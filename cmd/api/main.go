@@ -5,11 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"pinnado/docs"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
 	"pinnado/pkg/mongodb"
+)
+
+const (
+	shutdownTimeout = 10 * time.Second
 )
 
 // @title Pinnado API
@@ -22,9 +31,12 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @BasePath /api
 func main() {
+	log.Println("loading configuration...")
 	config := infrastructure.LoadConfig()
 
-	mongoClient, err := mongodb.NewMongoClient(context.Background(),
+	log.Println("connecting to MongoDB...")
+	ctx := context.Background()
+	mongoClient, err := mongodb.NewMongoClient(ctx,
 		config.Mongo.Host,
 		config.Mongo.Port,
 		config.Mongo.DBName,
@@ -34,9 +46,16 @@ func main() {
 		config.Mongo.RetryDelay,
 		config.Mongo.ConnectTimeout)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to connect to MongoDB: %v", err)
 	}
+	defer func() {
+		log.Println("disconnecting from MongoDB...")
+		if err := mongoClient.Disconnect(context.Background()); err != nil {
+			log.Printf("error disconnecting from MongoDB: %v", err)
+		}
+	}()
 
+	log.Println("initializing services...")
 	healthService := application.NewHealthService(mongoClient)
 
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
@@ -54,8 +73,25 @@ func main() {
 		Handler: mux,
 	}
 
-	log.Printf("server starting on %s", addr)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	go func() {
+		log.Printf("server starting on %s", addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed to start: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("server forced to shutdown: %v", err)
 	}
+
+	log.Println("server exited gracefully")
 }
