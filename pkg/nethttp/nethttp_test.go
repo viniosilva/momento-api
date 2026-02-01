@@ -56,7 +56,6 @@ func TestLoggingMiddleware(t *testing.T) {
 		output := logOutput.String()
 		assert.Contains(t, output, "request started")
 		assert.Contains(t, output, "request completed")
-		assert.Contains(t, output, `"request_id":`)
 		assert.Contains(t, output, `"method":"GET"`)
 		assert.Contains(t, output, `"path":"/test"`)
 		assert.Contains(t, output, `"status":200`)

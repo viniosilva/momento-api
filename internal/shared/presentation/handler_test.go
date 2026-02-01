@@ -69,7 +69,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 		assert.Equal(t, domain.HealthStatusValueError, got.Status)
 	})
 }
