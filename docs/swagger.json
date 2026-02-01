@@ -1,0 +1,69 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API documentation for Pinnado application",
+        "title": "Pinnado API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@pinnado.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/healthcheck": {
+            "get": {
+                "description": "Returns the health status of the application and database connection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Health status response",
+                        "schema": {
+                            "$ref": "#/definitions/presentation.HealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.HealthStatusEnum": {
+            "type": "string",
+            "enum": [
+                "ok",
+                "error"
+            ],
+            "x-enum-varnames": [
+                "HealthStatusValueOk",
+                "HealthStatusValueError"
+            ]
+        },
+        "presentation.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.HealthStatusEnum"
+                        }
+                    ],
+                    "example": "ok"
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,7 @@
 package application
 
+import "pinnado/internal/shared/domain"
+
 type HealthOutput struct {
-	Status string
+	Status domain.HealthStatusEnum
 }

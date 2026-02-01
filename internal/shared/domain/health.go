@@ -1,5 +1,7 @@
 package domain
 
+// HealthStatusEnum represents the possible health status values
+// @enum ok error
 type HealthStatusEnum string
 
 const (

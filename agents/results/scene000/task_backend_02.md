@@ -16,8 +16,8 @@ Definição técnica: Interface HealthService com método HealthCheck(ctx). Impl
 Arquivo: internal/shared/application/health_service.go
 
 4. Camada de Apresentação e Documentação
-Tarefa: Swagger e Rota de Health
-Definição técnica: Handler de Health e registro de rota /docs/*any via http-swagger.
+Tarefa: Swagger e Rota de Healthcheck
+Definição técnica: Handler de Healthcheck e registro de rota /docs/*any via http-swagger.
 Arquivo: internal/shared/presentation/router.go
 
 5. Ciclo de Vida e Bootstrap (Orquestrador)

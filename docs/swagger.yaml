@@ -1,0 +1,45 @@
+basePath: /api
+definitions:
+  domain.HealthStatusEnum:
+    enum:
+    - ok
+    - error
+    type: string
+    x-enum-varnames:
+    - HealthStatusValueOk
+    - HealthStatusValueError
+  presentation.HealthResponse:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.HealthStatusEnum'
+        example: ok
+    type: object
+info:
+  contact:
+    email: support@pinnado.com
+    name: API Support
+  description: API documentation for Pinnado application
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Pinnado API
+  version: "1.0"
+paths:
+  /healthcheck:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the application and database connection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Health status response
+          schema:
+            $ref: '#/definitions/presentation.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - health
+swagger: "2.0"

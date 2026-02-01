@@ -22,7 +22,7 @@ func TestHealthService_HealthCheck(t *testing.T) {
 
 		got := healthService.HealthCheck(t.Context())
 
-		assert.Equal(t, string(domain.HealthStatusValueOk), got.Status)
+		assert.Equal(t, domain.HealthStatusValueOk, got.Status)
 	})
 
 	t.Run("should return error status when mongo client is nil", func(t *testing.T) {
@@ -30,7 +30,7 @@ func TestHealthService_HealthCheck(t *testing.T) {
 
 		got := healthService.HealthCheck(t.Context())
 
-		assert.Equal(t, string(domain.HealthStatusValueError), got.Status)
+		assert.Equal(t, domain.HealthStatusValueError, got.Status)
 	})
 
 	t.Run("should return error status when mongo ping fails", func(t *testing.T) {
@@ -43,6 +43,6 @@ func TestHealthService_HealthCheck(t *testing.T) {
 
 		got := healthService.HealthCheck(t.Context())
 
-		assert.Equal(t, string(domain.HealthStatusValueError), got.Status)
+		assert.Equal(t, domain.HealthStatusValueError, got.Status)
 	})
 }

@@ -1,5 +1,7 @@
 package presentation
 
+import "pinnado/internal/shared/domain"
+
 type HealthResponse struct {
-	Status string `json:"status"`
+	Status domain.HealthStatusEnum `json:"status" example:"ok"`
 }

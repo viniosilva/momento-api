@@ -5,13 +5,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+	"pinnado/docs"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
 	"pinnado/pkg/mongodb"
 )
 
+// @title Pinnado API
+// @version 1.0
+// @description API documentation for Pinnado application
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email support@pinnado.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath /api
 func main() {
 	config := infrastructure.LoadConfig()
 
@@ -30,10 +39,16 @@ func main() {
 
 	healthService := application.NewHealthService(mongoClient)
 
-	mux := http.NewServeMux()
-	presentation.SetupHealthRouter(mux, "/api", healthService)
-
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
+	docs.SwaggerInfo.Host = addr
+
+	mux := http.NewServeMux()
+	presentation.SetupRouter(presentation.SetupRouterOptions{
+		Mux:           mux,
+		Prefix:        "/api",
+		HealthService: healthService,
+	})
+
 	server := &http.Server{
 		Addr:    addr,
 		Handler: mux,

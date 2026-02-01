@@ -42,7 +42,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, string(domain.HealthStatusValueOk), got.Status)
+		assert.Equal(t, domain.HealthStatusValueOk, got.Status)
 	})
 
 	t.Run("should return healthcheck error response", func(t *testing.T) {
@@ -70,6 +70,6 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, string(domain.HealthStatusValueError), got.Status)
+		assert.Equal(t, domain.HealthStatusValueError, got.Status)
 	})
 }
