@@ -14,3 +14,11 @@ func TestHealthStatusOk(t *testing.T) {
 		assert.Equal(t, domain.HealthStatusValueOk, got.Status)
 	})
 }
+
+func TestHealthStatusError(t *testing.T) {
+	t.Run("should return health status with error value", func(t *testing.T) {
+		got := domain.HealthStatusError()
+
+		assert.Equal(t, domain.HealthStatusValueError, got.Status)
+	})
+}

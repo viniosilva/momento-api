@@ -16,3 +16,9 @@ func HealthStatusOk() HealthStatus {
 		Status: HealthStatusValueOk,
 	}
 }
+
+func HealthStatusError() HealthStatus {
+	return HealthStatus{
+		Status: HealthStatusValueError,
+	}
+}

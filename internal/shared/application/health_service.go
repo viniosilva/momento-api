@@ -6,15 +6,32 @@ import (
 	"pinnado/internal/shared/domain"
 )
 
-type HealthService struct{}
+type HealthService struct {
+	mongoClient MongoClient
+}
 
-func NewHealthService() *HealthService {
-	return &HealthService{}
+func NewHealthService(mongoClient MongoClient) *HealthService {
+	return &HealthService{
+		mongoClient: mongoClient,
+	}
 }
 
 func (s *HealthService) HealthCheck(ctx context.Context) HealthOutput {
-	healthStatus := domain.HealthStatusOk()
+	if s.mongoClient == nil {
+		healthStatus := domain.HealthStatusError()
+		return HealthOutput{
+			Status: string(healthStatus.Status),
+		}
+	}
 
+	if err := s.mongoClient.Ping(ctx, nil); err != nil {
+		healthStatus := domain.HealthStatusError()
+		return HealthOutput{
+			Status: string(healthStatus.Status),
+		}
+	}
+
+	healthStatus := domain.HealthStatusOk()
 	return HealthOutput{
 		Status: string(healthStatus.Status),
 	}

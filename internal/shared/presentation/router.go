@@ -10,5 +10,5 @@ import (
 func SetupHealthRouter(mux *http.ServeMux, prefix string, healthService *application.HealthService) {
 	handler := NewHealthHandler(healthService)
 
-	mux.HandleFunc(fmt.Sprintf("GET %s/health", prefix), handler.HealthCheck)
+	mux.HandleFunc(fmt.Sprintf("GET %s/healthcheck", prefix), handler.HealthCheck)
 }

@@ -13,7 +13,7 @@ import (
 func TestSetupHealthRouter(t *testing.T) {
 	t.Run("should not panic when setting up health router", func(t *testing.T) {
 		mux := http.NewServeMux()
-		healthService := application.NewHealthService()
+		healthService := application.NewHealthService(nil)
 		prefix := "/api"
 
 		assert.NotPanics(t, func() {

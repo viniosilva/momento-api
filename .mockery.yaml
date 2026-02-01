@@ -1,0 +1,10 @@
+dir: "mocks"
+filename: "mock_{{.InterfaceName | snakecase}}.go"
+pkgname: "mocks"
+all: true
+recursive: true
+packages:
+  pinnado/internal:
+    config:
+      all: true
+      recursive: true
