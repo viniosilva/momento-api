@@ -3,7 +3,7 @@
 1. Utilitários Técnicos (Agnósticos no /pkg)
 Tarefa: Logger Provider
 Definição técnica: 
-- Função `NewLogger(level string, isJSON bool)` que retorna uma instância de `*slog.Logger`.
+- Função `NewLogger(level string)` que retorna uma instância de `*slog.Logger`.
 - Implementar lógica para extrair `trace_id` e `request_id` de um `context.Context` e anexá-los como atributos dinâmicos.
 - **Regra:** Não lê variáveis de ambiente. Recebe `level` e formato via parâmetro.
 Arquivo: pkg/logger/logger.go

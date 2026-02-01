@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
+	"pinnado/pkg/logger"
 	"pinnado/pkg/mongodb"
 )
 
@@ -31,6 +33,8 @@ const (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @BasePath /api
 func main() {
+	slog.SetDefault(logger.NewLogger("info"))
+
 	log.Println("loading configuration...")
 	config := infrastructure.LoadConfig()
 
@@ -61,11 +65,13 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr
 
+	appLogger := logger.NewLogger("info")
 	mux := http.NewServeMux()
 	presentation.SetupRouter(presentation.SetupRouterOptions{
 		Mux:           mux,
 		Prefix:        "/api",
 		HealthService: healthService,
+		Logger:        appLogger,
 	})
 
 	server := &http.Server{

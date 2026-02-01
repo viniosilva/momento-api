@@ -42,6 +42,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/presentation.HealthResponse"
                         }
+                    },
+                    "503": {
+                        "description": "Health status response",
+                        "schema": {
+                            "$ref": "#/definitions/presentation.HealthResponse"
+                        }
                     }
                 }
             }

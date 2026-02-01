@@ -3,6 +3,7 @@ package presentation
 import (
 	"net/http"
 	"pinnado/internal/shared/application"
+	"pinnado/internal/shared/domain"
 	"pinnado/pkg/nethttp"
 )
 
@@ -23,6 +24,7 @@ func NewHealthHandler(healthService *application.HealthService) *HealthHandler {
 // @Accept json
 // @Produce json
 // @Success 200 {object} HealthResponse "Health status response"
+// @Failure 503 {object} HealthResponse "Health status response"
 // @Router /healthcheck [get]
 func (h *HealthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	output := h.healthService.HealthCheck(r.Context())
@@ -30,6 +32,10 @@ func (h *HealthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	response := HealthResponse{
 		Status: output.Status,
 	}
+	statusCode := http.StatusOK
+	if output.Status == domain.HealthStatusValueError {
+		statusCode = http.StatusServiceUnavailable
+	}
 
-	nethttp.JSON(w, http.StatusOK, response)
+	nethttp.JSON(w, statusCode, response)
 }
