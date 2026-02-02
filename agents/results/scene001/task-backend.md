@@ -27,7 +27,7 @@ Arquivo: internal/auth/infrastructure/user_repository.go
 ## 3. Application Layer (Usecases & Ports)
 
 Tarefa: DTOs de Fluxo
-Definição técnica: Estruturas para transporte de dados de registro (entrada) e perfil de usuário com token (saída).
+Definição técnica: Estruturas para transporte de dados de registro (entrada) e perfil de usuário.
 Arquivo: internal/auth/application/dto.go
 
 Tarefa: Interfaces (Ports)

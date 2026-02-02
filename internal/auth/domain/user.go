@@ -1,12 +1,18 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const UsersCollectionName = "users"
+
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound      = errors.New("user not found")
+)
 
 type User struct {
 	ID        primitive.ObjectID `bson:"_id"`
