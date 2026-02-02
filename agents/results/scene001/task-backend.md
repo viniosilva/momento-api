@@ -17,7 +17,7 @@ Arquivo: internal/auth/domain/user.go
 ## 2. Infrastructure Layer (Persistence & Adapters)
 
 Tarefa: MongoDB Indexes
-Definição técnica: Função para garantia de índice único no campo de e-mail na collection de usuários.
+Definição técnica: Função para garantia de índice único no campo de e-mail na collection de usuários. Também adicionar func na cmd/api/main.go para rodar as indexes
 Arquivo: internal/auth/infrastructure/mongo_indexes.go
 
 Tarefa: User Repository (MongoDB)

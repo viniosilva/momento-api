@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"pinnado/docs"
+	authinfra "pinnado/internal/auth/infrastructure"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
@@ -58,6 +59,11 @@ func main() {
 			log.Printf("error disconnecting from MongoDB: %v", err)
 		}
 	}()
+
+	log.Println("creating MongoDB indexes...")
+	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
+		log.Fatalf("failed to create MongoDB indexes: %v", err)
+	}
 
 	log.Println("initializing services...")
 	healthService := application.NewHealthService(mongoClient)
