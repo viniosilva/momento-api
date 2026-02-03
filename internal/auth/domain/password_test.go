@@ -19,6 +19,14 @@ func TestNewPassword(t *testing.T) {
 		assert.NotEqual(t, "ValidPass123©®€!", string(password))
 	})
 
+	t.Run("should create password with simple symbols", func(t *testing.T) {
+		password, err := domain.NewPassword("ValidPass123!@#")
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, string(password))
+		assert.NotEqual(t, "ValidPass123!@#", string(password))
+	})
+
 	t.Run("should accept password at maximum length", func(t *testing.T) {
 		longPassword := strings.Repeat("A", 58) + "a1©"
 		password, err := domain.NewPassword(longPassword)

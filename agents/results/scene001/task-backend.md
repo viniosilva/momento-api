@@ -35,8 +35,8 @@ Definição técnica: Definição dos contratos para `UserRepository` e `AuthSer
 Arquivo: internal/auth/application/port.go
 
 Tarefa: Auth Service
-Definição técnica: Implementação do caso de uso de registro com login automático. Deve orquestrar validação de domínio, unicidade, persistência e geração de credenciais.
-Arquivo: internal/auth/application/auth_service.go
+Definição técnica: Implementação do caso de uso criar usuário. Deve orquestrar validação de domínio, unicidade, persistência e geração de credenciais.
+Arquivo: internal/auth/application/user_service.go
 
 ## 4. Presentation Layer (API)
 

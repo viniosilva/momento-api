@@ -12,12 +12,18 @@ import (
 	"pinnado/internal/auth/domain"
 )
 
-type UserRepository struct {
-	Collection *mongo.Collection
+type userRepository struct {
+	collection *mongo.Collection
 }
 
-func (r *UserRepository) Create(ctx context.Context, user domain.User) error {
-	_, err := r.Collection.InsertOne(ctx, user)
+func NewUserRepository(collection *mongo.Collection) *userRepository {
+	return &userRepository{
+		collection: collection,
+	}
+}
+
+func (r *userRepository) Create(ctx context.Context, user domain.User) error {
+	_, err := r.collection.InsertOne(ctx, user)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return fmt.Errorf("%w: %s", domain.ErrUserAlreadyExists, user.Email)
@@ -29,26 +35,22 @@ func (r *UserRepository) Create(ctx context.Context, user domain.User) error {
 	return nil
 }
 
-func (r *UserRepository) FindByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+func (r *userRepository) HasByEmail(ctx context.Context, email domain.Email) (bool, error) {
 	filter := bson.M{"email": string(email)}
 
-	var user domain.User
-	err := r.Collection.FindOne(ctx, filter).Decode(&user)
+	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return domain.User{}, fmt.Errorf("%w: email %s", domain.ErrUserNotFound, email)
-		}
-		return domain.User{}, err
+		return false, err
 	}
 
-	return user, nil
+	return count > 0, nil
 }
 
-func (r *UserRepository) FindByID(ctx context.Context, id primitive.ObjectID) (domain.User, error) {
+func (r *userRepository) FindByID(ctx context.Context, id primitive.ObjectID) (domain.User, error) {
 	filter := bson.M{"_id": id}
 
 	var user domain.User
-	err := r.Collection.FindOne(ctx, filter).Decode(&user)
+	err := r.collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return domain.User{}, fmt.Errorf("%w: id %s", domain.ErrUserNotFound, id.Hex())
