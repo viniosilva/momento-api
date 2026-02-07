@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 )
 
-type callback func(w http.ResponseWriter, r *http.Request) error
+type callback func(w http.ResponseWriter, r *http.Request)
 
 func Request[T any](ctx context.Context, method string, target string, body T, cb callback) (*http.Response, error) {
 	b, err := json.Marshal(body)
@@ -20,9 +20,9 @@ func Request[T any](ctx context.Context, method string, target string, body T, c
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
-	err = cb(rec, req)
+	cb(rec, req)
 
-	return rec.Result(), err
+	return rec.Result(), nil
 }
 
 // RequestWithResponse makes a request to the given target with the given method and body and returns the response and the response body.

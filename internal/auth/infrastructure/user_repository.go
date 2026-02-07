@@ -2,11 +2,9 @@ package infrastructure
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"pinnado/internal/auth/domain"
@@ -35,7 +33,7 @@ func (r *userRepository) Create(ctx context.Context, user domain.User) error {
 	return nil
 }
 
-func (r *userRepository) HasByEmail(ctx context.Context, email domain.Email) (bool, error) {
+func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) (bool, error) {
 	filter := bson.M{"email": string(email)}
 
 	count, err := r.collection.CountDocuments(ctx, filter)
@@ -44,20 +42,4 @@ func (r *userRepository) HasByEmail(ctx context.Context, email domain.Email) (bo
 	}
 
 	return count > 0, nil
-}
-
-func (r *userRepository) FindByID(ctx context.Context, id primitive.ObjectID) (domain.User, error) {
-	filter := bson.M{"_id": id}
-
-	var user domain.User
-	err := r.collection.FindOne(ctx, filter).Decode(&user)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return domain.User{}, fmt.Errorf("%w: id %s", domain.ErrUserNotFound, id.Hex())
-		}
-
-		return domain.User{}, err
-	}
-
-	return user, nil
 }

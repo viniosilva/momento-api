@@ -13,16 +13,16 @@ import (
 	"pinnado/mocks"
 )
 
-func TestNewUserService(t *testing.T) {
-	t.Run("should create user service", func(t *testing.T) {
+func TestNewAuthService(t *testing.T) {
+	t.Run("should create auth service", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		authService := application.NewAuthService(userRepoMock)
 
-		assert.NotNil(t, userService)
+		assert.NotNil(t, authService)
 	})
 }
 
-func TestUserService_CreateUser(t *testing.T) {
+func TestAuthService_Register(t *testing.T) {
 	defaultUserInput := application.UserInput{
 		Email:    "user@example.com",
 		Password: "ValidPass123!",
@@ -30,12 +30,12 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("should create user successfully", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
-		userRepoMock.EXPECT().HasByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
+		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
 		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).Return(nil).Once()
 
-		got, err := userService.CreateUser(t.Context(), defaultUserInput)
+		got, err := userService.Register(t.Context(), defaultUserInput)
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
@@ -46,59 +46,59 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("should return error when email is invalid", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
 		input := defaultUserInput
 		input.Email = "invalid-email"
 
-		_, err := userService.CreateUser(t.Context(), input)
+		_, err := userService.Register(t.Context(), input)
 
 		assert.ErrorIs(t, err, domain.ErrInvalidEmail)
 	})
 
 	t.Run("should return error when password is invalid", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
 		input := defaultUserInput
-		input.Password = "invalid"
+		input.Password = "short"
 
-		_, err := userService.CreateUser(t.Context(), input)
+		_, err := userService.Register(t.Context(), input)
 
 		assert.ErrorIs(t, err, domain.ErrPasswordTooShort)
 	})
 
 	t.Run("should return error when user already exists", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
-		userRepoMock.EXPECT().HasByEmail(mock.Anything, mock.Anything).
+		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
 
-		_, err := userService.CreateUser(t.Context(), defaultUserInput)
+		_, err := userService.Register(t.Context(), defaultUserInput)
 
 		assert.ErrorIs(t, err, domain.ErrUserAlreadyExists)
 	})
 
-	t.Run("should return error when HasByEmail fails", func(t *testing.T) {
+	t.Run("should return error when ExistsByEmail fails", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
-		userRepoMock.EXPECT().HasByEmail(mock.Anything, mock.Anything).
+		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
 			Return(false, assert.AnError).
 			Once()
 
-		_, err := userService.CreateUser(t.Context(), defaultUserInput)
+		_, err := userService.Register(t.Context(), defaultUserInput)
 
 		assert.ErrorIs(t, err, assert.AnError)
 	})
 
 	t.Run("should return error when Create fails", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		userService := application.NewUserService(userRepoMock)
+		userService := application.NewAuthService(userRepoMock)
 
-		userRepoMock.EXPECT().HasByEmail(mock.Anything, mock.Anything).
+		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
 			Return(false, nil).
 			Once()
 
@@ -106,7 +106,7 @@ func TestUserService_CreateUser(t *testing.T) {
 			Return(assert.AnError).
 			Once()
 
-		_, err := userService.CreateUser(t.Context(), defaultUserInput)
+		_, err := userService.Register(t.Context(), defaultUserInput)
 
 		assert.ErrorIs(t, err, assert.AnError)
 	})

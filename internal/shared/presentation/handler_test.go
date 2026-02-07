@@ -26,18 +26,12 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		requestBody := map[string]any{}
-		cb := func(w http.ResponseWriter, r *http.Request) error {
-			handler.HealthCheck(w, r)
-			return nil
-		}
-
 		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, presentation.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",
-			requestBody,
-			cb,
+			nil,
+			handler.HealthCheck,
 		)
 		require.NoError(t, err)
 
@@ -54,18 +48,12 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		requestBody := map[string]any{}
-		cb := func(w http.ResponseWriter, r *http.Request) error {
-			handler.HealthCheck(w, r)
-			return nil
-		}
-
 		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, presentation.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",
-			requestBody,
-			cb,
+			nil,
+			handler.HealthCheck,
 		)
 		require.NoError(t, err)
 

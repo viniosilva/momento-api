@@ -9,7 +9,6 @@ import (
 	"pinnado/internal/auth/domain"
 
 	mock "github.com/stretchr/testify/mock"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // NewMockUserRepository creates a new instance of MockUserRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -96,78 +95,12 @@ func (_c *MockUserRepository_Create_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
-// FindByID provides a mock function for the type MockUserRepository
-func (_mock *MockUserRepository) FindByID(ctx context.Context, id primitive.ObjectID) (domain.User, error) {
-	ret := _mock.Called(ctx, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindByID")
-	}
-
-	var r0 domain.User
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID) (domain.User, error)); ok {
-		return returnFunc(ctx, id)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID) domain.User); ok {
-		r0 = returnFunc(ctx, id)
-	} else {
-		r0 = ret.Get(0).(domain.User)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, primitive.ObjectID) error); ok {
-		r1 = returnFunc(ctx, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockUserRepository_FindByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByID'
-type MockUserRepository_FindByID_Call struct {
-	*mock.Call
-}
-
-// FindByID is a helper method to define mock.On call
-//   - ctx context.Context
-//   - id primitive.ObjectID
-func (_e *MockUserRepository_Expecter) FindByID(ctx interface{}, id interface{}) *MockUserRepository_FindByID_Call {
-	return &MockUserRepository_FindByID_Call{Call: _e.mock.On("FindByID", ctx, id)}
-}
-
-func (_c *MockUserRepository_FindByID_Call) Run(run func(ctx context.Context, id primitive.ObjectID)) *MockUserRepository_FindByID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 primitive.ObjectID
-		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockUserRepository_FindByID_Call) Return(user domain.User, err error) *MockUserRepository_FindByID_Call {
-	_c.Call.Return(user, err)
-	return _c
-}
-
-func (_c *MockUserRepository_FindByID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID) (domain.User, error)) *MockUserRepository_FindByID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// HasByEmail provides a mock function for the type MockUserRepository
-func (_mock *MockUserRepository) HasByEmail(ctx context.Context, email domain.Email) (bool, error) {
+// ExistsByEmail provides a mock function for the type MockUserRepository
+func (_mock *MockUserRepository) ExistsByEmail(ctx context.Context, email domain.Email) (bool, error) {
 	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
-		panic("no return value specified for HasByEmail")
+		panic("no return value specified for ExistsByEmail")
 	}
 
 	var r0 bool
@@ -188,19 +121,19 @@ func (_mock *MockUserRepository) HasByEmail(ctx context.Context, email domain.Em
 	return r0, r1
 }
 
-// MockUserRepository_HasByEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'HasByEmail'
-type MockUserRepository_HasByEmail_Call struct {
+// MockUserRepository_ExistsByEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExistsByEmail'
+type MockUserRepository_ExistsByEmail_Call struct {
 	*mock.Call
 }
 
-// HasByEmail is a helper method to define mock.On call
+// ExistsByEmail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email domain.Email
-func (_e *MockUserRepository_Expecter) HasByEmail(ctx interface{}, email interface{}) *MockUserRepository_HasByEmail_Call {
-	return &MockUserRepository_HasByEmail_Call{Call: _e.mock.On("HasByEmail", ctx, email)}
+func (_e *MockUserRepository_Expecter) ExistsByEmail(ctx interface{}, email interface{}) *MockUserRepository_ExistsByEmail_Call {
+	return &MockUserRepository_ExistsByEmail_Call{Call: _e.mock.On("ExistsByEmail", ctx, email)}
 }
 
-func (_c *MockUserRepository_HasByEmail_Call) Run(run func(ctx context.Context, email domain.Email)) *MockUserRepository_HasByEmail_Call {
+func (_c *MockUserRepository_ExistsByEmail_Call) Run(run func(ctx context.Context, email domain.Email)) *MockUserRepository_ExistsByEmail_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -218,12 +151,12 @@ func (_c *MockUserRepository_HasByEmail_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *MockUserRepository_HasByEmail_Call) Return(b bool, err error) *MockUserRepository_HasByEmail_Call {
+func (_c *MockUserRepository_ExistsByEmail_Call) Return(b bool, err error) *MockUserRepository_ExistsByEmail_Call {
 	_c.Call.Return(b, err)
 	return _c
 }
 
-func (_c *MockUserRepository_HasByEmail_Call) RunAndReturn(run func(ctx context.Context, email domain.Email) (bool, error)) *MockUserRepository_HasByEmail_Call {
+func (_c *MockUserRepository_ExistsByEmail_Call) RunAndReturn(run func(ctx context.Context, email domain.Email) (bool, error)) *MockUserRepository_ExistsByEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -12,7 +12,10 @@ import (
 	"time"
 
 	"pinnado/docs"
+	authapp "pinnado/internal/auth/application"
+	authdomain "pinnado/internal/auth/domain"
 	authinfra "pinnado/internal/auth/infrastructure"
+	authpres "pinnado/internal/auth/presentation"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
@@ -68,16 +71,29 @@ func main() {
 	log.Println("initializing services...")
 	healthService := application.NewHealthService(mongoClient)
 
+	db := mongoClient.Database(config.Mongo.DBName)
+	userCollection := db.Collection(authdomain.UsersCollectionName)
+	userRepository := authinfra.NewUserRepository(userCollection)
+	authService := authapp.NewAuthService(userRepository)
+
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr
 
 	appLogger := logger.NewLogger("info")
 	mux := http.NewServeMux()
+
 	presentation.SetupRouter(presentation.SetupRouterOptions{
 		Mux:           mux,
 		Prefix:        "/api",
 		HealthService: healthService,
 		Logger:        appLogger,
+	})
+
+	authpres.SetupRouter(authpres.SetupRouterOptions{
+		Mux:         mux,
+		Prefix:      "/api",
+		AuthService: authService,
+		Logger:      appLogger,
 	})
 
 	server := &http.Server{

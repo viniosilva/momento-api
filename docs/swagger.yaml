@@ -8,12 +8,39 @@ definitions:
     x-enum-varnames:
     - HealthStatusValueOk
     - HealthStatusValueError
+  presentation.ErrorResponse:
+    properties:
+      message:
+        example: user already exists
+        type: string
+    type: object
   presentation.HealthResponse:
     properties:
       status:
         allOf:
         - $ref: '#/definitions/domain.HealthStatusEnum'
         example: ok
+    type: object
+  presentation.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: ValidPass123!
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  presentation.RegisterResponse:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
     type: object
 info:
   contact:
@@ -27,6 +54,40 @@ info:
   title: Pinnado API
   version: "1.0"
 paths:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with email and password
+      parameters:
+      - description: Registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/presentation.RegisterResponse'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
   /healthcheck:
     get:
       consumes:

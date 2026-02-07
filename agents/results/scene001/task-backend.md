@@ -41,11 +41,11 @@ Arquivo: internal/auth/application/user_service.go
 ## 4. Presentation Layer (API)
 
 Tarefa: Contratos HTTP
-Definição técnica: Estruturas de `Request` com tags de validação de campos e `Response` formatada para o frontend.
+Definição técnica: Estruturas de `Request` e `Response`, conforme inputs.
 Arquivo: internal/auth/presentation/request_response.go
 
 Tarefa: Auth Handler
-Definição técnica: Handler para processar submissões de formulário, sanitização de entrada e mapeamento de erros de negócio para status codes adequados.
+Definição técnica: Handler para processar submissões de formulário, sanitização de entrada e mapeamento de erros de negócio para status codes adequados. Adicionar comentários para geração do swagger
 Arquivo: internal/auth/presentation/handler.go
 
 Tarefa: Router Setup

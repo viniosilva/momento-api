@@ -6,30 +6,30 @@ import (
 	"pinnado/internal/auth/domain"
 )
 
-type userService struct {
+type authService struct {
 	userRepository UserRepository
 }
 
-func NewUserService(userRepository UserRepository) *userService {
-	return &userService{
+func NewAuthService(userRepository UserRepository) *authService {
+	return &authService{
 		userRepository: userRepository,
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, input UserInput) (UserOutput, error) {
+func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
 	email, err := domain.NewEmail(input.Email)
 	if err != nil {
-		return UserOutput{}, fmt.Errorf("domain.NewEmail: %w", err)
+		return UserOutput{}, err
 	}
 
 	password, err := domain.NewPassword(input.Password)
 	if err != nil {
-		return UserOutput{}, fmt.Errorf("domain.NewPassword: %w", err)
+		return UserOutput{}, err
 	}
 
-	exists, err := s.userRepository.HasByEmail(ctx, email)
+	exists, err := s.userRepository.ExistsByEmail(ctx, email)
 	if err != nil {
-		return UserOutput{}, fmt.Errorf("failed to check user existence: %w", err)
+		return UserOutput{}, fmt.Errorf("s.userRepository.ExistsByEmail: %w", err)
 	}
 	if exists {
 		return UserOutput{}, domain.ErrUserAlreadyExists
@@ -37,7 +37,7 @@ func (s *userService) CreateUser(ctx context.Context, input UserInput) (UserOutp
 
 	user := domain.NewUser(email, password)
 	if err := s.userRepository.Create(ctx, user); err != nil {
-		return UserOutput{}, fmt.Errorf("failed to create user: %w", err)
+		return UserOutput{}, fmt.Errorf("s.userRepository.Create: %w", err)
 	}
 
 	return UserOutput{
