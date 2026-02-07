@@ -72,7 +72,7 @@ A API estará disponível em `http://localhost:8080/api`
 Após iniciar a aplicação, acesse a documentação Swagger em:
 
 ```
-http://localhost:8080/swagger/index.html
+http://localhost:8080/docs/swagger/index.html
 ```
 
 

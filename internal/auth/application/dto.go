@@ -23,8 +23,5 @@ type LoginInput struct {
 }
 
 type LoginOutput struct {
-	ID        string
-	Email     domain.Email
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Token string
 }

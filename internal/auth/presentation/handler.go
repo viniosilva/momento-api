@@ -100,8 +100,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := LoginResponse{
-		ID:    output.ID,
-		Email: string(output.Email),
+		Token: output.Token,
 	}
 
 	nethttp.JSON(w, http.StatusOK, response)

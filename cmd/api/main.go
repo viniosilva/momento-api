@@ -74,7 +74,8 @@ func main() {
 	db := mongoClient.Database(config.Mongo.DBName)
 	userCollection := db.Collection(authdomain.UsersCollectionName)
 	userRepository := authinfra.NewUserRepository(userCollection)
-	authService := authapp.NewAuthService(userRepository)
+	jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
+	authService := authapp.NewAuthService(userRepository, jwtService)
 
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -14,6 +15,7 @@ import (
 
 	"pinnado/internal/auth/application"
 	"pinnado/internal/auth/domain"
+	"pinnado/internal/auth/infrastructure"
 	"pinnado/internal/auth/presentation"
 	"pinnado/mocks"
 	"pinnado/pkg/nethttp"
@@ -22,10 +24,16 @@ import (
 // mapErrorToHTTPStatus is exported for testing
 var mapErrorToHTTPStatus = presentation.MapErrorToHTTPStatus
 
+const (
+	secretTest     = "secretTest"
+	expirationTest = 5 * time.Second
+)
+
 func TestNewAuthHandler(t *testing.T) {
 	t.Run("should create auth handler", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		assert.NotNil(t, handler)
@@ -40,7 +48,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return created when user is created successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
@@ -57,7 +66,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		resp, got, err := nethttp.RequestWithResponse[string, presentation.ErrorResponse](
@@ -70,7 +80,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when email is invalid", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -88,7 +99,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when password is empty after trim", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -106,7 +118,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return conflict when user already exists", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(true, nil).Once()
@@ -121,7 +134,8 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return internal server error when repository fails", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, assert.AnError).Once()
@@ -138,7 +152,8 @@ func TestAuthHandler_Register(t *testing.T) {
 func TestSetupRouter(t *testing.T) {
 	t.Run("should setup router with auth handler", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 
 		mux := http.NewServeMux()
 		presentation.SetupRouter(presentation.SetupRouterOptions{
@@ -159,7 +174,8 @@ func TestSetupRouter(t *testing.T) {
 
 	t.Run("should apply logging middleware when logger is provided", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 
 		mux := http.NewServeMux()
 		logger := slog.Default()
@@ -249,7 +265,8 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return ok when login is successful", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -267,13 +284,13 @@ func TestAuthHandler_Login(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, defaultReqBody["email"], got.Email)
+		assert.NotEmpty(t, got.Token)
 	})
 
 	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		resp, got, err := nethttp.RequestWithResponse[string, presentation.ErrorResponse](
@@ -286,7 +303,8 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return bad request when email is invalid", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -304,7 +322,8 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return unauthorized when user is not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -324,7 +343,8 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return unauthorized when password is incorrect", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -347,7 +367,8 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return internal server error when repository fails", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
-		authService := application.NewAuthService(mockRepo)
+		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
+		authService := application.NewAuthService(mockRepo, jwtService)
 		handler := presentation.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))

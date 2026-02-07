@@ -21,6 +21,24 @@ definitions:
         - $ref: '#/definitions/domain.HealthStatusEnum'
         example: ok
     type: object
+  presentation.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: ValidPass123!
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  presentation.LoginResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
   presentation.RegisterRequest:
     properties:
       email:
@@ -54,6 +72,40 @@ info:
   title: Pinnado API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user with email and password credentials
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/presentation.LoginResponse'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/presentation.ErrorResponse'
+      summary: Login with email and password
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:

@@ -16,8 +16,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	ID    string `json:"id" example:"507f1f77bcf86cd799439011"`
-	Email string `json:"email" example:"user@example.com"`
+	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 type ErrorResponse struct {

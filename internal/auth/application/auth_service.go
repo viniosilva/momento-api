@@ -9,11 +9,13 @@ import (
 
 type authService struct {
 	userRepository UserRepository
+	jwtService     JWTService
 }
 
-func NewAuthService(userRepository UserRepository) *authService {
+func NewAuthService(userRepository UserRepository, jwtService JWTService) *authService {
 	return &authService{
 		userRepository: userRepository,
+		jwtService:     jwtService,
 	}
 }
 
@@ -67,10 +69,12 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 		return LoginOutput{}, domain.ErrInvalidCredentials
 	}
 
+	token, err := s.jwtService.Generate(user.ID.Hex(), user.Email)
+	if err != nil {
+		return LoginOutput{}, fmt.Errorf("s.jwtService.Generate: %w", err)
+	}
+
 	return LoginOutput{
-		ID:        user.ID.Hex(),
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		Token: token,
 	}, nil
 }

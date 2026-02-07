@@ -29,6 +29,8 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 3, got.Mongo.MaxRetries)
 		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
+		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
+		assert.Equal(t, 5*time.Second, got.JWT.Expiration)
 	})
 
 	t.Run("should load values from .env.example file", func(t *testing.T) {
@@ -49,6 +51,8 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 3, got.Mongo.MaxRetries)
 		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
+		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
+		assert.Equal(t, 5*time.Second, got.JWT.Expiration)
 	})
 
 	t.Run("should return default max retries when conversion fails", func(t *testing.T) {
@@ -75,6 +79,8 @@ var envVars []string = []string{
 	"MONGO_MAX_RETRIES",
 	"MONGO_RETRY_DELAY_MS",
 	"MONGO_CONNECT_TIMEOUT_MS",
+	"JWT_SECRET",
+	"JWT_EXPIRATION_MS",
 }
 
 func clearEnvVars(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Api   ApiConfig
 	Mongo MongoConfig
+	JWT   JWTConfig
 }
 
 type ApiConfig struct {
@@ -30,6 +31,11 @@ type MongoConfig struct {
 	ConnectTimeout time.Duration
 }
 
+type JWTConfig struct {
+	Secret     string
+	Expiration time.Duration
+}
+
 const (
 	defaultEnvPath             = ".env"
 	defaultApiHost             = ""
@@ -42,6 +48,8 @@ const (
 	defaultMongoMaxRetries     = 3
 	defaultMongoRetryDelay     = 2 * time.Second
 	defaultMongoConnectTimeout = 10 * time.Second
+	defaultJWTSecret           = "your-secret-key-change-in-production"
+	defaultJWTExpiration       = 24 * time.Hour
 )
 
 type LoadConfigOption func(*loadConfigOptions)
@@ -83,6 +91,10 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			MaxRetries:     getEnvAsInt("MONGO_MAX_RETRIES", defaultMongoMaxRetries),
 			RetryDelay:     getEnvAsDuration("MONGO_RETRY_DELAY_MS", defaultMongoRetryDelay),
 			ConnectTimeout: getEnvAsDuration("MONGO_CONNECT_TIMEOUT_MS", defaultMongoConnectTimeout),
+		},
+		JWT: JWTConfig{
+			Secret:     getEnv("JWT_SECRET", defaultJWTSecret),
+			Expiration: getEnvAsDuration("JWT_EXPIRATION_MS", defaultJWTExpiration),
 		},
 	}
 }
