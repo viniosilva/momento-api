@@ -38,6 +38,72 @@ func (_m *MockAuthService) EXPECT() *MockAuthService_Expecter {
 	return &MockAuthService_Expecter{mock: &_m.Mock}
 }
 
+// Login provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) Login(ctx context.Context, input application.LoginInput) (application.LoginOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Login")
+	}
+
+	var r0 application.LoginOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.LoginInput) (application.LoginOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.LoginInput) application.LoginOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(application.LoginOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, application.LoginInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockAuthService_Login_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Login'
+type MockAuthService_Login_Call struct {
+	*mock.Call
+}
+
+// Login is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input application.LoginInput
+func (_e *MockAuthService_Expecter) Login(ctx interface{}, input interface{}) *MockAuthService_Login_Call {
+	return &MockAuthService_Login_Call{Call: _e.mock.On("Login", ctx, input)}
+}
+
+func (_c *MockAuthService_Login_Call) Run(run func(ctx context.Context, input application.LoginInput)) *MockAuthService_Login_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 application.LoginInput
+		if args[1] != nil {
+			arg1 = args[1].(application.LoginInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_Login_Call) Return(loginOutput application.LoginOutput, err error) *MockAuthService_Login_Call {
+	_c.Call.Return(loginOutput, err)
+	return _c
+}
+
+func (_c *MockAuthService_Login_Call) RunAndReturn(run func(ctx context.Context, input application.LoginInput) (application.LoginOutput, error)) *MockAuthService_Login_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Register provides a mock function for the type MockAuthService
 func (_mock *MockAuthService) Register(ctx context.Context, input application.UserInput) (application.UserOutput, error) {
 	ret := _mock.Called(ctx, input)

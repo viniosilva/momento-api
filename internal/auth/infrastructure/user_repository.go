@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,4 +43,19 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) 
 	}
 
 	return count > 0, nil
+}
+
+func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+	filter := bson.M{"email": string(email)}
+
+	var user domain.User
+	err := r.collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, err
+	}
+
+	return user, nil
 }

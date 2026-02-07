@@ -119,7 +119,7 @@ func TestAuthHandler_Register(t *testing.T) {
 		assert.Equal(t, "user already exists", got.Message)
 	})
 
-	t.Run("should return internal server error when repository error occurs", func(t *testing.T) {
+	t.Run("should return internal server error when repository fails", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
 		authService := application.NewAuthService(mockRepo)
 		handler := presentation.NewAuthHandler(authService)
@@ -226,10 +226,142 @@ func TestMapErrorToHTTPStatus(t *testing.T) {
 		}
 	})
 
-	t.Run("should return internal server error when unknown error occurs", func(t *testing.T) {
+	t.Run("should return unauthorized when credentials are invalid", func(t *testing.T) {
+		statusCode, message := mapErrorToHTTPStatus(domain.ErrInvalidCredentials)
+
+		assert.Equal(t, http.StatusUnauthorized, statusCode)
+		assert.Equal(t, "invalid credentials", message)
+	})
+
+	t.Run("should return internal server error when unknown fails", func(t *testing.T) {
 		statusCode, message := mapErrorToHTTPStatus(context.DeadlineExceeded)
 
 		assert.Equal(t, http.StatusInternalServerError, statusCode)
 		assert.Equal(t, "internal server error", message)
+	})
+}
+
+func TestAuthHandler_Login(t *testing.T) {
+	defaultReqBody := map[string]any{
+		"email":    "user@example.com",
+		"password": "ValidPass123!",
+	}
+
+	t.Run("should return ok when login is successful", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		email, err := domain.NewEmail(defaultReqBody["email"].(string))
+		require.NoError(t, err)
+
+		password, err := domain.NewPassword(defaultReqBody["password"].(string))
+		require.NoError(t, err)
+
+		user := domain.NewUser(email, password)
+
+		mockRepo.EXPECT().FindByEmail(mock.Anything, email).Return(user, nil).Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.LoginResponse](
+			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.NotEmpty(t, got.ID)
+		assert.Equal(t, defaultReqBody["email"], got.Email)
+	})
+
+	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		resp, got, err := nethttp.RequestWithResponse[string, presentation.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/login", "invalid json", handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Equal(t, "invalid request body", got.Message)
+	})
+
+	t.Run("should return bad request when email is invalid", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		reqBody := map[string]any{
+			"email":    "invalid-email",
+			"password": defaultReqBody["password"],
+		}
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/login", reqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Contains(t, got.Message, "invalid email format")
+	})
+
+	t.Run("should return unauthorized when user is not found", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		email, err := domain.NewEmail(defaultReqBody["email"].(string))
+		require.NoError(t, err)
+
+		mockRepo.EXPECT().FindByEmail(mock.Anything, email).
+			Return(domain.User{}, domain.ErrUserNotFound).
+			Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.Equal(t, "invalid credentials", got.Message)
+	})
+
+	t.Run("should return unauthorized when password is incorrect", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		email, err := domain.NewEmail(defaultReqBody["email"].(string))
+		require.NoError(t, err)
+
+		password, err := domain.NewPassword("OtherPass123!")
+		require.NoError(t, err)
+
+		user := domain.NewUser(email, password)
+
+		mockRepo.EXPECT().FindByEmail(mock.Anything, email).Return(user, nil).Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.Equal(t, "invalid credentials", got.Message)
+	})
+
+	t.Run("should return internal server error when repository fails", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(mockRepo)
+		handler := presentation.NewAuthHandler(authService)
+
+		email, err := domain.NewEmail(defaultReqBody["email"].(string))
+		require.NoError(t, err)
+
+		mockRepo.EXPECT().FindByEmail(mock.Anything, email).
+			Return(domain.User{}, assert.AnError).
+			Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		assert.Equal(t, "internal server error", got.Message)
 	})
 }

@@ -64,6 +64,49 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	nethttp.JSON(w, http.StatusCreated, response)
 }
 
+// Login godoc
+// @Summary Login with email and password
+// @Description Authenticates a user with email and password credentials
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login request"
+// @Success 200 {object} LoginResponse "Login successful"
+// @Failure 400 {object} ErrorResponse "Invalid request data"
+// @Failure 401 {object} ErrorResponse "Invalid credentials"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /auth/login [post]
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	input := application.LoginInput{
+		Email:    strings.TrimSpace(req.Email),
+		Password: strings.TrimSpace(req.Password),
+	}
+
+	output, err := h.authService.Login(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp.JSON(w, statusCode, ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	response := LoginResponse{
+		ID:    output.ID,
+		Email: string(output.Email),
+	}
+
+	nethttp.JSON(w, http.StatusOK, response)
+}
+
 // MapErrorToHTTPStatus maps domain/application errors to appropriate HTTP status codes
 // Exported for testing purposes
 func MapErrorToHTTPStatus(err error) (int, string) {
@@ -80,6 +123,10 @@ func MapErrorToHTTPStatus(err error) (int, string) {
 		errors.Is(err, domain.ErrPasswordMissingNumber) ||
 		errors.Is(err, domain.ErrPasswordMissingSymbol) {
 		return http.StatusBadRequest, err.Error()
+	}
+
+	if errors.Is(err, domain.ErrInvalidCredentials) {
+		return http.StatusUnauthorized, err.Error()
 	}
 
 	return http.StatusInternalServerError, "internal server error"

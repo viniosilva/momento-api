@@ -111,3 +111,51 @@ func TestAuthService_Register(t *testing.T) {
 		assert.ErrorIs(t, err, assert.AnError)
 	})
 }
+
+func TestAuthService_Login(t *testing.T) {
+	defaultLoginInput := application.LoginInput{
+		Email:    "user@example.com",
+		Password: "ValidPass123!",
+	}
+
+	t.Run("should login successfully with valid credentials", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(userRepoMock)
+
+		email, err := domain.NewEmail(defaultLoginInput.Email)
+		require.NoError(t, err)
+
+		password, err := domain.NewPassword(defaultLoginInput.Password)
+		require.NoError(t, err)
+
+		user := domain.NewUser(email, password)
+
+		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+			Return(user, nil).
+			Once()
+
+		got, err := authService.Login(t.Context(), defaultLoginInput)
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, got.ID)
+		assert.Equal(t, email, got.Email)
+		assert.WithinDuration(t, time.Now(), got.CreatedAt, time.Second)
+		assert.WithinDuration(t, time.Now(), got.UpdatedAt, time.Second)
+	})
+
+	t.Run("should return error when credentials are invalid", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		authService := application.NewAuthService(userRepoMock)
+
+		email, err := domain.NewEmail(defaultLoginInput.Email)
+		require.NoError(t, err)
+
+		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+			Return(domain.User{}, domain.ErrUserNotFound).
+			Once()
+
+		_, err = authService.Login(t.Context(), defaultLoginInput)
+
+		assert.ErrorIs(t, err, domain.ErrInvalidCredentials)
+	})
+}

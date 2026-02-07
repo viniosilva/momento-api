@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"pinnado/internal/auth/domain"
 )
@@ -41,6 +42,32 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 	}
 
 	return UserOutput{
+		ID:        user.ID.Hex(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}
+
+func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error) {
+	email, err := domain.NewEmail(input.Email)
+	if err != nil {
+		return LoginOutput{}, err
+	}
+
+	user, err := s.userRepository.FindByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return LoginOutput{}, domain.ErrInvalidCredentials
+		}
+		return LoginOutput{}, fmt.Errorf("s.userRepository.FindByEmail: %w", err)
+	}
+
+	if err := user.Password.Compare(input.Password); err != nil {
+		return LoginOutput{}, domain.ErrInvalidCredentials
+	}
+
+	return LoginOutput{
 		ID:        user.ID.Hex(),
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,

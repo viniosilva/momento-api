@@ -21,6 +21,9 @@ func SetupRouter(options SetupRouterOptions) {
 
 	registerHandler := addMiddleware(handler.Register, loggingMiddleware)
 	options.Mux.Handle(fmt.Sprintf("POST %s/auth/register", options.Prefix), registerHandler)
+
+	loginHandler := addMiddleware(handler.Login, loggingMiddleware)
+	options.Mux.Handle(fmt.Sprintf("POST %s/auth/login", options.Prefix), loginHandler)
 }
 
 type middlewareFunc func(http.Handler) http.Handler

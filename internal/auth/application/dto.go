@@ -16,3 +16,15 @@ type UserOutput struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type LoginInput struct {
+	Email    string
+	Password string
+}
+
+type LoginOutput struct {
+	ID        string
+	Email     domain.Email
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
