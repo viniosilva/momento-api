@@ -1,4 +1,4 @@
-# Tarefa: Arquitetura Completa do Módulo de Autenticação (Registro e Login Automático)
+# Tarefa: Arquitetura Completa do Módulo de Autenticação (Registro)
 
 ## 1. Domain Layer
 

@@ -27,6 +27,21 @@ Organize as entregas seguindo rigorosamente este mapeamento:
 - DRY: Reutilize entidades e objetos de valor entre módulos quando fizerem parte do mesmo Contexto Delimitado.
 - Object Calisthenics: Value Objects (VOs) devem garantir sua própria validade. O construtor (ex: `NewEmail`) deve ser o "porteiro", retornando erro imediato se o estado for inválido (Fail-Fast).
 
+## Estratégia
+Faça um plano para que cada tarefa seja como um commit conforme sequencia:
+
+- Criação da entidade se ainda não existir
+  e criação dos indexes no banco se necessário
+  (Nota: Se Value Objects ou entidades já existirem, reutilize-os ao invés de criar novos)
+- Input e output no DTO
+  e interfaces no port.go para o banco de dados
+- Funções na repository
+- Aplicação na service correspondente
+- Structs de request e response com exemplos na presentation,
+  criação da rota no handler com swaggo,
+  cadastro da rota no router.go
+- Orquestração no /cmd
+
 ## Formato de Saída (Markdown Puro para Copiar)
 Para cada tarefa:
 Tarefa: [Nome do Componente]
@@ -35,14 +50,24 @@ Arquivo: caminho/do/arquivo.go
 
 ## Exemplo de Execução
 ### Entrada
-"Como usuário, quero me cadastrar via telefone e senha."
+"Como usuário, quero me cadastrar via e-mail e senha."
 
 ### Saída do Arquiteto (Resumo do fluxo):
 ```
 1. Domain Layer
 Tarefa: Value Object Email
-Definição técnica: Tipo `Email` com construtor para validação RFC 5322 e retorno de valor primitivo.
+Definição técnica: Tipo `Email` com construtor para validação RFC 5322.
 Arquivo: internal/auth/domain/email.go
+
+Tarefa: Value Object Password
+Definição técnica: Tipo `Password` com construtor para as validações:
+  - ter ao menos 8 caracteres
+  - ter no máximo 64 caracteres
+  - ter ao menos uma letra maiúscula
+  - ter ao menos uma letra minúscula
+  - ter ao menos um número
+  - ter ao menos um símbolo (caractere especial. Ex: ! @ # © ® €)
+Arquivo: internal/auth/domain/password.go
 
 Tarefa: Entidade User
 Definição técnica: Entidade `User` composta pelos tipos `Email` e `Password`, garantindo integridade e timestamps.
@@ -53,29 +78,39 @@ Tarefa: MongoDB Indexes
 Definição técnica: Função para garantia de índice único no campo de e-mail na collection de usuários.
 Arquivo: internal/auth/infrastructure/mongo_indexes.go
 
-Tarefa: User Repository (MongoDB)
-Definição técnica: Implementação dos métodos de persistência e busca de usuários.
-Arquivo: internal/auth/infrastructure/user_repository.go
-
 3. Application Layer
 Tarefa: DTOs de Fluxo
-Definição técnica: Estruturas `RegisterInput` (entrada) e `RegisterOutput` (saída segura).
+Definição técnica: Estruturas `UserInput` (entrada) e `UserOutput` (saída segura).
 Arquivo: internal/auth/application/dto.go
 
 Tarefa: Interfaces (Ports)
-Definição técnica: Definição dos contratos para `UserRepository` e `AuthService`.
+Definição técnica: Definição dos contratos para `UserRepository`.
 Arquivo: internal/auth/application/port.go
 
+4. Infrastructure Layer
+Tarefa: User Repository (MongoDB)
+Definição técnica: Implementação dos métodos: Create e ExistsByEmail.
+Arquivo: internal/auth/infrastructure/user_repository.go
+
+5. Application Layer
 Tarefa: Auth Service
 Definição técnica: Implementação do caso de uso de registro. Orquestra validação de domínio (Fail-Fast), unicidade e persistência.
 Arquivo: internal/auth/application/auth_service.go
 
-4. Presentation Layer
+6. Presentation Layer
 Tarefa: Contratos HTTP
 Definição técnica: Estruturas de `Request` com tags de validação e `Response` formatada.
 Arquivo: internal/auth/presentation/request_response.go
 
-5. Orquestração
+Tarefa: Handler HTTP
+Definição técnica: Implementação do handler com anotações Swaggo.
+Arquivo: internal/auth/presentation/handler.go
+
+Tarefa: Router
+Definição técnica: Registro da rota no router com método HTTP, path e handler correspondente.
+Arquivo: internal/auth/presentation/router.go
+
+7. Orquestração
 Tarefa: Dependency Injection (Main)
 Definição técnica: Inicialização e conexão de todas as camadas e provedores no bootstrap.
 Arquivo: cmd/api/main.go
