@@ -9,3 +9,7 @@ import (
 type MongoClient interface {
 	Ping(ctx context.Context, readPreference *readpref.ReadPref) error
 }
+
+type HealthService interface {
+	HealthCheck(ctx context.Context) HealthOutput
+}

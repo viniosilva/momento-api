@@ -14,7 +14,7 @@ import (
 type SetupRouterOptions struct {
 	Mux           *http.ServeMux
 	Prefix        string
-	HealthService *application.HealthService
+	HealthService application.HealthService
 	Logger        *slog.Logger
 }
 
