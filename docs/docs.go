@@ -23,7 +23,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
+        "/api/auth/login": {
             "post": {
                 "description": "Authenticates a user with email and password credentials",
                 "consumes": [
@@ -57,25 +57,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/auth/register": {
+        "/api/auth/register": {
             "post": {
                 "description": "Creates a new user account with email and password",
                 "consumes": [
@@ -109,25 +109,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "User already exists",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/healthcheck": {
+        "/api/healthcheck": {
             "get": {
                 "description": "Returns the health status of the application and database connection",
                 "consumes": [
@@ -155,6 +155,63 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/notes": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a new note associated with the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notes"
+                ],
+                "summary": "Create a new note",
+                "parameters": [
+                    {
+                        "description": "Note content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presentation.CreateNoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/presentation.NoteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid content",
+                        "schema": {
+                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -169,12 +226,30 @@ const docTemplate = `{
                 "HealthStatusValueError"
             ]
         },
-        "presentation.ErrorResponse": {
+        "internal_auth_presentation.ErrorResponse": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string",
                     "example": "user already exists"
+                }
+            }
+        },
+        "internal_notes_presentation.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "invalid note content"
+                }
+            }
+        },
+        "presentation.CreateNoteRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "My important note content"
                 }
             }
         },
@@ -217,6 +292,31 @@ const docTemplate = `{
                 }
             }
         },
+        "presentation.NoteResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "My important note content"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-08T10:30:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-02-08T10:30:00Z"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
         "presentation.RegisterRequest": {
             "type": "object",
             "required": [
@@ -247,6 +347,14 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -254,7 +362,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/api",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Pinnado API",
 	Description:      "API documentation for Pinnado application",

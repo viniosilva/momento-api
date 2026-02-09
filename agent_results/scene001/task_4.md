@@ -1,77 +1,65 @@
-# História de Usuário
+# História de Usuário: Registro de Notas Rápidas
 
-Como um usuário, eu quero registrar textos em novas notas para capturar ideias imediatamente.
+**História:** Como um usuário, eu quero registrar textos em novas notas para capturar ideias imediatamente.
 
-## Necessidade de Negócio
+## 1. Necessidade de Negócio
+O objetivo é fornecer uma ferramenta de captura rápida de informações para usuários autenticados. A prioridade é a **agilidade no registro** e a **segurança na persistência**. O sistema deve evitar a perda de dados em casos de falha de rede e garantir que o conteúdo seja armazenado de forma íntegra e associado exclusivamente ao proprietário da conta, impedindo vulnerabilidades como XSS (Cross-Site Scripting).
 
-O objetivo é permitir que usuários autenticados criem novas notas de forma rápida e intuitiva, capturando ideias e informações importantes no momento em que surgem. O sistema deve garantir que apenas usuários autenticados possam criar notas, validar a integridade dos dados inseridos e oferecer feedback claro sobre o sucesso ou falha da operação. Além disso, deve considerar limites de tamanho de texto e tratamento de erros de conexão ou persistência.
+## 2. Cenários BDD (Dado/Quando/Então)
 
-## Cenários
+### Cenário 01: Criação de Nota com Sucesso (Caminho Feliz)
+**DADO** que estou autenticado no sistema
+**E** estou na página de criação de nota
+**QUANDO** eu inserir um texto válido no campo de conteúdo
+**E** clicar em "Salvar"
+**ENTÃO** o sistema deve persistir a nota associada ao meu `user_id` via transação atômica
+**E** deve retornar um status `201 Created`
+**E** devo visualizar uma notificação de sucesso (Toast)
+**E** ser redirecionado para a tela de edição ou visualização da nota recém-criada.
 
-### Cenário 01: Criação de Nota com Sucesso
+### Cenário 02: Validação de Conteúdo e Feedback em Tempo Real
+**DADO** que estou na página de criação de nota
+**QUANDO** o campo de texto estiver vazio ou apenas com espaços
+**ENTÃO** o botão "Salvar" deve permanecer desabilitado
+**E** ao começar a digitar, o sistema deve exibir um contador de caracteres progressivo (Ex: "150 / 100.000").
 
-**DADO** que estou autenticado no sistema  
-**E** estou na página de criação de nota  
-**QUANDO** eu inserir um texto válido no campo de conteúdo  
-**E** clicar em "Salvar"  
-**ENTÃO** o sistema deve persistir a nota no banco de dados associada ao meu usuário  
-**E** devo receber uma confirmação visual de que a nota foi criada com sucesso  
-**E** ser redirecionado para a visualização da nota criada  
-**E** a nota deve ter um identificador único gerado automaticamente  
-**E** a nota deve ter data e hora de criação registradas automaticamente
+### Cenário 03: Bloqueio por Excesso de Caracteres
+**DADO** que inseri um texto próximo ao limite de 100.000 caracteres
+**QUANDO** eu exceder esse limite
+**ENTÃO** o contador deve ficar vermelho
+**E** o botão "Salvar" deve ser desabilitado
+**E** deve exibir a mensagem: "O conteúdo excede o limite máximo permitido".
 
-### Cenário 02: Tentativa de Criar Nota sem Autenticação
+### Cenário 04: Proteção contra Injeção (Segurança)
+**DADO** que sou um usuário mal-intencionado
+**QUANDO** eu inserir scripts ou tags HTML (ex: `<script>`, `<iframe>`) no corpo da nota
+**E** tentar salvar
+**ENTÃO** o sistema deve sanitizar o conteúdo no backend antes de persistir
+**E** ao carregar a nota, o texto deve ser renderizado como string literal, sem executar comandos no navegador.
 
-**DADO** que não estou autenticado no sistema  
-**QUANDO** eu tentar acessar a página de criação de nota  
-**OU** tentar submeter uma nota via API  
-**ENTÃO** o sistema deve redirecionar para a página de login  
-**OU** retornar erro de autenticação (401 Unauthorized)  
-**E** não deve criar nenhuma nota
+### Cenário 05: Resiliência em Falhas de Conexão
+**DADO** que inseri um conteúdo válido
+**QUANDO** clicar em "Salvar" e houver uma queda de conexão ou erro `500` do servidor
+**ENTÃO** o sistema deve exibir a mensagem: "Erro ao salvar. Verifique sua conexão e tente novamente"
+**E** o conteúdo digitado deve permanecer no campo para que eu não perca o que escrevi.
 
-### Cenário 03: Conteúdo Vazio ou Inválido
+### Cenário 06: Tentativa de Acesso Não Autenticado
+**DADO** que não realizei login
+**QUANDO** eu tentar acessar a URL direta de criação de nota ou enviar um POST para o endpoint de notas
+**ENTÃO** o sistema deve redirecionar para `/login` (Web)
+**OU** retornar erro `401 Unauthorized` (API).
 
-**DADO** que estou autenticado no sistema  
-**E** estou na página de criação de nota  
-**QUANDO** eu tentar salvar uma nota com conteúdo vazio  
-**OU** contendo apenas espaços em branco  
-**ENTÃO** o sistema deve destacar o campo de conteúdo com erro  
-**E** exibir a mensagem: "O conteúdo da nota não pode estar vazio"  
-**E** impedir a criação da nota até que um conteúdo válido seja inserido
+## 3. Definition of Done (DoD)
 
-### Cenário 04: Conteúdo Excede Limite Máximo
+### Funcional e UX
+- [ ] O botão "Salvar" deve exibir estado de *loading* para impedir cliques duplos e duplicidade de IDs.
+- [ ] Interface responsiva: o campo de texto deve ser adaptável a diferentes tamanhos de tela.
+- [ ] O contador de caracteres deve ser atualizado a cada *keystroke*.
 
-**DADO** que estou autenticado no sistema  
-**E** estou na página de criação de nota  
-**QUANDO** eu inserir um texto que exceda o limite máximo de 100.000 caracteres  
-**E** tentar salvar a nota  
-**ENTÃO** o sistema deve exibir uma mensagem informando o limite máximo: "O conteúdo da nota não pode exceder 100.000 caracteres"  
-**E** mostrar um contador de caracteres indicando quantos foram utilizados (ex: "100.001 / 100.000")  
-**E** impedir a criação da nota até que o conteúdo esteja dentro do limite
-
-### Cenário 05: Falha na Persistência
-
-**DADO** que estou autenticado no sistema  
-**E** estou na página de criação de nota  
-**E** inseri um conteúdo válido  
-**QUANDO** ocorrer uma falha na comunicação com o banco de dados  
-**OU** ocorrer um erro interno do servidor  
-**ENTÃO** o sistema deve exibir uma mensagem de erro amigável: "Não foi possível salvar a nota. Tente novamente."  
-**E** manter o conteúdo preenchido no formulário para evitar perda de dados  
-**E** permitir nova tentativa de salvamento
-
-## Definition of Done
-
-- Apenas usuários autenticados podem criar notas
-- O conteúdo da nota é obrigatório e não pode estar vazio ou conter apenas espaços em branco
-- O conteúdo da nota deve ter um limite máximo de 100.000 caracteres (aproximadamente 100-200 KB em UTF-8, permitindo notas longas sem comprometer performance)
-- Cada nota deve ter um identificador único (UUID)
-- Cada nota deve estar associada ao usuário que a criou
-- Cada nota deve ter data e hora de criação registradas automaticamente
-- O sistema deve validar e sanitizar o conteúdo para prevenir ataques XSS
-- Mensagens de erro devem ser claras e específicas, mas não devem expor detalhes técnicos do sistema
-- O botão de salvar deve apresentar estado de "carregando" durante o processo de criação
-- O sistema deve impedir múltiplas submissões simultâneas da mesma nota
-- A nota criada deve ser persistida de forma atômica (transação)
-- O sistema deve retornar o identificador da nota criada após o sucesso
-- Em caso de falha de conexão, o sistema deve oferecer feedback adequado e permitir nova tentativa
+### Técnico e Segurança
+- [ ] **ID da Nota:** Gerar obrigatoriamente um UUID v4 no backend.
+- [ ] **Data/Hora:** O campo `created_at` deve ser preenchido pelo servidor (UTC).
+- [ ] **Autorização:** O backend deve validar se o `user_id` enviado no corpo da requisição condiz com o ID presente no Token JWT.
+- [ ] **Sanitização:** Implementar biblioteca de sanitização (ex: DOMPurify ou similar) para prevenir XSS.
+- [ ] **Performance:** O endpoint de criação deve responder em menos de 300ms em condições normais.
+- [ ] **API:** Retornar o objeto criado no body da resposta e o header `Location` com a URL do novo recurso.

@@ -10,8 +10,8 @@ import (
 const UsersCollectionName = "users"
 
 var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrUserNotFound      = errors.New("user not found")
+	ErrUserAlreadyExists  = errors.New("user already exists")
+	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
@@ -24,7 +24,7 @@ type User struct {
 }
 
 func NewUser(email Email, password Password) User {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	return User{
 		ID:        primitive.NewObjectID(),
@@ -38,5 +38,5 @@ func NewUser(email Email, password Password) User {
 func (u *User) Update(email Email, password Password) {
 	u.Email = email
 	u.Password = password
-	u.UpdatedAt = time.Now()
+	u.UpdatedAt = time.Now().UTC()
 }

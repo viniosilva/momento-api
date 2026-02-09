@@ -16,6 +16,10 @@ import (
 	authdomain "pinnado/internal/auth/domain"
 	authinfra "pinnado/internal/auth/infrastructure"
 	authpres "pinnado/internal/auth/presentation"
+	notesapp "pinnado/internal/notes/application"
+	notesdomain "pinnado/internal/notes/domain"
+	notesinfra "pinnado/internal/notes/infrastructure"
+	notespres "pinnado/internal/notes/presentation"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
@@ -35,6 +39,10 @@ const (
 // @contact.email support@pinnado.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 // @BasePath /api
 func main() {
 	slog.SetDefault(logger.NewLogger("info"))
@@ -67,6 +75,9 @@ func main() {
 	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create MongoDB indexes: %v", err)
 	}
+	if err := notesinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
+		log.Fatalf("failed to create notes indexes: %v", err)
+	}
 
 	log.Println("initializing services...")
 	healthService := application.NewHealthService(mongoClient)
@@ -76,6 +87,10 @@ func main() {
 	userRepository := authinfra.NewUserRepository(userCollection)
 	jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
 	authService := authapp.NewAuthService(userRepository, jwtService)
+
+	noteCollection := db.Collection(notesdomain.NotesCollectionName)
+	noteRepository := notesinfra.NewNoteRepository(noteCollection)
+	noteService := notesapp.NewNoteService(noteRepository)
 
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr
@@ -94,6 +109,14 @@ func main() {
 		Mux:         mux,
 		Prefix:      "/api",
 		AuthService: authService,
+		Logger:      appLogger,
+	})
+
+	notespres.SetupRouter(notespres.SetupRouterOptions{
+		Mux:         mux,
+		Prefix:      "/api",
+		NoteService: noteService,
+		JWTService:  jwtService,
 		Logger:      appLogger,
 	})
 

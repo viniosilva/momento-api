@@ -1,4 +1,3 @@
-basePath: /api
 definitions:
   domain.HealthStatusEnum:
     enum:
@@ -8,10 +7,22 @@ definitions:
     x-enum-varnames:
     - HealthStatusValueOk
     - HealthStatusValueError
-  presentation.ErrorResponse:
+  internal_auth_presentation.ErrorResponse:
     properties:
       message:
         example: user already exists
+        type: string
+    type: object
+  internal_notes_presentation.ErrorResponse:
+    properties:
+      message:
+        example: invalid note content
+        type: string
+    type: object
+  presentation.CreateNoteRequest:
+    properties:
+      content:
+        example: My important note content
         type: string
     type: object
   presentation.HealthResponse:
@@ -37,6 +48,24 @@ definitions:
     properties:
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  presentation.NoteResponse:
+    properties:
+      content:
+        example: My important note content
+        type: string
+      created_at:
+        example: "2026-02-08T10:30:00Z"
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        example: "2026-02-08T10:30:00Z"
+        type: string
+      user_id:
+        example: 507f1f77bcf86cd799439011
         type: string
     type: object
   presentation.RegisterRequest:
@@ -72,7 +101,7 @@ info:
   title: Pinnado API
   version: "1.0"
 paths:
-  /auth/login:
+  /api/auth/login:
     post:
       consumes:
       - application/json
@@ -94,19 +123,19 @@ paths:
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
       summary: Login with email and password
       tags:
       - auth
-  /auth/register:
+  /api/auth/register:
     post:
       consumes:
       - application/json
@@ -128,19 +157,19 @@ paths:
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
         "409":
           description: User already exists
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
-  /healthcheck:
+  /api/healthcheck:
     get:
       consumes:
       - application/json
@@ -159,4 +188,46 @@ paths:
       summary: Health check endpoint
       tags:
       - health
+  /api/notes:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new note associated with the authenticated user
+      parameters:
+      - description: Note content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.CreateNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presentation.NoteResponse'
+        "400":
+          description: Invalid content
+          schema:
+            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new note
+      tags:
+      - notes
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

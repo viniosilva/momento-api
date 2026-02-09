@@ -32,7 +32,7 @@ func NewAuthHandler(authService AuthService) *AuthHandler {
 // @Failure 400 {object} ErrorResponse "Invalid request data"
 // @Failure 409 {object} ErrorResponse "User already exists"
 // @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /auth/register [post]
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -75,7 +75,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} ErrorResponse "Invalid request data"
 // @Failure 401 {object} ErrorResponse "Invalid credentials"
 // @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /auth/login [post]
+// @Router /api/auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
