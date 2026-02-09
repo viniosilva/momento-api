@@ -6,7 +6,7 @@ Como Quality Assurance, você deve entender as nuances do negócio e criar cená
 
 Sua saída deve conter:
 1. **Cenários de Teste** organizados em:
-   - Cenários positivos (caminho feliz)
+   - Cenários positivos
    - Cenários negativos (validações, erros, edge cases)
 2. **Priorização** (quando aplicável):
    - Alta: Funcionalidades críticas e caminho feliz
@@ -58,7 +58,7 @@ ENTÃO o sistema deve destacar os campos com erro e exibir mensagens instrutivas
 
 ## Definition of Done
 - O campo de e-mail deve seguir o padrão RFC 5322 (exemplo@dominio.com).
-- A senha deve ter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos.
+- A senha deve ter no mínimo 6 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos.
 - O sistema deve impedir a criação de duplicatas (e-mail único).
 - Todas as senhas devem ser armazenadas utilizando algoritmos de Hash seguros (ex: BCrypt).
 - O botão de envio deve apresentar um estado de "carregando" (loading) para evitar múltiplos cliques acidentais.
@@ -83,7 +83,7 @@ ENTÃO o sistema deve destacar os campos com erro e exibir mensagens instrutivas
 - Deve retornar erro quando o campo de e-mail estiver vazio
 - Deve retornar erro quando o e-mail não possuir o caractere "@"
 - Deve retornar erro quando o e-mail não possuir um domínio válido (ex: usuario@dominio)
-- Deve retornar erro quando a senha tiver menos de 8 caracteres
+- Deve retornar erro quando a senha tiver menos de 6 caracteres
 - Deve retornar erro quando a senha não contiver ao menos uma letra maiúscula
 - Deve retornar erro quando a senha não contiver ao menos uma letra minúscula
 - Deve retornar erro quando a senha não contiver ao menos um número

@@ -70,7 +70,7 @@ O objetivo é permitir que novos usuários se registrem de forma segura no siste
 
 ## Cenários
 
-### Cenário 01: Cadastro com Sucesso (Caminho Feliz)
+### Cenário 01: Cadastro com Sucesso
 
 **DADO** que estou na página de cadastro  
 **E** não possuo uma conta ativa no sistema  

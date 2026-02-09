@@ -1,0 +1,562 @@
+# Regras de Arquitetura Backend Go - Pinnado
+
+> **Nota**: Este arquivo foca em **implementação**. Para outros contextos, use:
+> - 📋 Planejamento (Plan Mode): `@docs/ARCHITECT_BACKEND_GO.md`
+> - 💼 User Stories: `@docs/PRODUCT_MANAGER.md`
+> - 🧪 QA: `@docs/QUALITY_ASSURANCE.md`
+> - 🔧 Débitos Técnicos: `@docs/TECHNICAL_DEBT.md`
+
+## Stack e Princípios
+
+- **Go 1.25.0** + **MongoDB 8** + **Swagger/OpenAPI**
+- **Arquitetura**: Clean Architecture + DDD
+- **Princípios**: SOLID + Object Calisthenics
+- **Testes**: Cobertura de 100% sempre que possível com testify + mockery v3
+
+## Estrutura de 4 Camadas
+
+```
+/cmd/api/                    # Orquestração e injeção de dependências
+/internal/{module}/
+  /domain/                   # Entidades, Value Objects, erros de negócio
+  /application/              # DTOs, Ports (interfaces), Services
+  /infrastructure/           # Repositories, índices MongoDB, integrações
+  /presentation/             # Handlers HTTP, Request/Response, Router
+/pkg/{util}/                 # Utilitários agnósticos (sem internal/, sem .env)
+/mocks/                      # Gerados por mockery (não editar)
+```
+
+**Fluxo de Dependências**: `Presentation → Application → Domain ← Infrastructure`
+
+---
+
+## 1. DOMAIN LAYER
+
+**Localização**: `internal/{module}/domain/`
+
+**Responsabilidades**:
+- Entidades e Value Objects
+- Regras de negócio puras
+- Erros de domínio
+- Constantes (ex: collection names)
+
+**Regras Críticas**:
+- ❌ NÃO importar: `application`, `infrastructure`, `presentation`
+- ❌ NÃO acessar: banco de dados, APIs externas
+- ✅ Apenas lógica de negócio pura
+- ✅ Value Objects se validam (Fail-Fast)
+
+**Padrões** (ver `internal/auth/domain/` como referência):
+
+```go
+// Erros de domínio (variáveis globais)
+var (
+    ErrUserNotFound = errors.New("user not found")
+    ErrInvalidEmail = errors.New("invalid email format")
+)
+
+// Value Object com validação
+type Email string
+func NewEmail(value string) (Email, error) { /* valida e retorna */ }
+func ValidateEmail(value string) error { /* lógica de validação */ }
+
+// Entidade
+const UsersCollectionName = "users"
+type User struct {
+    ID        primitive.ObjectID `bson:"_id"`
+    Email     Email              `bson:"email"`
+    CreatedAt time.Time          `bson:"created_at"`
+}
+func NewUser(email Email) User { /* construtor */ }
+```
+
+## 2. APPLICATION LAYER
+
+**Localização**: `internal/{module}/application/`
+
+**Arquivos Obrigatórios**:
+- `dto.go` - Input (primitivos) e Output (pode ter VOs)
+- `port.go` - Interfaces para dependências externas
+- `{name}_service.go` - Implementação de casos de uso
+- `{name}_service_test.go` - Testes unitários
+
+**Regras Críticas**:
+- ✅ Context como **primeiro parâmetro** sempre
+- ✅ Wrap errors: `fmt.Errorf("s.repo.Method: %w", err)`
+- ✅ Guard clauses (SEM `else`)
+- ✅ Validar entrada via Value Objects
+- ❌ NÃO importar `presentation` ou `infrastructure` (apenas interfaces)
+- ❌ **NÃO adicionar logging em cada método** (logging é feito via middleware HTTP)
+
+**Padrões** (ver `internal/auth/application/` como referência):
+
+```go
+// dto.go
+type UserInput struct { Email string; Password string }      // primitivos
+type UserOutput struct { ID string; Email domain.Email }     // pode ter VO
+
+// port.go
+type UserRepository interface {
+    Create(ctx context.Context, user domain.User) error
+    ExistsByEmail(ctx context.Context, email domain.Email) (bool, error)
+}
+
+// auth_service.go
+type authService struct { repo UserRepository }              // struct privada
+func NewAuthService(repo UserRepository) *authService { }    // construtor público
+func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
+    // 1. Validar (Fail-Fast)
+    email, err := domain.NewEmail(input.Email)
+    if err != nil { return UserOutput{}, err }
+    
+    // 2. Regras de negócio
+    // 3. Persistir
+    // 4. Retornar DTO
+}
+```
+
+## 3. INFRASTRUCTURE LAYER
+
+**Localização**: `internal/{module}/infrastructure/`
+
+**Arquivos Comuns**:
+- `{name}_repository.go` - Implementa `application/port.go` (acesso a DB)
+- `{name}_service.go` - Serviços externos (JWT, APIs, etc)
+- `{name}_service_test.go` - Testes de services externos
+- `mongo_indexes.go` - Orquestrador de índices
+- `indexes/00N_{name}.go` - Índices específicos
+
+**Regras Críticas**:
+- ✅ Implementar interfaces de `application/port.go`
+- ✅ **Traduzir erros** de infra para erros de domínio
+- ✅ Context como primeiro parâmetro
+- ✅ **Testar services externos** (JWT, APIs) com testes unitários
+- ❌ **NÃO testar repositories** (deixar para testes de integração)
+- ❌ NÃO expor detalhes de implementação (MongoDB, etc)
+- ❌ **NÃO adicionar logging em repositories/services** (logging é feito via middleware HTTP)
+
+**Padrões** (ver `internal/auth/infrastructure/` como referência):
+
+```go
+// user_repository.go
+type userRepository struct { collection *mongo.Collection }
+func NewUserRepository(col *mongo.Collection) *userRepository { }
+func (r *userRepository) Create(ctx context.Context, user domain.User) error {
+    _, err := r.collection.InsertOne(ctx, user)
+    if mongo.IsDuplicateKeyError(err) {
+        return domain.ErrUserAlreadyExists  // traduz erro
+    }
+    return err
+}
+
+// mongo_indexes.go
+func CreateIndexes(ctx context.Context, db *mongo.Database) error {
+    return indexes.CreateUserEmailIndex(ctx, db)
+}
+
+// indexes/001_users_unique_email.go
+func CreateUserEmailIndex(ctx context.Context, db *mongo.Database) error {
+    // mongo.IndexModel com unique
+}
+```
+
+## 4. PRESENTATION LAYER
+
+**Localização**: `internal/{module}/presentation/`
+
+**Arquivos Obrigatórios**:
+- `request_response.go` - Request (tags Swagger) e Response (primitivos)
+- `port.go` - Interface do service (desacoplamento)
+- `handler.go` - Implementação handlers + `MapErrorToHTTPStatus`
+- `handler_test.go` - Testes (um por status code possível)
+- `router.go` - `SetupRouterOptions` + registro de rotas
+- `router_test.go` - Testes de rotas
+
+**Regras Críticas**:
+- ✅ **Swagger COMPLETO** (@Summary, @Description, @Tags, @Param, @Success, @Failure, @Router)
+- ✅ Usar `nethttp.JSON` (utilitário do `pkg`)
+- ✅ Limpar entrada: `strings.TrimSpace`
+- ✅ Separar Request/Response de DTOs
+- ✅ `MapErrorToHTTPStatus` mapeia erros → status codes
+- ✅ Usar `r.Context()` ao chamar service
+- ❌ NÃO colocar lógica de negócio no handler
+- ❌ NÃO expor erros internos (500 = "internal server error")
+
+**Padrões** (ver `internal/auth/presentation/` como referência):
+
+```go
+// request_response.go
+type RegisterRequest struct {
+    Email string `json:"email" example:"user@example.com"`
+}
+type RegisterResponse struct { ID string `json:"id"` }
+type ErrorResponse struct { Message string `json:"message"` }
+
+// port.go
+type AuthService interface {
+    Register(ctx context.Context, input application.UserInput) (application.UserOutput, error)
+}
+
+// handler.go
+type AuthHandler struct { authService AuthService }  // struct pública
+func NewAuthHandler(svc AuthService) *AuthHandler { }
+// @Summary Register a new user
+// @Tags auth
+// @Param request body RegisterRequest true "Registration request"
+// @Success 201 {object} RegisterResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /auth/register [post]
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+    // 1. Parse, 2. Limpar, 3. Chamar service, 4. Retornar
+}
+func MapErrorToHTTPStatus(err error) (int, string) { /* mapeia */ }
+
+// router.go
+type SetupRouterOptions struct { Mux *http.ServeMux; Prefix string; AuthService AuthService; Logger *slog.Logger }
+func SetupRouter(opts SetupRouterOptions) { /* registra rotas */ }
+```
+
+## 5. PKG LAYER (Utilitários Reutilizáveis)
+
+**Localização**: `pkg/{util_name}/`
+
+**Regras ABSOLUTAS**:
+- ❌ **NÃO** importar `internal/`
+- ❌ **NÃO** ler variáveis de ambiente (`.env`)
+- ✅ Agnóstico de domínio (reutilizável entre projetos)
+- ✅ Receber TODAS configurações via parâmetros
+- ✅ **Testar com testes unitários** (100% de cobertura)
+
+**Exemplos** (ver `pkg/` como referência):
+- `pkg/mongodb/client.go` + `client_test.go`
+- `pkg/nethttp/nethttp.go` + `nethttp_test.go`
+- `pkg/logger/logger.go` + `logger_test.go`
+
+## 6. ORQUESTRAÇÃO (cmd/api/main.go)
+
+**Sequência Obrigatória**:
+1. Logger setup
+2. Carregar config (`.env`)
+3. Conectar ao MongoDB
+4. Criar índices
+5. Injetar dependências (Infrastructure → Application → Presentation)
+6. Configurar rotas
+7. Iniciar servidor + graceful shutdown
+
+**Imports com Aliases** (padrão):
+```go
+import (
+    authapp "pinnado/internal/auth/application"
+    authdomain "pinnado/internal/auth/domain"
+    authinfra "pinnado/internal/auth/infrastructure"
+    authpres "pinnado/internal/auth/presentation"
+)
+```
+
+**Ver `cmd/api/main.go` como referência completa.**
+
+## 7. ESTRATÉGIA DE TESTES
+
+**Objetivo**: Cobertura de **100% sempre que possível** (verificar com `go test ./... -cover`)
+
+### 7.1 Por Camada
+
+**Domain Layer**:
+- ✅ Testar construtores, validações, comportamentos
+- ✅ Focar em Fail-Fast (validações falham rapidamente)
+- 🎯 Buscar 100% de cobertura se possível
+
+**Application Layer**:
+- ✅ Testar casos de uso completos com mocks
+- ✅ Caminho feliz + cenários de erro representativos
+- ✅ Usar `mocks.NewMock{Interface}(t)`
+- 🎯 Buscar 100% de cobertura se possível
+
+**Infrastructure Layer**:
+- ✅ **Testar services externos** (JWT, APIs) com testes unitários
+- ❌ **NÃO testar repositories** (deixar para testes de integração)
+- 🎯 Buscar 100% de cobertura se possível (services)
+
+**Presentation Layer**:
+- ✅ Testar parsing, formatação, mapeamento de erros
+- ✅ **Um teste para cada status code possível**
+- ✅ Usar `httptest.NewRecorder()`
+- 🎯 Buscar 100% de cobertura se possível
+
+### 7.2 Padrões de Teste
+
+**Nomenclatura**:
+- Arquivo: `{name}_test.go`
+- Package: `{name}_test` (ex: `application_test`)
+- Função: `TestStructName_MethodName`
+- Subteste: `t.Run("should {behavior} when {condition}")`
+
+**Estrutura** (Arrange-Act-Assert):
+```go
+func TestAuthService_Register(t *testing.T) {
+    defaultInput := application.UserInput{Email: "user@example.com", Password: "Pass123!"}
+    
+    t.Run("should create user successfully", func(t *testing.T) {
+        // Arrange
+        mock := mocks.NewMockUserRepository(t)
+        mock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
+        mock.EXPECT().Create(mock.Anything, mock.Anything).Return(nil).Once()
+        svc := application.NewAuthService(mock, jwtSvc)
+        
+        // Act
+        got, err := svc.Register(t.Context(), defaultInput)
+        
+        // Assert
+        require.NoError(t, err)
+        assert.NotEmpty(t, got.ID)
+    })
+}
+```
+
+**Helpers**:
+```go
+func helperCreateUser(t *testing.T, email, password string) *domain.User {
+    t.Helper()  // SEMPRE usar t.Helper()
+    // ...
+}
+```
+
+### 7.3 Mocks (Mockery v3)
+
+**Geração**: `make mock` (busca interfaces em `**/port.go`, gera em `/mocks`)
+
+**Uso**:
+```go
+mock := mocks.NewMockUserRepository(t)
+mock.EXPECT().
+    ExistsByEmail(mock.Anything, mock.Anything).  // params
+    Return(false, nil).                            // retorno
+    Once()                                         // quantas vezes
+```
+
+**Asserções**:
+- `require.*` - para execução se falhar
+- `assert.*` - continua executando
+- `assert.ErrorIs(t, err, domain.ErrExpected)` - compara erros
+- `assert.WithinDuration(t, expected, got, delta)` - timestamps
+
+## 8. TRATAMENTO DE ERROS
+
+**Fluxo**: Domain → Infrastructure (traduz) → Application (enriquece) → Presentation (mapeia HTTP)
+
+**Princípios**:
+- ✅ Erros de domínio: `var Err... = errors.New("...")`
+- ✅ Comparar: `errors.Is(err, domain.ErrExpected)`
+- ✅ Wrap: `fmt.Errorf("context: %w", err)`
+- ✅ Traduzir erros de infra para domínio
+- ❌ NÃO expor detalhes internos (500 = "internal server error")
+
+**Exemplo**:
+```go
+// Domain: var ErrUserNotFound = errors.New("user not found")
+// Infrastructure: if errors.Is(err, mongo.ErrNoDocuments) { return domain.ErrUserNotFound }
+// Application: return fmt.Errorf("s.repo.Find: %w", err)
+// Presentation: if errors.Is(err, domain.ErrUserNotFound) { return 404, "not found" }
+```
+
+## 9. OBJECT CALISTHENICS & CONVENÇÕES
+
+**Object Calisthenics**:
+- ✅ **Caminho feliz à esquerda** - SEM `else`, use guard clauses
+- ✅ **Baixa indentação** - máximo 2-3 níveis, extraia funções
+- ✅ **Métodos pequenos** - funções focadas e descritivas
+- ✅ **Tell, don't ask** - delegue lógica ao objeto dono dos dados
+
+**Exemplo**:
+```go
+// ❌ MAU (else + indentação)
+if err != nil { return err } else { /* ... */ }
+
+// ✅ BOM (guard clause)
+if err != nil { return err }
+// caminho feliz continua aqui
+```
+
+**Nomenclatura**:
+- Structs públicas: `PascalCase` (ex: `UserRepository`)
+- Structs privadas: `camelCase` (ex: `userRepository`)
+- Construtores: `New{Name}` (ex: `NewUserService`)
+- Interfaces: comportamento (ex: `UserRepository`, não `IUserRepository`)
+- Erros: `Err{Name}` (ex: `ErrUserNotFound`)
+- Arquivos: `{name}.go`, `{name}_test.go`
+- Packages de teste: `{name}_test` (ex: `application_test`)
+
+**Imports** (ordem: stdlib → externos → internos):
+```go
+import (
+    "context"  // stdlib
+    "github.com/stretchr/testify/assert"  // externos
+    "pinnado/internal/auth/domain"  // internos
+)
+```
+
+**Comentários**: Apenas quando necessário. Explique "porquê", não "o quê".
+
+## 10. SEQUÊNCIA DE IMPLEMENTAÇÃO
+
+**Ordem obrigatória** (camada por camada):
+
+1. **Domain**: Value Objects → Entidades → Constantes → Testes
+2. **Application**: DTOs (`dto.go`) → Ports (`port.go`) → Testes (`*_test.go`)
+3. **Infrastructure**: Índices → Repository → Services externos + Testes
+4. **Application**: Service (`*_service.go`) → Verificar testes (`make test`)
+5. **Presentation**: Request/Response → Port → Handler → Router → Testes
+6. **Orquestração**: Injetar em `cmd/api/main.go` → `make swag` → `make run`
+7. **Finalização**: `make mock` → `make test` → Verificar cobertura
+
+## 11. COMANDOS ÚTEIS
+
+```bash
+make          # Instalar deps
+make run      # Executar app
+make test     # Rodar testes
+make mock     # Gerar mocks
+make swag     # Gerar Swagger
+
+# Cobertura
+go test ./... -cover
+go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
+
+# Testes específicos
+go test ./internal/auth/domain -run TestNewEmail
+
+# Race detector
+go test ./... -race
+```
+
+## 12. SWAGGER (Obrigatório em Todos os Endpoints)
+
+**Anotações no `main.go`** (cabeçalho da API):
+```go
+// @title Pinnado API
+// @version 1.0
+// @description API documentation for Pinnado application
+// @BasePath /api
+```
+
+**Anotações nos Handlers** (completas):
+```go
+// Register godoc
+// @Summary Register a new user
+// @Description Creates a new user account with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration request"
+// @Success 201 {object} RegisterResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/register [post]
+```
+
+**Tags nos Structs**:
+```go
+type RegisterRequest struct {
+    Email string `json:"email" example:"user@example.com"`
+}
+```
+
+## 13. LOGGING (Regras Obrigatórias)
+
+**Princípios**:
+- ❌ **NÃO logar em Domain Layer** (lógica pura, sem side effects)
+- ❌ **NÃO logar em Application Layer** (services não devem logar)
+- ❌ **NÃO logar em Infrastructure Layer** (repositories/services externos não devem logar)
+- ✅ **Logging apenas via Middleware HTTP** (em `pkg/nethttp` ou `pkg/middleware`)
+- ✅ **Erros são retornados, não logados** (deixar Presentation/Handler decidir)
+
+**Onde Logar**:
+- ✅ Middleware HTTP: Request/Response (já implementado em `pkg/nethttp`)
+- ✅ `cmd/api/main.go`: Apenas startup/shutdown críticos
+- ❌ Services: NÃO logar (apenas retornar erros)
+- ❌ Repositories: NÃO logar (apenas retornar erros)
+- ❌ Domain: NÃO logar (lógica pura)
+
+**Exemplo Correto**:
+```go
+// ❌ ERRADO (em service)
+func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
+    logger.Info("registering user")  // NÃO FAZER!
+    // ...
+}
+
+// ✅ CORRETO (em service)
+func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
+    // Apenas lógica de negócio, sem logging
+    email, err := domain.NewEmail(input.Email)
+    if err != nil { return UserOutput{}, err }
+    // ...
+}
+```
+
+**Middleware já faz logging**:
+- `pkg/nethttp/LoggingMiddleware` já loga todos os requests HTTP
+- Não precisa adicionar logging manual em services/repositories
+
+## 14. CONFIGURAÇÃO
+
+- **Local**: `internal/shared/infrastructure/config.go`
+- **Função**: `LoadConfig()` lê `.env` com valores default
+- **Estrutura**: `Config { Api ApiConfig; Mongo MongoConfig; JWT JWTConfig }`
+
+## 15. PRINCÍPIOS SOLID
+
+- **S** (Single Responsibility): Uma responsabilidade por struct/arquivo
+- **O** (Open/Closed): Extensível via interfaces
+- **L** (Liskov): Implementações substituíveis por interfaces
+- **I** (Interface Segregation): Interfaces pequenas e focadas
+- **D** (Dependency Inversion): Depender de abstrações, injetar dependências
+
+## 16. ANTI-PATTERNS (Evitar)
+
+**❌ NÃO FAZER**:
+```go
+if err != nil { return err } else { return nil }    // usar guard clause
+import "pinnado/internal/..." // em pkg/              // pkg não importa internal
+func NewService() userService { }                    // retornar *userService
+return err                                           // wrap: fmt.Errorf("ctx: %w", err)
+func (s *service) Create(input Input) error         // falta ctx context.Context
+func NewClient() { host := os.Getenv("HOST") }      // receber como parâmetro
+if user.Email == "" { } // no handler               // validação no domain
+logger.Info("creating user") // em service          // NÃO logar tudo! Middleware já faz
+logger.Debug("validating email") // em domain       // Domain não deve logar
+```
+
+**✅ FAZER**:
+```go
+if err != nil { return fmt.Errorf("s.repo.Create: %w", err) }
+func (s *service) Create(ctx context.Context, input Input) error
+type service struct { }; func NewService() *service
+func NewClient(host, port string) *Client
+// Logging: Middleware HTTP já faz logging de requests/responses
+// Services/Repositories: Apenas retornar erros (sem logging)
+```
+
+---
+
+## RESUMO
+
+**Arquitetura**: Clean Architecture + DDD (4 camadas isoladas)
+- **Domain** (regras de negócio puras)
+- **Application** (casos de uso, DTOs, Ports)
+- **Infrastructure** (repositories, MongoDB, integrações)
+- **Presentation** (handlers HTTP, Swagger, rotas)
+
+**Fluxo**: `Presentation → Application → Domain ← Infrastructure`
+
+**Checklist de Nova Funcionalidade**:
+1. Domain (VOs → Entidades → Testes)
+2. Application (DTOs → Ports → Testes)
+3. Infrastructure (Índices → Repository → Services externos + Testes)
+4. Application (Service → Verificar testes)
+5. Presentation (Req/Res → Handler → Router → Testes)
+6. Orquestração (main.go → Swagger)
+7. Finalização (mock → test → cobertura)
+
+**Este padrão é OBRIGATÓRIO para todas as novas funcionalidades.**

@@ -10,7 +10,7 @@ import (
 
 var (
 	ErrInvalidPassword       = errors.New("invalid password")
-	ErrPasswordTooShort      = errors.New("password must be at least 8 characters")
+	ErrPasswordTooShort      = errors.New("password must be at least 6 characters")
 	ErrPasswordTooLong       = errors.New("password must be less than 64 characters")
 	ErrPasswordMissingUpper  = errors.New("password must contain at least one uppercase letter")
 	ErrPasswordMissingLower  = errors.New("password must contain at least one lowercase letter")

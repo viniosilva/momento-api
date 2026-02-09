@@ -1,117 +1,245 @@
-# Arquiteto Golang (Expert em Clean Architecture)
+# Guia de Planejamento - Cursor Plan Mode
 
-Você atua como um Arquiteto de Software sênior, especialista em Go (Golang), Clean Architecture e DDD. Seu objetivo é decompor Histórias de Usuário em tarefas técnicas detalhadas, descrevendo contratos, estruturas e responsabilidades em todas as camadas.
+Use este guia para **decompor User Stories em tarefas técnicas** antes de implementar.
 
-## Restrição de Escopo
-VOCÊ É UM DESIGNER, NÃO UM CODIFICADOR. Sua saída deve descrever "o quê" criar e "onde" criar, definindo assinaturas de métodos e campos de structs, mas delegando a implementação da lógica interna para o agente backend.
+> **Objetivo**: Criar um plano estruturado que possa ser executado passo a passo seguindo `.cursorrules`.
 
-## Estratégia de Desacoplamento (/pkg vs internal)
-- **pkg/**: Contém utilitários globais e técnicos (Logger, DB Drivers, Telemetria). 
-  - **REGRA:** Pacotes em `/pkg` devem ser agnósticos. Eles NÃO podem importar `internal` nem ler variáveis de ambiente diretamente. Devem receber configurações apenas via parâmetros (Injeção de Dependência).
-- **internal/**: Contém o Core do negócio (Domain, Application, Presentation).
-- **cmd/**: Onde a orquestração acontece. Lê as configurações (.env) e injeta as dependências nos pacotes de `/pkg` e `internal`.
+---
 
-## Diretrizes de Estrutura de Pastas
-Organize as entregas seguindo rigorosamente este mapeamento:
-- Database: db/migrations/[seq]_[name].[up/down].sql
-- Domain: internal/[module]/domain/ (Entidades, Value Objects e regras de negócio puras).
-- Infrastructure: internal/[module]/infrastructure/ (Repositórios e clientes externos).
-- Application: internal/[module]/application/ (Services/Usecases, DTOs de entrada/saída e Interfaces/Ports).
-- Presentation: internal/[module]/presentation/ (Handlers HTTP, Request/Response e Router).
-- Utilitários: pkg/[util-name]/ (Ex: pkg/logger, pkg/mongodb).
+## 📋 Checklist de Decomposição
 
-## Regras de Ouro
-- Segurança: Proibido expor senhas ou PII em outputs/responses. Use Value Objects para mascaramento ou hashing.
-- Encapsulamento: Domain é isolado. Application define interfaces (Ports). Infrastructure implementa interfaces.
-- Validação: Regras de negócio no Domain; Regras de contrato/formato na Presentation.
-- DRY: Reutilize entidades e objetos de valor entre módulos quando fizerem parte do mesmo Contexto Delimitado.
-- Object Calisthenics: Value Objects (VOs) devem garantir sua própria validade. O construtor (ex: `NewEmail`) deve ser o "porteiro", retornando erro imediato se o estado for inválido (Fail-Fast).
+Para cada User Story, decomponha em **7 fases** seguindo Clean Architecture:
 
-## Estratégia
-Faça um plano para que cada tarefa seja como um commit conforme sequencia:
+### **1. Domain Layer** (Regras de Negócio)
+- [ ] Identificar Value Objects necessários (Email, Password, etc)
+- [ ] Identificar Entidades (User, Product, etc)
+- [ ] Definir erros de domínio (`var Err...`)
+- [ ] Definir constantes (collection names, status, etc)
 
-- Criação da entidade se ainda não existir
-  e criação dos indexes no banco se necessário
-  (Nota: Se Value Objects ou entidades já existirem, reutilize-os ao invés de criar novos)
-- Input e output no DTO
-  e interfaces no port.go para o banco de dados
-- Funções na repository
-- Aplicação na service correspondente
-- Structs de request e response com exemplos na presentation,
-  criação da rota no handler com swaggo,
-  cadastro da rota no router.go
-- Orquestração no /cmd
+### **2. Application Layer - Contratos** (DTOs e Interfaces)
+- [ ] Definir Input DTOs (tipos primitivos)
+- [ ] Definir Output DTOs (pode ter Value Objects)
+- [ ] Definir interfaces (Ports) para dependências
 
-## Formato de Saída (Markdown Puro para Copiar)
-Para cada tarefa:
-Tarefa: [Nome do Componente]
-Definição técnica: (Assinatura do método, campos da struct ou contrato da interface)
-Arquivo: caminho/do/arquivo.go
+### **3. Infrastructure Layer** (Persistência e Integrações)
+- [ ] Criar índices MongoDB (se necessário)
+- [ ] Implementar Repository (se necessário)
+- [ ] Implementar Services externos (JWT, APIs, etc)
 
-## Exemplo de Execução
-### Entrada
-"Como usuário, quero me cadastrar via e-mail e senha."
+### **4. Application Layer - Lógica** (Casos de Uso)
+- [ ] Implementar Service com orquestração
+- [ ] Validações via Value Objects
+- [ ] Lógica de negócio
 
-### Saída do Arquiteto (Resumo do fluxo):
+### **5. Presentation Layer** (HTTP Interface)
+- [ ] Definir Request structs (com tags Swagger)
+- [ ] Definir Response structs (primitivos)
+- [ ] Definir interface do service (Port)
+- [ ] Implementar Handler com Swagger completo
+- [ ] Mapear erros para HTTP status codes
+- [ ] Registrar rotas no Router
+
+### **6. Orquestração** (Injeção de Dependências)
+- [ ] Atualizar `cmd/api/main.go` com novo módulo
+- [ ] Injetar dependências (Infrastructure → Application → Presentation)
+- [ ] Registrar rotas
+
+### **7. Finalização**
+- [ ] Gerar Swagger: `make swag`
+- [ ] Gerar mocks: `make mock`
+- [ ] Executar testes: `make test`
+
+---
+
+## 📝 Formato de Output
+
+Para cada fase, liste as tarefas assim:
+
 ```
-1. Domain Layer
-Tarefa: Value Object Email
-Definição técnica: Tipo `Email` com construtor para validação RFC 5322.
-Arquivo: internal/auth/domain/email.go
+### Fase [N]: [Nome da Fase]
 
-Tarefa: Value Object Password
-Definição técnica: Tipo `Password` com construtor para as validações:
-  - ter ao menos 8 caracteres
-  - ter no máximo 64 caracteres
-  - ter ao menos uma letra maiúscula
-  - ter ao menos uma letra minúscula
-  - ter ao menos um número
-  - ter ao menos um símbolo (caractere especial. Ex: ! @ # © ® €)
-Arquivo: internal/auth/domain/password.go
+**Tarefa**: [Nome do componente]
+**Arquivo**: `caminho/do/arquivo.go`
+**Definição**:
+- [O que criar: struct, função, interface]
+- [Campos/parâmetros principais]
+- [Validações ou regras principais]
+```
 
-Tarefa: Entidade User
-Definição técnica: Entidade `User` composta pelos tipos `Email` e `Password`, garantindo integridade e timestamps.
-Arquivo: internal/auth/domain/user.go
+---
 
-2. Infrastructure Layer
-Tarefa: MongoDB Indexes
-Definição técnica: Função para garantia de índice único no campo de e-mail na collection de usuários.
-Arquivo: internal/auth/infrastructure/mongo_indexes.go
+## 🎯 Exemplo Prático
 
-3. Application Layer
-Tarefa: DTOs de Fluxo
-Definição técnica: Estruturas `UserInput` (entrada) e `UserOutput` (saída segura).
-Arquivo: internal/auth/application/dto.go
+**Input**: "Como usuário, quero me cadastrar via e-mail e senha"
 
-Tarefa: Interfaces (Ports)
-Definição técnica: Definição dos contratos para `UserRepository`.
-Arquivo: internal/auth/application/port.go
+**Output do Plan Mode**:
 
-4. Infrastructure Layer
-Tarefa: User Repository (MongoDB)
-Definição técnica: Implementação dos métodos: Create e ExistsByEmail.
-Arquivo: internal/auth/infrastructure/user_repository.go
+```markdown
+## Plano Técnico: Cadastro de Usuário
 
-5. Application Layer
-Tarefa: Auth Service
-Definição técnica: Implementação do caso de uso de registro. Orquestra validação de domínio (Fail-Fast), unicidade e persistência.
-Arquivo: internal/auth/application/auth_service.go
+### Fase 1: Domain Layer
 
-6. Presentation Layer
-Tarefa: Contratos HTTP
-Definição técnica: Estruturas de `Request` com tags de validação e `Response` formatada.
-Arquivo: internal/auth/presentation/request_response.go
+**Tarefa**: Value Object Email
+**Arquivo**: `internal/auth/domain/email.go`
+**Definição**:
+- Type: `Email string`
+- Construtor: `NewEmail(value string) (Email, error)`
+- Validação: RFC 5322 (usar `mail.ParseAddress`)
+- Normalização: lowercase e trim
 
-Tarefa: Handler HTTP
-Definição técnica: Implementação do handler com anotações Swaggo.
-Arquivo: internal/auth/presentation/handler.go
+**Tarefa**: Value Object Password  
+**Arquivo**: `internal/auth/domain/password.go`
+**Definição**:
+- Type: `Password string`
+- Construtor: `NewPassword(plain string) (Password, error)`
+- Validações: min 6, max 64, uppercase, lowercase, número, símbolo
+- Hash: bcrypt com cost 12
 
-Tarefa: Router
-Definição técnica: Registro da rota no router com método HTTP, path e handler correspondente.
-Arquivo: internal/auth/presentation/router.go
+**Tarefa**: Entidade User
+**Arquivo**: `internal/auth/domain/user.go`
+**Definição**:
+- Struct: `User { ID, Email, Password, CreatedAt, UpdatedAt }`
+- Construtor: `NewUser(email Email, password Password) User`
+- Constante: `UsersCollectionName = "users"`
 
-7. Orquestração
-Tarefa: Dependency Injection (Main)
-Definição técnica: Inicialização e conexão de todas as camadas e provedores no bootstrap.
-Arquivo: cmd/api/main.go
+**Tarefa**: Erros de Domínio
+**Arquivo**: `internal/auth/domain/user.go`
+**Definição**:
+- `ErrUserAlreadyExists = errors.New("user already exists")`
+- `ErrUserNotFound = errors.New("user not found")`
+
+---
+
+### Fase 2: Application Layer - Contratos
+
+**Tarefa**: DTOs
+**Arquivo**: `internal/auth/application/dto.go`
+**Definição**:
+- Input: `UserInput { Email string; Password string }`
+- Output: `UserOutput { ID string; Email domain.Email; CreatedAt time.Time }`
+
+**Tarefa**: Interfaces (Ports)
+**Arquivo**: `internal/auth/application/port.go`
+**Definição**:
+```go
+type UserRepository interface {
+    Create(ctx context.Context, user domain.User) error
+    ExistsByEmail(ctx context.Context, email domain.Email) (bool, error)
+}
+```
+
+---
+
+### Fase 3: Infrastructure Layer
+
+**Tarefa**: MongoDB Index
+**Arquivo**: `internal/auth/infrastructure/indexes/001_users_unique_email.go`
+**Definição**:
+- Função: `CreateUserEmailIndex(ctx, db) error`
+- Index: `email` field com `unique: true`
+
+**Tarefa**: Repository
+**Arquivo**: `internal/auth/infrastructure/user_repository.go`
+**Definição**:
+- Struct privada: `userRepository { collection *mongo.Collection }`
+- Implementar: `Create()`, `ExistsByEmail()`
+- Traduzir: `mongo.IsDuplicateKeyError` → `domain.ErrUserAlreadyExists`
+
+---
+
+### Fase 4: Application Layer - Service
+
+**Tarefa**: Auth Service
+**Arquivo**: `internal/auth/application/auth_service.go`
+**Definição**:
+- Struct privada: `authService { userRepository UserRepository }`
+- Método: `Register(ctx context.Context, input UserInput) (UserOutput, error)`
+- Fluxo:
+  1. Validar email via `domain.NewEmail()`
+  2. Validar senha via `domain.NewPassword()`
+  3. Verificar se email existe via `ExistsByEmail()`
+  4. Criar user via `Create()`
+  5. Retornar `UserOutput`
+
+---
+
+### Fase 5: Presentation Layer
+
+**Tarefa**: Request/Response
+**Arquivo**: `internal/auth/presentation/request_response.go`
+**Definição**:
+- `RegisterRequest { Email string; Password string }` com tags Swagger
+- `RegisterResponse { ID string; Email string }`
+- `ErrorResponse { Message string }`
+
+**Tarefa**: Port
+**Arquivo**: `internal/auth/presentation/port.go`
+**Definição**:
+```go
+type AuthService interface {
+    Register(ctx, input application.UserInput) (application.UserOutput, error)
+}
+```
+
+**Tarefa**: Handler
+**Arquivo**: `internal/auth/presentation/handler.go`
+**Definição**:
+- Struct: `AuthHandler { authService AuthService }`
+- Método: `Register(w http.ResponseWriter, r *http.Request)`
+- Swagger completo com @Summary, @Tags, @Param, @Success, @Failure, @Router
+- Função: `MapErrorToHTTPStatus(err error) (int, string)`
+
+**Tarefa**: Router
+**Arquivo**: `internal/auth/presentation/router.go`
+**Definição**:
+- Função: `SetupRouter(opts SetupRouterOptions)`
+- Registrar: `POST /api/auth/register`
+
+---
+
+### Fase 6: Orquestração
+
+**Tarefa**: Main
+**Arquivo**: `cmd/api/main.go`
+**Definição**:
+1. Criar índices: `authinfra.CreateIndexes(ctx, db)`
+2. Instanciar repository: `authinfra.NewUserRepository(collection)`
+3. Instanciar service: `authapp.NewAuthService(repo)`
+4. Configurar rotas: `authpres.SetupRouter(opts)`
+
+---
+
+### Fase 7: Finalização
+
+**Comandos**:
+```bash
+make swag  # Gerar Swagger
+make mock  # Gerar mocks
+make test  # Executar testes
+```
+
+---
+
+## 💡 Dicas para Plan Mode
+
+1. **Seja específico**: Liste arquivos exatos, não "criar arquivos necessários"
+2. **Siga a ordem**: Domain → Application → Infrastructure → Application → Presentation → Main
+3. **Reutilize**: Sempre verificar se Value Objects/Entidades já existem
+4. **Foque no contrato**: Assinaturas de métodos, campos de structs, não implementação
+5. **Pense em testes**: Cada componente deve ser testável
+
+---
+
+## 🔄 Fluxo de Trabalho
+
+```
+User Story
+    ↓
+Este guia (decomposição)
+    ↓
+Plan Mode output estruturado
+    ↓
+Implementação seguindo .cursorrules
+    ↓
+Feature completa
 ```

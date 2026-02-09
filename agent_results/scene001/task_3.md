@@ -4,7 +4,7 @@ Como um usuário, eu quero recuperar minha senha via e-mail para retomar o acess
 ## Necessidade de Negócio
 O objetivo é fornecer uma forma segura e autônoma para que o usuário recupere o acesso à sua conta. O processo deve garantir que apenas o proprietário do e-mail possa redefinir a senha, protegendo a plataforma contra tentativas de invasão e garantindo que o usuário não fique bloqueado fora do sistema.
 
-### Cenário 01: Solicitação de Recuperação com Sucesso (Caminho Feliz)
+### Cenário 01: Solicitação de Recuperação com Sucesso
 DADO que estou na página de "Esqueci minha senha"
 QUANDO eu inserir meu e-mail cadastrado e clicar em "Enviar link de recuperação"
 ENTÃO o sistema deve enviar um e-mail com um token único e temporário para redefinição
