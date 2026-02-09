@@ -49,7 +49,7 @@ const (
 	defaultMongoRetryDelay     = 2 * time.Second
 	defaultMongoConnectTimeout = 10 * time.Second
 	defaultJWTSecret           = "your-secret-key-change-in-production"
-	defaultJWTExpiration       = 24 * time.Hour
+	defaultJWTExpiration       = 12 * time.Hour
 )
 
 type LoadConfigOption func(*loadConfigOptions)

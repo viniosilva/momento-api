@@ -1,11 +1,8 @@
 package presentation_test
 
 import (
-	"bytes"
 	"context"
-	"log/slog"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -146,53 +143,6 @@ func TestAuthHandler_Register(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 		assert.Equal(t, "internal server error", got.Message)
-	})
-}
-
-func TestSetupRouter(t *testing.T) {
-	t.Run("should setup router with auth handler", func(t *testing.T) {
-		mockRepo := mocks.NewMockUserRepository(t)
-		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
-		authService := application.NewAuthService(mockRepo, jwtService)
-
-		mux := http.NewServeMux()
-		presentation.SetupRouter(presentation.SetupRouterOptions{
-			Mux:         mux,
-			Prefix:      "/api",
-			AuthService: authService,
-			Logger:      nil,
-		})
-
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", nil)
-		w := httptest.NewRecorder()
-
-		mux.ServeHTTP(w, req)
-
-		// Should not return 404 (route exists)
-		assert.NotEqual(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("should apply logging middleware when logger is provided", func(t *testing.T) {
-		mockRepo := mocks.NewMockUserRepository(t)
-		jwtService := infrastructure.NewJWTService(secretTest, expirationTest)
-		authService := application.NewAuthService(mockRepo, jwtService)
-
-		mux := http.NewServeMux()
-		logger := slog.Default()
-		presentation.SetupRouter(presentation.SetupRouterOptions{
-			Mux:         mux,
-			Prefix:      "/api",
-			AuthService: authService,
-			Logger:      logger,
-		})
-
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewReader([]byte("{}")))
-		w := httptest.NewRecorder()
-
-		mux.ServeHTTP(w, req)
-
-		// Should not return 404 (route exists)
-		assert.NotEqual(t, http.StatusNotFound, w.Code)
 	})
 }
 

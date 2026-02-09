@@ -30,7 +30,7 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
-		assert.Equal(t, 5*time.Second, got.JWT.Expiration)
+		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
 	})
 
 	t.Run("should load values from .env.example file", func(t *testing.T) {
@@ -52,7 +52,7 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
-		assert.Equal(t, 5*time.Second, got.JWT.Expiration)
+		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
 	})
 
 	t.Run("should return default max retries when conversion fails", func(t *testing.T) {

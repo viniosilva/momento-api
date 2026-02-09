@@ -20,9 +20,12 @@ var (
 )
 
 const (
+	// minPasswordLength defines minimum password length to ensure basic security
 	minPasswordLength = 6
+	// maxPasswordLength prevents DoS attacks via bcrypt computation time
 	maxPasswordLength = 64
-	bcryptCost        = 12
+	// bcryptCost balances security and performance (2^12 iterations)
+	bcryptCost = 12
 )
 
 type Password string

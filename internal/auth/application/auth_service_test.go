@@ -225,8 +225,8 @@ func TestAuthService_Login(t *testing.T) {
 
 	t.Run("should return error when jwtService.Generate fails", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
-		mockJWTService := &mockJWTService{generateError: assert.AnError}
-		authService := application.NewAuthService(userRepoMock, mockJWTService)
+		jwtMock := mocks.NewMockJWTService(t)
+		authService := application.NewAuthService(userRepoMock, jwtMock)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
@@ -240,16 +240,12 @@ func TestAuthService_Login(t *testing.T) {
 			Return(user, nil).
 			Once()
 
+		jwtMock.EXPECT().Generate(mock.Anything, mock.Anything).
+			Return("", assert.AnError).
+			Once()
+
 		_, err = authService.Login(t.Context(), defaultLoginInput)
 
 		assert.ErrorIs(t, err, assert.AnError)
 	})
-}
-
-type mockJWTService struct {
-	generateError error
-}
-
-func (m *mockJWTService) Generate(userID string, email domain.Email) (string, error) {
-	return "", m.generateError
 }
