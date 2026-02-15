@@ -31,9 +31,20 @@ func SetupRouter(options SetupRouterOptions) {
 		authMiddleware,
 	)
 
+	listNotesHandler := addMiddlewares(
+		handler.ListNotes,
+		loggingMiddleware,
+		authMiddleware,
+	)
+
 	options.Mux.Handle(
 		fmt.Sprintf("POST %s/notes", options.Prefix),
 		createNoteHandler,
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/notes", options.Prefix),
+		listNotesHandler,
 	)
 }
 

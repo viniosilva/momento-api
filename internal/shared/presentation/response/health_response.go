@@ -1,4 +1,4 @@
-package presentation
+package response
 
 import "pinnado/internal/shared/domain"
 

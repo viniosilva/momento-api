@@ -110,7 +110,7 @@ func TestAuthHandler_Register(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-		assert.Equal(t, "password must be at least 8 characters", got.Message)
+		assert.Equal(t, "password must be at least 6 characters", got.Message)
 	})
 
 	t.Run("should return conflict when user already exists", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestMapErrorToHTTPStatus(t *testing.T) {
 			err      error
 			expected string
 		}{
-			{domain.ErrPasswordTooShort, "password must be at least 8 characters"},
+			{domain.ErrPasswordTooShort, "password must be at least 6 characters"},
 			{domain.ErrPasswordTooLong, "password must be less than 64 characters"},
 			{domain.ErrPasswordMissingUpper, "password must contain at least one uppercase letter"},
 			{domain.ErrPasswordMissingLower, "password must contain at least one lowercase letter"},

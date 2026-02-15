@@ -1,5 +1,11 @@
 package presentation
 
+import (
+	"pinnado/internal/notes/application"
+	"pinnado/internal/shared/presentation/response"
+	"time"
+)
+
 type CreateNoteRequest struct {
 	Content string `json:"content" example:"My important note content"`
 }
@@ -12,6 +18,17 @@ type NoteResponse struct {
 	UpdatedAt string `json:"updated_at" example:"2026-02-08T10:30:00Z"`
 }
 
-type ErrorResponse struct {
-	Message string `json:"message" example:"invalid note content"`
+type ListNotesResponse struct {
+	Data       []NoteResponse              `json:"data"`
+	Pagination response.PaginationResponse `json:"pagination"`
+}
+
+func NoteApplicationToResponse(note application.NoteOutput) NoteResponse {
+	return NoteResponse{
+		ID:        note.ID,
+		UserID:    note.UserID,
+		Content:   string(note.Content),
+		CreatedAt: note.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: note.UpdatedAt.Format(time.RFC3339),
+	}
 }

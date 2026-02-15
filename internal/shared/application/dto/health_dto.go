@@ -1,4 +1,4 @@
-package application
+package dto
 
 import "pinnado/internal/shared/domain"
 

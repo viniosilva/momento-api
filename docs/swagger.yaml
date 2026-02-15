@@ -7,30 +7,26 @@ definitions:
     x-enum-varnames:
     - HealthStatusValueOk
     - HealthStatusValueError
-  internal_auth_presentation.ErrorResponse:
-    properties:
-      message:
-        example: user already exists
-        type: string
-    type: object
-  internal_notes_presentation.ErrorResponse:
-    properties:
-      message:
-        example: invalid note content
-        type: string
-    type: object
   presentation.CreateNoteRequest:
     properties:
       content:
         example: My important note content
         type: string
     type: object
-  presentation.HealthResponse:
+  presentation.ErrorResponse:
     properties:
-      status:
-        allOf:
-        - $ref: '#/definitions/domain.HealthStatusEnum'
-        example: ok
+      message:
+        example: user already exists
+        type: string
+    type: object
+  presentation.ListNotesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/presentation.NoteResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
     type: object
   presentation.LoginRequest:
     properties:
@@ -89,6 +85,34 @@ definitions:
         example: 507f1f77bcf86cd799439011
         type: string
     type: object
+  response.ErrorResponse:
+    properties:
+      message:
+        example: error message
+        type: string
+    type: object
+  response.HealthResponse:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.HealthStatusEnum'
+        example: ok
+    type: object
+  response.PaginationResponse:
+    properties:
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_count:
+        example: 100
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
 info:
   contact:
     email: support@pinnado.com
@@ -123,15 +147,15 @@ paths:
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
       summary: Login with email and password
       tags:
       - auth
@@ -157,15 +181,15 @@ paths:
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
         "409":
           description: User already exists
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/internal_auth_presentation.ErrorResponse'
+            $ref: '#/definitions/presentation.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -180,15 +204,65 @@ paths:
         "200":
           description: Health status response
           schema:
-            $ref: '#/definitions/presentation.HealthResponse'
+            $ref: '#/definitions/response.HealthResponse'
         "503":
           description: Health status response
           schema:
-            $ref: '#/definitions/presentation.HealthResponse'
+            $ref: '#/definitions/response.HealthResponse'
       summary: Health check endpoint
       tags:
       - health
   /api/notes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of notes for the authenticated user
+        with sorting options
+      parameters:
+      - default: 1
+        description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 'Page size (default: 10, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      - default: created_at
+        description: 'Sort field: created_at, updated_at (default: created_at)'
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: 'Sort order: asc, desc (default: desc)'
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.ListNotesResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: List user notes
+      tags:
+      - notes
     post:
       consumes:
       - application/json
@@ -210,15 +284,15 @@ paths:
         "400":
           description: Invalid content
           schema:
-            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/internal_notes_presentation.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - Bearer: []
       summary: Create a new note

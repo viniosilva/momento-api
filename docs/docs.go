@@ -57,19 +57,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     }
                 }
@@ -109,19 +109,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "User already exists",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_auth_presentation.ErrorResponse"
+                            "$ref": "#/definitions/presentation.ErrorResponse"
                         }
                     }
                 }
@@ -144,19 +144,93 @@ const docTemplate = `{
                     "200": {
                         "description": "Health status response",
                         "schema": {
-                            "$ref": "#/definitions/presentation.HealthResponse"
+                            "$ref": "#/definitions/response.HealthResponse"
                         }
                     },
                     "503": {
                         "description": "Health status response",
                         "schema": {
-                            "$ref": "#/definitions/presentation.HealthResponse"
+                            "$ref": "#/definitions/response.HealthResponse"
                         }
                     }
                 }
             }
         },
         "/api/notes": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of notes for the authenticated user with sorting options",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notes"
+                ],
+                "summary": "List user notes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size (default: 10, max: 100)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Sort field: created_at, updated_at (default: created_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order: asc, desc (default: desc)",
+                        "name": "sort_order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/presentation.ListNotesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -195,19 +269,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid content",
                         "schema": {
-                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_notes_presentation.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -226,24 +300,6 @@ const docTemplate = `{
                 "HealthStatusValueError"
             ]
         },
-        "internal_auth_presentation.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "user already exists"
-                }
-            }
-        },
-        "internal_notes_presentation.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "invalid note content"
-                }
-            }
-        },
         "presentation.CreateNoteRequest": {
             "type": "object",
             "properties": {
@@ -253,16 +309,26 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.HealthResponse": {
+        "presentation.ErrorResponse": {
             "type": "object",
             "properties": {
-                "status": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/domain.HealthStatusEnum"
-                        }
-                    ],
-                    "example": "ok"
+                "message": {
+                    "type": "string",
+                    "example": "user already exists"
+                }
+            }
+        },
+        "presentation.ListNotesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presentation.NoteResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
                 }
             }
         },
@@ -344,6 +410,49 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "error message"
+                }
+            }
+        },
+        "response.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.HealthStatusEnum"
+                        }
+                    ],
+                    "example": "ok"
+                }
+            }
+        },
+        "response.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
                 }
             }
         }

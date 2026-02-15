@@ -2,17 +2,17 @@ package presentation
 
 import (
 	"net/http"
-	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/domain"
+	"pinnado/internal/shared/presentation/response"
 	"pinnado/pkg/nethttp"
 )
 
-type HealthHandler struct {
-	healthService application.HealthService
+type healthHandler struct {
+	healthService HealthService
 }
 
-func NewHealthHandler(healthService application.HealthService) *HealthHandler {
-	return &HealthHandler{
+func NewHealthHandler(healthService HealthService) *healthHandler {
+	return &healthHandler{
 		healthService: healthService,
 	}
 }
@@ -23,13 +23,13 @@ func NewHealthHandler(healthService application.HealthService) *HealthHandler {
 // @Tags health
 // @Accept json
 // @Produce json
-// @Success 200 {object} HealthResponse "Health status response"
-// @Failure 503 {object} HealthResponse "Health status response"
+// @Success 200 {object} response.HealthResponse "Health status response"
+// @Failure 503 {object} response.HealthResponse "Health status response"
 // @Router /api/healthcheck [get]
-func (h *HealthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+func (h *healthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	output := h.healthService.HealthCheck(r.Context())
 
-	response := HealthResponse{
+	response := response.HealthResponse{
 		Status: output.Status,
 	}
 	statusCode := http.StatusOK

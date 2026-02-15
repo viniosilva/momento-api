@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
-	"pinnado/internal/shared/application"
 	"pinnado/pkg/nethttp"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -14,7 +13,7 @@ import (
 type SetupRouterOptions struct {
 	Mux           *http.ServeMux
 	Prefix        string
-	HealthService application.HealthService
+	HealthService HealthService
 	Logger        *slog.Logger
 }
 

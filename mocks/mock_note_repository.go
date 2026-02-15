@@ -7,8 +7,11 @@ package mocks
 import (
 	"context"
 	"pinnado/internal/notes/domain"
+	"pinnado/internal/shared/application/dto"
+	"pinnado/internal/shared/infrastructure"
 
 	mock "github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // NewMockNoteRepository creates a new instance of MockNoteRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -91,6 +94,78 @@ func (_c *MockNoteRepository_Create_Call) Return(err error) *MockNoteRepository_
 }
 
 func (_c *MockNoteRepository_Create_Call) RunAndReturn(run func(ctx context.Context, note domain.Note) error) *MockNoteRepository_Create_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListByUserID provides a mock function for the type MockNoteRepository
+func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (dto.Paginated[domain.Note], error) {
+	ret := _mock.Called(ctx, userID, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListByUserID")
+	}
+
+	var r0 dto.Paginated[domain.Note]
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) (dto.Paginated[domain.Note], error)); ok {
+		return returnFunc(ctx, userID, params)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) dto.Paginated[domain.Note]); ok {
+		r0 = returnFunc(ctx, userID, params)
+	} else {
+		r0 = ret.Get(0).(dto.Paginated[domain.Note])
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) error); ok {
+		r1 = returnFunc(ctx, userID, params)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockNoteRepository_ListByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByUserID'
+type MockNoteRepository_ListByUserID_Call struct {
+	*mock.Call
+}
+
+// ListByUserID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID primitive.ObjectID
+//   - params infrastructure.ListParams
+func (_e *MockNoteRepository_Expecter) ListByUserID(ctx interface{}, userID interface{}, params interface{}) *MockNoteRepository_ListByUserID_Call {
+	return &MockNoteRepository_ListByUserID_Call{Call: _e.mock.On("ListByUserID", ctx, userID, params)}
+}
+
+func (_c *MockNoteRepository_ListByUserID_Call) Run(run func(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams)) *MockNoteRepository_ListByUserID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 primitive.ObjectID
+		if args[1] != nil {
+			arg1 = args[1].(primitive.ObjectID)
+		}
+		var arg2 infrastructure.ListParams
+		if args[2] != nil {
+			arg2 = args[2].(infrastructure.ListParams)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteRepository_ListByUserID_Call) Return(paginated dto.Paginated[domain.Note], err error) *MockNoteRepository_ListByUserID_Call {
+	_c.Call.Return(paginated, err)
+	return _c
+}
+
+func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (dto.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

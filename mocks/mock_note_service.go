@@ -71,7 +71,7 @@ type MockNoteService_CreateNote_Call struct {
 
 // CreateNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.CreateNoteInput
+//   - input application.NoteInput
 func (_e *MockNoteService_Expecter) CreateNote(ctx interface{}, input interface{}) *MockNoteService_CreateNote_Call {
 	return &MockNoteService_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, input)}
 }
@@ -100,6 +100,72 @@ func (_c *MockNoteService_CreateNote_Call) Return(noteOutput application.NoteOut
 }
 
 func (_c *MockNoteService_CreateNote_Call) RunAndReturn(run func(ctx context.Context, input application.NoteInput) (application.NoteOutput, error)) *MockNoteService_CreateNote_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListNotes provides a mock function for the type MockNoteService
+func (_mock *MockNoteService) ListNotes(ctx context.Context, input application.ListNotesInput) (application.ListNotesOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListNotes")
+	}
+
+	var r0 application.ListNotesOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.ListNotesInput) (application.ListNotesOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.ListNotesInput) application.ListNotesOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(application.ListNotesOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, application.ListNotesInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockNoteService_ListNotes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListNotes'
+type MockNoteService_ListNotes_Call struct {
+	*mock.Call
+}
+
+// ListNotes is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input application.ListNotesInput
+func (_e *MockNoteService_Expecter) ListNotes(ctx interface{}, input interface{}) *MockNoteService_ListNotes_Call {
+	return &MockNoteService_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, input)}
+}
+
+func (_c *MockNoteService_ListNotes_Call) Run(run func(ctx context.Context, input application.ListNotesInput)) *MockNoteService_ListNotes_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 application.ListNotesInput
+		if args[1] != nil {
+			arg1 = args[1].(application.ListNotesInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteService_ListNotes_Call) Return(listNotesOutput application.ListNotesOutput, err error) *MockNoteService_ListNotes_Call {
+	_c.Call.Return(listNotesOutput, err)
+	return _c
+}
+
+func (_c *MockNoteService_ListNotes_Call) RunAndReturn(run func(ctx context.Context, input application.ListNotesInput) (application.ListNotesOutput, error)) *MockNoteService_ListNotes_Call {
 	_c.Call.Return(run)
 	return _c
 }

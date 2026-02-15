@@ -12,6 +12,7 @@ import (
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/domain"
 	"pinnado/internal/shared/presentation"
+	"pinnado/internal/shared/presentation/response"
 	"pinnado/mocks"
 	"pinnado/pkg/nethttp"
 )
@@ -26,7 +27,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, presentation.HealthResponse](
+		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, response.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",
@@ -48,7 +49,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, presentation.HealthResponse](
+		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, response.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",

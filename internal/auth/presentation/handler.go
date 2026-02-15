@@ -11,12 +11,12 @@ import (
 	"pinnado/pkg/nethttp"
 )
 
-type AuthHandler struct {
+type authHandler struct {
 	authService AuthService
 }
 
-func NewAuthHandler(authService AuthService) *AuthHandler {
-	return &AuthHandler{
+func NewAuthHandler(authService AuthService) *authHandler {
+	return &authHandler{
 		authService: authService,
 	}
 }
@@ -33,7 +33,7 @@ func NewAuthHandler(authService AuthService) *AuthHandler {
 // @Failure 409 {object} ErrorResponse "User already exists"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/auth/register [post]
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{
@@ -76,7 +76,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} ErrorResponse "Invalid credentials"
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/auth/login [post]
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{

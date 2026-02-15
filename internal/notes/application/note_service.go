@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"pinnado/internal/notes/domain"
+	sharedinfra "pinnado/internal/shared/infrastructure"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -36,11 +37,31 @@ func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutp
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.Create: %w", err)
 	}
 
-	return NoteOutput{
-		ID:        note.ID.Hex(),
-		UserID:    note.UserID.Hex(),
-		Content:   note.Content,
-		CreatedAt: note.CreatedAt,
-		UpdatedAt: note.UpdatedAt,
+	return NoteApplicationToOutput(note), nil
+}
+
+func (s *noteService) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return ListNotesOutput{}, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	params := sharedinfra.ListParams{
+		Pagination: input.Pagination,
+		Sort:       input.Sort,
+	}
+	paginatedNotes, err := s.noteRepository.ListByUserID(ctx, userID, params)
+	if err != nil {
+		return ListNotesOutput{}, fmt.Errorf("s.noteRepository.ListByUserID: %w", err)
+	}
+
+	noteOutputs := make([]NoteOutput, len(paginatedNotes.Data))
+	for i, note := range paginatedNotes.Data {
+		noteOutputs[i] = NoteApplicationToOutput(note)
+	}
+
+	return ListNotesOutput{
+		Data:       noteOutputs,
+		Pagination: paginatedNotes.Pagination,
 	}, nil
 }
