@@ -1,18 +1,19 @@
 # Débitos Técnicos - Pinnado Backend
 
-> **Última atualização**: 2026-02-15
+> **Última atualização**: 2026-02-16
 > **Arquitetura**: Clean Architecture + DDD + Go 1.25.0
 
 ---
 
 ## 📊 Resumo Executivo
 
-**Score da Arquitetura**: 8/10
+**Score da Arquitetura**: 8.5/10
 
 **Fundação**:
 - ✅ Clean Architecture bem implementada
 - ✅ DDD aplicado corretamente
 - ✅ Testabilidade excelente
+- ✅ Migração de índices desacoplada do startup
 - ⚠️ Orquestração precária (DI manual)
 - ⚠️ Escalabilidade limitada
 - ⚠️ Violação de arquitetura (pkg → internal)
@@ -28,7 +29,7 @@
 | 🟠 P1 | [#2] Refatorar `shared/config` | Alto | Baixo | 🔜 Pendente |
 | 🟠 P1 | [#9] Middleware duplicado em routers | Médio | Baixo | 🔜 Pendente |
 | 🟠 P1 | [#10] Inconsistência em middleware | Baixo | Muito Baixo | 🔜 Pendente |
-| 🟡 P2 | [#3] Índices MongoDB no Startup | Médio | Baixo | 🔜 Pendente |
+| 🟡 P2 | [#3] Índices MongoDB no Startup | Médio | Baixo | ✅ Resolvido |
 | 🟡 P2 | [#4] Contexto sem Request ID | Médio | Baixo | 🔜 Pendente |
 | 🟡 P2 | [#5] Logger Duplicado | Baixo | Muito Baixo | 🔜 Pendente |
 | 🟡 P2 | [#11] Método `User.Update()` não utilizado | Baixo | Muito Baixo | 🔜 Pendente |
@@ -299,11 +300,16 @@ jwtService := authinfra.NewJWTService(authConfig.JWT.Secret, authConfig.JWT.Expi
 
 ## 🟡 P2 - Médio Impacto
 
-### #3: Índices MongoDB Síncronos no Startup
+### ✅ #3: Índices MongoDB Síncronos no Startup (RESOLVIDO)
 
-**Problema**: `authinfra.CreateIndexes()` é bloqueante no startup da aplicação
+> **Resolução**: Implementado `cmd/migrate/main.go` com comando de migração separado.
+> **Data**: 2026-02-16
+> **Solução**: Criação de índices movida para ferramenta de migração independente (`make migrate-up`), desacoplando do startup da aplicação. Os índices são criados via comando de migração antes do deploy, permitindo startup rápido da aplicação.
+> **Implementação**: Versão simplificada com apenas `up` (criação de índices), sem `down` (rollback).
 
-**Localização**: `cmd/api/main.go:67-69`
+**Problema**: `authinfra.CreateIndexes()` era bloqueante no startup da aplicação
+
+**Localização Original**: `cmd/api/main.go:67-69`
 
 ```go
 // CÓDIGO ATUAL (bloqueante)
@@ -422,11 +428,11 @@ func DropIndexes(ctx context.Context, db *mongo.Database) error {
 - ✅ Deploy mais seguro (migrar antes de atualizar app)
 
 **Checklist**:
-- [ ] Criar `cmd/migrate/main.go`
-- [ ] Implementar `DropIndexes()` em cada módulo
-- [ ] Adicionar `make migrate-up` e `make migrate-down`
-- [ ] Documentar no README.md
-- [ ] Atualizar CI/CD para rodar migrations antes do deploy
+- [x] Criar `cmd/migrate/main.go` ✅
+- [ ] Implementar `DropIndexes()` em cada módulo (opcional - não implementado)
+- [x] Adicionar `make migrate-up` no Makefile ✅
+- [ ] Documentar no README.md (pendente)
+- [ ] Atualizar CI/CD para rodar migrations antes do deploy (pendente)
 
 ---
 

@@ -71,14 +71,6 @@ func main() {
 		}
 	}()
 
-	log.Println("creating MongoDB indexes...")
-	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
-		log.Fatalf("failed to create MongoDB indexes: %v", err)
-	}
-	if err := notesinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
-		log.Fatalf("failed to create notes indexes: %v", err)
-	}
-
 	log.Println("initializing services...")
 	healthService := application.NewHealthService(mongoClient)
 

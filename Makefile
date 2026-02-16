@@ -3,6 +3,9 @@ all:
 	go install github.com/swaggo/swag/cmd/swag@latest
 	go mod download
 
+migrate-up:
+	go run cmd/migrate/main.go
+
 run:
 	go run cmd/api/main.go
 
