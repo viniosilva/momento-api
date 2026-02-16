@@ -2,7 +2,7 @@ package presentation
 
 import (
 	"pinnado/internal/notes/application"
-	"pinnado/pkg/pagination"
+	"pinnado/pkg/listopts"
 	"time"
 )
 
@@ -19,8 +19,8 @@ type NoteResponse struct {
 }
 
 type ListNotesResponse struct {
-	Data       []NoteResponse                `json:"data"`
-	Pagination pagination.PaginationResponse `json:"pagination"`
+	Data       []NoteResponse              `json:"data"`
+	Pagination listopts.PaginationResponse `json:"pagination"`
 }
 
 func NoteApplicationToResponse(note application.NoteOutput) NoteResponse {

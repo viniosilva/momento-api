@@ -1,4 +1,4 @@
-package pagination
+package listopts
 
 import "math"
 
@@ -37,14 +37,14 @@ type Paginated[T any] struct {
 	Pagination PaginationOutput
 }
 
-func NewPaginated[T any](data []T, totalCount int64, pagination PaginationInput) Paginated[T] {
+func NewPaginated[T any](data []T, totalCount int64, input PaginationInput) Paginated[T] {
 	return Paginated[T]{
 		Data: data,
 		Pagination: PaginationOutput{
 			TotalCount: totalCount,
-			Page:       pagination.Page,
-			PageSize:   pagination.PageSize,
-			TotalPages: int(math.Ceil(float64(totalCount) / float64(pagination.PageSize))),
+			Page:       input.Page,
+			PageSize:   input.PageSize,
+			TotalPages: int(math.Ceil(float64(totalCount) / float64(input.PageSize))),
 		},
 	}
 }

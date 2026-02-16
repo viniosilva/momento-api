@@ -8,10 +8,9 @@ import (
 
 	"pinnado/internal/notes/application"
 	"pinnado/internal/notes/domain"
-	shareddto "pinnado/internal/shared/application/dto"
 	sharedresp "pinnado/internal/shared/presentation/response"
+	"pinnado/pkg/listopts"
 	"pinnado/pkg/nethttp"
-	"pinnado/pkg/pagination"
 	"pinnado/pkg/tools"
 )
 
@@ -106,13 +105,13 @@ func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := r.URL.Query()
-	paginationInput := pagination.NewPaginationInput(
+	paginationInput := listopts.NewPaginationInput(
 		tools.AtoiOrDefault(query.Get("page"), 1),
 		tools.AtoiOrDefault(query.Get("page_size"), 10),
 	)
-	sort := shareddto.NewSortInput(
+	sort := listopts.NewSortInput(
 		query.Get("sort_by"),
-		shareddto.OrderTypeFromString(query.Get("sort_order")),
+		listopts.OrderTypeFromString(query.Get("sort_order")),
 	)
 
 	input := application.ListNotesInput{
@@ -137,7 +136,7 @@ func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
 
 	response := ListNotesResponse{
 		Data:       data,
-		Pagination: pagination.PaginationApplicationToResponse(output.Pagination),
+		Pagination: listopts.PaginationApplicationToResponse(output.Pagination),
 	}
 
 	nethttp.JSON(w, http.StatusOK, response)

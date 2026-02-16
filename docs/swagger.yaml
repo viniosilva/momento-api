@@ -7,7 +7,7 @@ definitions:
     x-enum-varnames:
     - HealthStatusValueOk
     - HealthStatusValueError
-  pagination.PaginationResponse:
+  listopts.PaginationResponse:
     properties:
       page:
         example: 1
@@ -41,7 +41,7 @@ definitions:
           $ref: '#/definitions/presentation.NoteResponse'
         type: array
       pagination:
-        $ref: '#/definitions/pagination.PaginationResponse'
+        $ref: '#/definitions/listopts.PaginationResponse'
     type: object
   presentation.LoginRequest:
     properties:

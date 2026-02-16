@@ -10,9 +10,8 @@ import (
 
 	"pinnado/internal/notes/application"
 	"pinnado/internal/notes/domain"
-	shareddto "pinnado/internal/shared/application/dto"
 	"pinnado/mocks"
-	"pinnado/pkg/pagination"
+	"pinnado/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -110,11 +109,11 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 	defaultInput := application.ListNotesInput{
 		UserID: validUserID.Hex(),
-		Pagination: pagination.PaginationInput{
+		Pagination: listopts.PaginationInput{
 			Page:     1,
 			PageSize: 10,
 		},
-		Sort: shareddto.SortInput{
+		Sort: listopts.SortInput{
 			Field: "created_at",
 			Order: "desc",
 		},
@@ -143,9 +142,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{
+			Return(listopts.Paginated[domain.Note]{
 				Data: expectedNotes,
-				Pagination: pagination.PaginationOutput{
+				Pagination: listopts.PaginationOutput{
 					TotalCount: 2,
 					Page:       1,
 					PageSize:   10,
@@ -172,9 +171,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{
+			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: pagination.PaginationOutput{
+				Pagination: listopts.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -199,11 +198,11 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		input := application.ListNotesInput{
 			UserID: validUserID.Hex(),
-			Pagination: pagination.PaginationInput{
+			Pagination: listopts.PaginationInput{
 				Page:     1,
 				PageSize: 10,
 			},
-			Sort: shareddto.SortInput{
+			Sort: listopts.SortInput{
 				Field: "created_at",
 				Order: "desc",
 			},
@@ -211,9 +210,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{
+			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: pagination.PaginationOutput{
+				Pagination: listopts.PaginationOutput{
 					TotalCount: 25,
 					Page:       1,
 					PageSize:   10,
@@ -236,11 +235,11 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		input := application.ListNotesInput{
 			UserID: validUserID.Hex(),
-			Pagination: pagination.PaginationInput{
+			Pagination: listopts.PaginationInput{
 				Page:     0,
 				PageSize: 0,
 			},
-			Sort: shareddto.SortInput{
+			Sort: listopts.SortInput{
 				Field: "created_at",
 				Order: "desc",
 			},
@@ -248,9 +247,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{
+			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: pagination.PaginationOutput{
+				Pagination: listopts.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -271,16 +270,16 @@ func TestNoteService_ListNotes(t *testing.T) {
 		noteService := application.NewNoteService(noteRepoMock)
 
 		input := defaultInput
-		input.Sort = shareddto.SortInput{
+		input.Sort = listopts.SortInput{
 			Field: "invalid_field",
 			Order: "invalid_order",
 		}
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{
+			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: pagination.PaginationOutput{
+				Pagination: listopts.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -325,7 +324,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(pagination.Paginated[domain.Note]{}, assert.AnError).
+			Return(listopts.Paginated[domain.Note]{}, assert.AnError).
 			Once()
 
 		_, err := noteService.ListNotes(t.Context(), defaultInput)

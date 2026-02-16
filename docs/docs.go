@@ -300,7 +300,7 @@ const docTemplate = `{
                 "HealthStatusValueError"
             ]
         },
-        "pagination.PaginationResponse": {
+        "listopts.PaginationResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -349,7 +349,7 @@ const docTemplate = `{
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/pagination.PaginationResponse"
+                    "$ref": "#/definitions/listopts.PaginationResponse"
                 }
             }
         },

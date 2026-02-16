@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"pinnado/internal/notes/domain"
-	sharedinfra "pinnado/internal/shared/infrastructure"
+	"pinnado/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -46,7 +46,7 @@ func (s *noteService) ListNotes(ctx context.Context, input ListNotesInput) (List
 		return ListNotesOutput{}, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	params := sharedinfra.ListParams{
+	params := listopts.ListParams{
 		Pagination: input.Pagination,
 		Sort:       input.Sort,
 	}

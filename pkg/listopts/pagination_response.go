@@ -1,4 +1,4 @@
-package pagination
+package listopts
 
 type PaginatedResponse[T any] struct {
 	Data       []T                `json:"data" example:"[item1, item2, item3]"`

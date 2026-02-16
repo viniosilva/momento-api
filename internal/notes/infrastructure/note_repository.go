@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"pinnado/internal/notes/domain"
-	sharedinfra "pinnado/internal/shared/infrastructure"
-	"pinnado/pkg/pagination"
+	"pinnado/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,25 +26,25 @@ func (r *noteRepository) Create(ctx context.Context, note domain.Note) error {
 	return err
 }
 
-func (r *noteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params sharedinfra.ListParams) (pagination.Paginated[domain.Note], error) {
+func (r *noteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error) {
 	filter := bson.M{"user_id": userID}
 
 	totalCount, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return pagination.Paginated[domain.Note]{}, err
+		return listopts.Paginated[domain.Note]{}, err
 	}
 
 	findOptions := params.ToFindOptions()
 	cursor, err := r.collection.Find(ctx, filter, findOptions)
 	if err != nil {
-		return pagination.Paginated[domain.Note]{}, err
+		return listopts.Paginated[domain.Note]{}, err
 	}
 	defer cursor.Close(ctx)
 
 	var notes []domain.Note
 	if err := cursor.All(ctx, &notes); err != nil {
-		return pagination.Paginated[domain.Note]{}, err
+		return listopts.Paginated[domain.Note]{}, err
 	}
 
-	return pagination.NewPaginated(notes, totalCount, params.Pagination), nil
+	return listopts.NewPaginated(notes, totalCount, params.Pagination), nil
 }

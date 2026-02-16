@@ -292,7 +292,7 @@
                 "HealthStatusValueError"
             ]
         },
-        "pagination.PaginationResponse": {
+        "listopts.PaginationResponse": {
             "type": "object",
             "properties": {
                 "page": {
@@ -341,7 +341,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/pagination.PaginationResponse"
+                    "$ref": "#/definitions/listopts.PaginationResponse"
                 }
             }
         },

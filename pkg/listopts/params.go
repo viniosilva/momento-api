@@ -1,21 +1,18 @@
-package infrastructure
+package listopts
 
 import (
-	shareddto "pinnado/internal/shared/application/dto"
-	"pinnado/pkg/pagination"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ListParams struct {
-	Pagination pagination.PaginationInput
-	Sort       shareddto.SortInput
+	Pagination PaginationInput
+	Sort       SortInput
 }
 
 func (p ListParams) ToFindOptions() *options.FindOptions {
 	order := 1
-	if p.Sort.Order == shareddto.OrderTypeDesc {
+	if p.Sort.Order == OrderTypeDesc {
 		order = -1
 	}
 
