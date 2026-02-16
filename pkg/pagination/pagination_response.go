@@ -1,6 +1,4 @@
-package response
-
-import "pinnado/internal/shared/application/dto"
+package pagination
 
 type PaginatedResponse[T any] struct {
 	Data       []T                `json:"data" example:"[item1, item2, item3]"`
@@ -14,6 +12,6 @@ type PaginationResponse struct {
 	TotalPages int   `json:"total_pages" example:"5"`
 }
 
-func PaginationApplicationToResponse(pagination dto.PaginationOutput) PaginationResponse {
-	return PaginationResponse(pagination)
+func PaginationApplicationToResponse(output PaginationOutput) PaginationResponse {
+	return PaginationResponse(output)
 }

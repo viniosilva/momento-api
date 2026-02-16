@@ -13,10 +13,10 @@ import (
 	"pinnado/internal/notes/application"
 	"pinnado/internal/notes/domain"
 	"pinnado/internal/notes/presentation"
-	shareddto "pinnado/internal/shared/application/dto"
 	sharedresp "pinnado/internal/shared/presentation/response"
 	"pinnado/mocks"
 	"pinnado/pkg/nethttp"
+	"pinnado/pkg/pagination"
 )
 
 var mapErrorToHTTPStatus = presentation.MapErrorToHTTPStatus
@@ -195,7 +195,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 					UpdatedAt: now.Add(-time.Hour),
 				},
 			},
-			Pagination: shareddto.PaginationOutput{
+			Pagination: pagination.PaginationOutput{
 				TotalCount: 2,
 				Page:       1,
 				PageSize:   10,
@@ -207,7 +207,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 			Return(output, nil).
 			Once()
 
-		resp, got, err := nethttp.RequestWithResponse[any, sharedresp.PaginatedResponse[presentation.NoteResponse]](
+		resp, got, err := nethttp.RequestWithResponse[any, pagination.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes?page=1&page_size=10", nil, func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
@@ -230,7 +230,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		output := application.ListNotesOutput{
 			Data: []application.NoteOutput{},
-			Pagination: shareddto.PaginationOutput{
+			Pagination: pagination.PaginationOutput{
 				TotalCount: 0,
 				Page:       1,
 				PageSize:   10,
@@ -242,7 +242,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 			Return(output, nil).
 			Once()
 
-		resp, got, err := nethttp.RequestWithResponse[any, sharedresp.PaginatedResponse[presentation.NoteResponse]](
+		resp, got, err := nethttp.RequestWithResponse[any, pagination.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
@@ -260,7 +260,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		output := application.ListNotesOutput{
 			Data: []application.NoteOutput{},
-			Pagination: shareddto.PaginationOutput{
+			Pagination: pagination.PaginationOutput{
 				TotalCount: 0,
 				Page:       1,
 				PageSize:   10,
@@ -270,7 +270,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).Return(output, nil).Once()
 
-		resp, _, err := nethttp.RequestWithResponse[any, sharedresp.PaginatedResponse[presentation.NoteResponse]](
+		resp, _, err := nethttp.RequestWithResponse[any, pagination.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
@@ -286,7 +286,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		output := application.ListNotesOutput{
 			Data: []application.NoteOutput{},
-			Pagination: shareddto.PaginationOutput{
+			Pagination: pagination.PaginationOutput{
 				TotalCount: 0,
 				Page:       2,
 				PageSize:   10,
@@ -296,7 +296,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).Return(output, nil).Once()
 
-		resp, _, err := nethttp.RequestWithResponse[any, sharedresp.PaginatedResponse[presentation.NoteResponse]](
+		resp, _, err := nethttp.RequestWithResponse[any, pagination.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes?page=2&page_size=10&sort_by=updated_at&sort_order=asc", nil, func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))

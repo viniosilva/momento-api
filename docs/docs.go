@@ -300,6 +300,27 @@ const docTemplate = `{
                 "HealthStatusValueError"
             ]
         },
+        "pagination.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
         "presentation.CreateNoteRequest": {
             "type": "object",
             "properties": {
@@ -328,7 +349,7 @@ const docTemplate = `{
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/response.PaginationResponse"
+                    "$ref": "#/definitions/pagination.PaginationResponse"
                 }
             }
         },
@@ -432,27 +453,6 @@ const docTemplate = `{
                         }
                     ],
                     "example": "ok"
-                }
-            }
-        },
-        "response.PaginationResponse": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "page_size": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "total_count": {
-                    "type": "integer",
-                    "example": 100
-                },
-                "total_pages": {
-                    "type": "integer",
-                    "example": 5
                 }
             }
         }

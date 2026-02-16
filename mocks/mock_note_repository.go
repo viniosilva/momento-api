@@ -7,8 +7,8 @@ package mocks
 import (
 	"context"
 	"pinnado/internal/notes/domain"
-	"pinnado/internal/shared/application/dto"
 	"pinnado/internal/shared/infrastructure"
+	"pinnado/pkg/pagination"
 
 	mock "github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -99,22 +99,22 @@ func (_c *MockNoteRepository_Create_Call) RunAndReturn(run func(ctx context.Cont
 }
 
 // ListByUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (dto.Paginated[domain.Note], error) {
+func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (pagination.Paginated[domain.Note], error) {
 	ret := _mock.Called(ctx, userID, params)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListByUserID")
 	}
 
-	var r0 dto.Paginated[domain.Note]
+	var r0 pagination.Paginated[domain.Note]
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) (dto.Paginated[domain.Note], error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) (pagination.Paginated[domain.Note], error)); ok {
 		return returnFunc(ctx, userID, params)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) dto.Paginated[domain.Note]); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) pagination.Paginated[domain.Note]); ok {
 		r0 = returnFunc(ctx, userID, params)
 	} else {
-		r0 = ret.Get(0).(dto.Paginated[domain.Note])
+		r0 = ret.Get(0).(pagination.Paginated[domain.Note])
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, primitive.ObjectID, infrastructure.ListParams) error); ok {
 		r1 = returnFunc(ctx, userID, params)
@@ -160,12 +160,12 @@ func (_c *MockNoteRepository_ListByUserID_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *MockNoteRepository_ListByUserID_Call) Return(paginated dto.Paginated[domain.Note], err error) *MockNoteRepository_ListByUserID_Call {
+func (_c *MockNoteRepository_ListByUserID_Call) Return(paginated pagination.Paginated[domain.Note], err error) *MockNoteRepository_ListByUserID_Call {
 	_c.Call.Return(paginated, err)
 	return _c
 }
 
-func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (dto.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
+func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID primitive.ObjectID, params infrastructure.ListParams) (pagination.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

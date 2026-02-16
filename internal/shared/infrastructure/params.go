@@ -2,13 +2,14 @@ package infrastructure
 
 import (
 	shareddto "pinnado/internal/shared/application/dto"
+	"pinnado/pkg/pagination"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ListParams struct {
-	Pagination shareddto.PaginationInput
+	Pagination pagination.PaginationInput
 	Sort       shareddto.SortInput
 }
 

@@ -12,6 +12,7 @@ import (
 	"pinnado/internal/notes/domain"
 	shareddto "pinnado/internal/shared/application/dto"
 	"pinnado/mocks"
+	"pinnado/pkg/pagination"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -109,7 +110,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 	defaultInput := application.ListNotesInput{
 		UserID: validUserID.Hex(),
-		Pagination: shareddto.PaginationInput{
+		Pagination: pagination.PaginationInput{
 			Page:     1,
 			PageSize: 10,
 		},
@@ -142,9 +143,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{
+			Return(pagination.Paginated[domain.Note]{
 				Data: expectedNotes,
-				Pagination: shareddto.PaginationOutput{
+				Pagination: pagination.PaginationOutput{
 					TotalCount: 2,
 					Page:       1,
 					PageSize:   10,
@@ -171,9 +172,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{
+			Return(pagination.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: shareddto.PaginationOutput{
+				Pagination: pagination.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -198,7 +199,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		input := application.ListNotesInput{
 			UserID: validUserID.Hex(),
-			Pagination: shareddto.PaginationInput{
+			Pagination: pagination.PaginationInput{
 				Page:     1,
 				PageSize: 10,
 			},
@@ -210,9 +211,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{
+			Return(pagination.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: shareddto.PaginationOutput{
+				Pagination: pagination.PaginationOutput{
 					TotalCount: 25,
 					Page:       1,
 					PageSize:   10,
@@ -235,7 +236,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		input := application.ListNotesInput{
 			UserID: validUserID.Hex(),
-			Pagination: shareddto.PaginationInput{
+			Pagination: pagination.PaginationInput{
 				Page:     0,
 				PageSize: 0,
 			},
@@ -247,9 +248,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{
+			Return(pagination.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: shareddto.PaginationOutput{
+				Pagination: pagination.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -277,9 +278,9 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{
+			Return(pagination.Paginated[domain.Note]{
 				Data: []domain.Note{},
-				Pagination: shareddto.PaginationOutput{
+				Pagination: pagination.PaginationOutput{
 					TotalCount: 0,
 					Page:       1,
 					PageSize:   10,
@@ -324,7 +325,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 
 		noteRepoMock.EXPECT().
 			ListByUserID(mock.Anything, validUserID, mock.Anything).
-			Return(shareddto.Paginated[domain.Note]{}, assert.AnError).
+			Return(pagination.Paginated[domain.Note]{}, assert.AnError).
 			Once()
 
 		_, err := noteService.ListNotes(t.Context(), defaultInput)

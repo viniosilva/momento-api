@@ -7,6 +7,21 @@ definitions:
     x-enum-varnames:
     - HealthStatusValueOk
     - HealthStatusValueError
+  pagination.PaginationResponse:
+    properties:
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_count:
+        example: 100
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
   presentation.CreateNoteRequest:
     properties:
       content:
@@ -26,7 +41,7 @@ definitions:
           $ref: '#/definitions/presentation.NoteResponse'
         type: array
       pagination:
-        $ref: '#/definitions/response.PaginationResponse'
+        $ref: '#/definitions/pagination.PaginationResponse'
     type: object
   presentation.LoginRequest:
     properties:
@@ -97,21 +112,6 @@ definitions:
         allOf:
         - $ref: '#/definitions/domain.HealthStatusEnum'
         example: ok
-    type: object
-  response.PaginationResponse:
-    properties:
-      page:
-        example: 1
-        type: integer
-      page_size:
-        example: 10
-        type: integer
-      total_count:
-        example: 100
-        type: integer
-      total_pages:
-        example: 5
-        type: integer
     type: object
 info:
   contact:

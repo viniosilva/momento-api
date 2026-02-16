@@ -3,6 +3,7 @@ package application
 import (
 	"pinnado/internal/notes/domain"
 	shareddto "pinnado/internal/shared/application/dto"
+	"pinnado/pkg/pagination"
 	"time"
 )
 
@@ -21,11 +22,11 @@ type NoteOutput struct {
 
 type ListNotesInput struct {
 	UserID     string
-	Pagination shareddto.PaginationInput
+	Pagination pagination.PaginationInput
 	Sort       shareddto.SortInput
 }
 
-type ListNotesOutput shareddto.Paginated[NoteOutput]
+type ListNotesOutput pagination.Paginated[NoteOutput]
 
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
