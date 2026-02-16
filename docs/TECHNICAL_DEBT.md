@@ -1,6 +1,6 @@
 # Débitos Técnicos - Pinnado Backend
 
-> **Última atualização**: 2026-02-08
+> **Última atualização**: 2026-02-15
 > **Arquitetura**: Clean Architecture + DDD + Go 1.25.0
 
 ---
@@ -15,6 +15,7 @@
 - ✅ Testabilidade excelente
 - ⚠️ Orquestração precária (DI manual)
 - ⚠️ Escalabilidade limitada
+- ⚠️ Violação de arquitetura (pkg → internal)
 
 ---
 
@@ -23,12 +24,25 @@
 | Prioridade | Débito | Impacto | Esforço | Status |
 |------------|--------|---------|---------|--------|
 | 🔴 P0 | [#1] Dependency Injection Container | Alto | Médio | 🔜 Pendente |
+| 🔴 P0 | [#8] `pkg/` importando `internal/` | Alto | Médio | 🔜 Pendente |
 | 🟠 P1 | [#2] Refatorar `shared/config` | Alto | Baixo | 🔜 Pendente |
+| 🟠 P1 | [#9] Middleware duplicado em routers | Médio | Baixo | 🔜 Pendente |
+| 🟠 P1 | [#10] Inconsistência em middleware | Baixo | Muito Baixo | 🔜 Pendente |
 | 🟡 P2 | [#3] Índices MongoDB no Startup | Médio | Baixo | 🔜 Pendente |
 | 🟡 P2 | [#4] Contexto sem Request ID | Médio | Baixo | 🔜 Pendente |
 | 🟡 P2 | [#5] Logger Duplicado | Baixo | Muito Baixo | 🔜 Pendente |
+| 🟡 P2 | [#11] Método `User.Update()` não utilizado | Baixo | Muito Baixo | 🔜 Pendente |
+| 🟡 P2 | [#12] Logging inconsistente no `main.go` | Baixo | Muito Baixo | 🔜 Pendente |
+| 🟡 P2 | [#13] Falta validação de sort fields | Baixo | Baixo | 🔜 Pendente |
 | 🟢 P3 | [#6] Ausência de Middleware Chain | Médio | Médio | 🔜 Pendente |
 | 🟢 P3 | [#7] Health Check Simplista | Baixo | Baixo | 🔜 Pendente |
+| 🟢 P3 | [#14] Configuração Swagger Host desnecessária | Baixo | Muito Baixo | 🔜 Pendente |
+| 🟢 P3 | [#15] Falta de testes de integração | Médio | Alto | 🔜 Pendente |
+| 🟢 P3 | [#16] Makefile limitado | Baixo | Baixo | 🔜 Pendente |
+| 🟢 P3 | [#17] Falta validação de env vars | Médio | Baixo | 🔜 Pendente |
+| 🟢 P3 | [#18] Estrutura de erros simples | Baixo | Médio | 🔜 Pendente |
+| 🟢 P3 | [#19] Falta context timeout em handlers | Médio | Baixo | 🔜 Pendente |
+| 🟢 P3 | [#20] Graceful shutdown sem logging | Baixo | Muito Baixo | 🔜 Pendente |
 
 ---
 
@@ -950,29 +964,1362 @@ spec:
 
 ---
 
+### #8: `pkg/` importando `internal/` (Violação de Arquitetura)
+
+**Problema**: `pkg/nethttp/port.go` importa `pinnado/internal/auth/infrastructure`
+
+**Localização**: 
+- `pkg/nethttp/port.go:3`
+- `internal/notes/presentation/router.go:8,16-18`
+
+```go
+// pkg/nethttp/port.go (VIOLAÇÃO CRÍTICA)
+package nethttp
+
+import "pinnado/internal/auth/infrastructure"
+
+type JWTService interface {
+    Validate(tokenString string) (*infrastructure.Claims, error)
+}
+```
+
+**Impactos**:
+- ❌ **Quebra Clean Architecture**: `pkg/` deve ser agnóstico de domínio
+- ❌ **`pkg/` não é reutilizável**: Acoplado ao módulo auth
+- ❌ **Impossível extrair auth**: `pkg/` depende de `internal/auth`
+- ❌ **Viola regra fundamental**: `pkg/` NÃO pode conhecer `internal/`
+- ❌ **Testabilidade comprometida**: `pkg/` precisa importar mocks de `internal/`
+
+**Solução Proposta**:
+
+**Opção 1: Mover `Claims` para Domain (Recomendado)**
+```go
+// internal/auth/domain/claims.go (NOVO)
+package domain
+
+import "time"
+
+type Claims struct {
+    UserID string    `json:"user_id"`
+    Email  Email     `json:"email"`
+    Exp    time.Time `json:"exp"`
+}
+```
+
+```go
+// pkg/nethttp/port.go (REFATORADO)
+package nethttp
+
+// Remover import de internal/!
+// Interface genérica sem tipos concretos
+type JWTService interface {
+    Validate(tokenString string) (map[string]any, error)
+}
+```
+
+```go
+// pkg/nethttp/auth_middleware.go (REFATORADO)
+package nethttp
+
+import (
+    "context"
+    "net/http"
+    "strings"
+)
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
+
+func AuthMiddleware(jwtService JWTService) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            token := extractToken(r)
+            if token == "" {
+                JSON(w, http.StatusUnauthorized, ErrorResponse{Message: "missing token"})
+                return
+            }
+            
+            claims, err := jwtService.Validate(token)
+            if err != nil {
+                JSON(w, http.StatusUnauthorized, ErrorResponse{Message: "invalid token"})
+                return
+            }
+            
+            // Extrai apenas o user_id (não depende de Claims struct)
+            userID, ok := claims["user_id"].(string)
+            if !ok {
+                JSON(w, http.StatusUnauthorized, ErrorResponse{Message: "invalid claims"})
+                return
+            }
+            
+            ctx := context.WithValue(r.Context(), UserIDKey, userID)
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+```
+
+```go
+// internal/auth/infrastructure/jwt_service.go (ATUALIZAR)
+package infrastructure
+
+func (s *jwtService) Validate(tokenString string) (map[string]any, error) {
+    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+        return []byte(s.secret), nil
+    })
+    
+    if err != nil || !token.Valid {
+        return nil, domain.ErrInvalidToken
+    }
+    
+    claims, ok := token.Claims.(jwt.MapClaims)
+    if !ok {
+        return nil, domain.ErrInvalidClaims
+    }
+    
+    // Retorna map genérico
+    return map[string]any(claims), nil
+}
+```
+
+**Opção 2: Criar `pkg/jwt` (Alternativa)**
+```go
+// pkg/jwt/claims.go (NOVO - agnóstico)
+package jwt
+
+import "time"
+
+type Claims struct {
+    UserID string                 `json:"user_id"`
+    Email  string                 `json:"email"`
+    Exp    time.Time              `json:"exp"`
+    Extra  map[string]interface{} `json:"extra,omitempty"`
+}
+```
+
+**Opção 3: Remover interface de `pkg/` (Mais Simples)**
+```go
+// Deletar: pkg/nethttp/port.go
+
+// internal/notes/presentation/port.go (NOVO)
+package presentation
+
+import "pinnado/internal/auth/infrastructure"
+
+type JWTService interface {
+    Validate(tokenString string) (*infrastructure.Claims, error)
+}
+```
+
+**Recomendação**: **Opção 3** (mais simples e mantém separação)
+
+**Estimativa**: 3-4 horas
+
+**Benefícios**:
+- ✅ `pkg/` volta a ser agnóstico de domínio
+- ✅ Reutilizável entre projetos
+- ✅ Testável sem mocks de `internal/`
+- ✅ Respeita Clean Architecture
+
+**Checklist**:
+- [ ] Deletar `pkg/nethttp/port.go`
+- [ ] Mover interface `JWTService` para `internal/notes/presentation/port.go`
+- [ ] Atualizar `pkg/nethttp/auth_middleware.go` para usar interface genérica ou injetada
+- [ ] Atualizar `.cursorrules` (reforçar: `pkg/` NÃO importa `internal/`)
+- [ ] Rodar `make test` para validar
+
+---
+
+### #9: Middleware Duplicado em 3 Routers
+
+**Problema**: Funções `addMiddleware`, `addMiddlewares` e `makeLoggingMiddleware` duplicadas
+
+**Localização**:
+- `internal/auth/presentation/router.go:29-43`
+- `internal/notes/presentation/router.go:51-70`
+- `internal/shared/presentation/router.go:44-58`
+
+```go
+// CÓDIGO DUPLICADO (3x no projeto!)
+type middlewareFunc func(http.Handler) http.Handler
+
+func addMiddleware(handler http.HandlerFunc, middleware middlewareFunc) http.Handler {
+    return middleware(handler)
+}
+
+func makeLoggingMiddleware(logger *slog.Logger) middlewareFunc {
+    return func(handler http.Handler) http.Handler {
+        if logger != nil {
+            return nethttp.LoggingMiddleware(logger)(handler)
+        }
+        return handler
+    }
+}
+```
+
+**Impactos**:
+- ❌ **Manutenção cara**: Alterar middleware = mexer em 3 arquivos
+- ❌ **Inconsistência**: `auth` tem `addMiddleware`, `notes` tem `addMiddlewares` (plural)
+- ❌ **Viola DRY**: 45 linhas duplicadas
+- ❌ **Testes triplicados**: Cada router precisa testar as mesmas funções
+
+**Solução Proposta**:
+
+```go
+// pkg/nethttp/middleware.go (NOVO)
+package nethttp
+
+import (
+    "log/slog"
+    "net/http"
+)
+
+type MiddlewareFunc func(http.Handler) http.Handler
+
+// Chain aplica múltiplos middlewares em ordem
+func Chain(middlewares ...MiddlewareFunc) MiddlewareFunc {
+    return func(next http.Handler) http.Handler {
+        for i := len(middlewares) - 1; i >= 0; i-- {
+            next = middlewares[i](next)
+        }
+        return next
+    }
+}
+
+// MakeLoggingMiddleware cria middleware de logging
+func MakeLoggingMiddleware(logger *slog.Logger) MiddlewareFunc {
+    return func(next http.Handler) http.Handler {
+        if logger != nil {
+            return LoggingMiddleware(logger)(next)
+        }
+        return next
+    }
+}
+```
+
+```go
+// internal/auth/presentation/router.go (REFATORADO)
+package presentation
+
+import (
+    "fmt"
+    "log/slog"
+    "net/http"
+    "pinnado/pkg/nethttp"
+)
+
+func SetupRouter(options SetupRouterOptions) {
+    handler := NewAuthHandler(options.AuthService)
+    
+    // Usar funções de pkg/nethttp
+    middleware := nethttp.MakeLoggingMiddleware(options.Logger)
+    
+    registerHandler := middleware(handler.Register)
+    loginHandler := middleware(handler.Login)
+    
+    options.Mux.Handle(fmt.Sprintf("POST %s/auth/register", options.Prefix), registerHandler)
+    options.Mux.Handle(fmt.Sprintf("POST %s/auth/login", options.Prefix), loginHandler)
+}
+
+// DELETAR: addMiddleware, makeLoggingMiddleware, middlewareFunc
+```
+
+**Estimativa**: 2 horas
+
+**Benefícios**:
+- ✅ Reduz de 45 para 0 linhas duplicadas
+- ✅ Manutenção centralizada
+- ✅ Consistência entre módulos
+- ✅ Facilita adicionar novos middlewares
+
+**Checklist**:
+- [ ] Criar `pkg/nethttp/middleware.go`
+- [ ] Refatorar `internal/auth/presentation/router.go`
+- [ ] Refatorar `internal/notes/presentation/router.go`
+- [ ] Refatorar `internal/shared/presentation/router.go`
+- [ ] Deletar funções duplicadas
+- [ ] Rodar `make test`
+
+---
+
+### #10: Inconsistência em Funções de Middleware
+
+**Problema**: `auth` e `shared` usam `addMiddleware` (singular), `notes` usa `addMiddlewares` (plural)
+
+**Localização**:
+- `internal/auth/presentation/router.go:31` - `addMiddleware`
+- `internal/notes/presentation/router.go:53` - `addMiddlewares`
+- `internal/shared/presentation/router.go:46` - `addMiddleware`
+
+```go
+// auth/router.go (singular)
+func addMiddleware(handler http.HandlerFunc, middleware middlewareFunc) http.Handler
+
+// notes/router.go (plural - aceita varargs)
+func addMiddlewares(handler http.HandlerFunc, middlewares ...middlewareFunc) http.Handler
+```
+
+**Impactos**:
+- ❌ **Confusão**: Desenvolvedores não sabem qual usar
+- ❌ **Inconsistência**: Mesmo padrão, nomes diferentes
+- ❌ **Code review difícil**: Precisa verificar qual versão está sendo usada
+
+**Solução Proposta**:
+
+Será resolvido automaticamente com **#9** (extrair para `pkg/nethttp`).
+
+**Estimativa**: Incluído no #9
+
+**Benefícios**:
+- ✅ Padronização automática
+- ✅ Uma única API (plural com varargs)
+
+**Checklist**:
+- [ ] Resolver #9 primeiro
+- [ ] Validar que todos os módulos usam `nethttp.Chain()`
+
+---
+
+### #11: Método `User.Update()` Não Utilizado
+
+**Problema**: Método `Update()` definido mas nunca chamado
+
+**Localização**: `internal/auth/domain/user.go` (aproximadamente linha 30-35)
+
+```go
+// CÓDIGO ATUAL (não utilizado)
+func (u *User) Update(email Email, password Password) {
+    u.Email = email
+    u.Password = password
+    u.UpdatedAt = time.Now()
+}
+```
+
+**Impactos**:
+- ❌ **Dead code**: Aumenta complexidade sem valor
+- ❌ **Confusão**: Desenvolvedores podem pensar que existe feature de update
+- ❌ **Cobertura de teste**: Método não testado ou testado sem uso real
+
+**Solução Proposta**:
+
+**Opção 1: Remover (Recomendado)**
+```go
+// Deletar método Update() completamente
+```
+
+**Opção 2: Implementar funcionalidade completa**
+```go
+// internal/auth/application/auth_service.go (NOVO)
+func (s *authService) UpdateUser(ctx context.Context, userID string, input UpdateUserInput) error {
+    // 1. Buscar usuário
+    user, err := s.repo.FindByID(ctx, userID)
+    if err != nil {
+        return fmt.Errorf("s.repo.FindByID: %w", err)
+    }
+    
+    // 2. Validar novos dados
+    email, err := domain.NewEmail(input.Email)
+    if err != nil {
+        return err
+    }
+    
+    password, err := domain.NewPassword(input.Password)
+    if err != nil {
+        return err
+    }
+    
+    // 3. Atualizar
+    user.Update(email, password)
+    
+    // 4. Persistir
+    if err := s.repo.Update(ctx, user); err != nil {
+        return fmt.Errorf("s.repo.Update: %w", err)
+    }
+    
+    return nil
+}
+```
+
+**Recomendação**: **Opção 1** (remover)
+
+**Estimativa**: 15 minutos
+
+**Benefícios**:
+- ✅ Reduz dead code
+- ✅ Clareza sobre features existentes
+- ✅ Menos manutenção
+
+**Checklist**:
+- [ ] Verificar se há algum uso oculto do método
+- [ ] Deletar `User.Update()` de `domain/user.go`
+- [ ] Deletar testes relacionados (se houver)
+- [ ] Rodar `make test`
+
+---
+
+### #12: Logging Inconsistente no `main.go`
+
+**Problema**: Mix de `log.Println` (stdlib) e `slog` (structured logging)
+
+**Localização**: `cmd/api/main.go`
+
+```go
+// CÓDIGO ATUAL (inconsistente)
+func main() {
+    slog.SetDefault(logger.NewLogger("info"))  // Linha 48
+    
+    log.Println("loading configuration...")    // Linha 50 (stdlib!)
+    log.Println("connecting to MongoDB...")    // Linha 53
+    // ...
+    
+    appLogger := logger.NewLogger("info")      // Linha 98 (duplicado!)
+}
+```
+
+**Impactos**:
+- ❌ **Logs não estruturados**: `log.Println` não tem níveis/campos
+- ❌ **Dificulta parsing**: Logs em formato texto puro
+- ❌ **Inconsistência**: Alguns lugares usam `slog`, outros `log`
+- ❌ **Impossível filtrar**: Não há `log.level=info` no stdlib
+
+**Solução Proposta**:
+
+```go
+// cmd/api/main.go (REFATORADO)
+func main() {
+    appLogger := logger.NewLogger("info")
+    slog.SetDefault(appLogger)
+    
+    appLogger.Info("loading configuration")
+    config := infrastructure.LoadConfig()
+    
+    appLogger.Info("connecting to MongoDB")
+    ctx := context.Background()
+    mongoClient, err := mongodb.NewMongoClient(ctx, /* ... */)
+    if err != nil {
+        appLogger.Error("failed to connect to MongoDB", "error", err)
+        os.Exit(1)
+    }
+    defer func() {
+        appLogger.Info("disconnecting from MongoDB")
+        if err := mongoClient.Disconnect(context.Background()); err != nil {
+            appLogger.Error("error disconnecting from MongoDB", "error", err)
+        }
+    }()
+    
+    appLogger.Info("creating MongoDB indexes")
+    if err := authinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
+        appLogger.Error("failed to create MongoDB indexes", "error", err)
+        os.Exit(1)
+    }
+    
+    appLogger.Info("server starting", "address", addr)
+    // ...
+}
+```
+
+**Estimativa**: 30 minutos
+
+**Benefícios**:
+- ✅ Logs estruturados (JSON)
+- ✅ Facilita parsing por ferramentas (DataDog, ELK)
+- ✅ Consistência em todo o projeto
+- ✅ Níveis de log configuráveis
+
+**Checklist**:
+- [ ] Substituir todos `log.Println` por `appLogger.Info`
+- [ ] Substituir todos `log.Fatalf` por `appLogger.Error + os.Exit(1)`
+- [ ] Remover import `"log"` de `main.go`
+- [ ] Testar startup da aplicação
+
+---
+
+### #13: Falta de Validação de Sort Fields
+
+**Problema**: `SortDTO` aceita qualquer campo sem validação
+
+**Localização**: `internal/shared/application/dto/sort_dto.go`
+
+```go
+// CÓDIGO ATUAL (sem validação)
+type SortDTO struct {
+    Field string `json:"field"`
+    Order string `json:"order"` // "asc" ou "desc"
+}
+```
+
+**Impactos**:
+- ❌ **Possível NoSQL injection**: Campo malicioso pode acessar dados sensíveis
+- ❌ **Erros em runtime**: MongoDB retorna erro se campo não existe
+- ❌ **Experiência ruim**: Cliente não sabe quais campos são válidos
+- ❌ **Sem documentação**: Swagger não lista campos permitidos
+
+**Solução Proposta**:
+
+```go
+// internal/shared/application/dto/sort_dto.go (REFATORADO)
+package dto
+
+import "fmt"
+
+type SortDTO struct {
+    Field string `json:"field" example:"created_at"`
+    Order string `json:"order" example:"desc" enums:"asc,desc"`
+}
+
+func (s SortDTO) Validate(allowedFields []string) error {
+    // Valida order
+    if s.Order != "asc" && s.Order != "desc" {
+        return fmt.Errorf("invalid sort order: %s (allowed: asc, desc)", s.Order)
+    }
+    
+    // Valida field
+    if !contains(allowedFields, s.Field) {
+        return fmt.Errorf("invalid sort field: %s (allowed: %v)", s.Field, allowedFields)
+    }
+    
+    return nil
+}
+
+func contains(slice []string, item string) bool {
+    for _, s := range slice {
+        if s == item {
+            return true
+        }
+    }
+    return false
+}
+```
+
+```go
+// internal/notes/presentation/handler.go (USAR)
+package presentation
+
+var allowedSortFields = []string{"created_at", "updated_at", "title"}
+
+func (h *NoteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
+    // Parse query params
+    sortField := r.URL.Query().Get("sort_field")
+    sortOrder := r.URL.Query().Get("sort_order")
+    
+    sort := dto.SortDTO{Field: sortField, Order: sortOrder}
+    
+    // Validar campos permitidos
+    if err := sort.Validate(allowedSortFields); err != nil {
+        nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{Message: err.Error()})
+        return
+    }
+    
+    // Continuar com listagem
+    // ...
+}
+```
+
+**Estimativa**: 1 hora
+
+**Benefícios**:
+- ✅ Segurança contra NoSQL injection
+- ✅ Validação em tempo de request
+- ✅ Mensagens claras de erro
+- ✅ Documentação implícita (campos permitidos)
+
+**Checklist**:
+- [ ] Adicionar `Validate()` em `SortDTO`
+- [ ] Definir `allowedSortFields` em cada handler que usa sort
+- [ ] Adicionar validação antes de chamar service
+- [ ] Atualizar Swagger com campos permitidos
+- [ ] Adicionar testes de validação
+
+---
+
+### #14: Configuração Swagger Host Desnecessária
+
+**Problema**: `docs.SwaggerInfo.Host` configurado dinamicamente no `main.go`
+
+**Localização**: `cmd/api/main.go:95-96`
+
+```go
+// CÓDIGO ATUAL (desnecessário)
+addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
+docs.SwaggerInfo.Host = addr
+```
+
+**Impactos**:
+- ⚠️ **Swagger quebra em produção**: Se host for `0.0.0.0:8080`, Swagger UI tenta acessar `0.0.0.0`
+- ⚠️ **Não funciona com proxy**: Swagger não sabe o domínio real (ex: `api.pinnado.com`)
+- ⚠️ **Desnecessário**: Swagger UI consegue inferir host automaticamente
+
+**Solução Proposta**:
+
+```go
+// cmd/api/main.go (REMOVER)
+// DELETAR: docs.SwaggerInfo.Host = addr
+
+// Swagger UI infere host automaticamente do browser
+```
+
+```go
+// cmd/api/main.go (ALTERNATIVA - apenas se necessário)
+// Configurar apenas em produção via env var
+if os.Getenv("SWAGGER_HOST") != "" {
+    docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
+}
+```
+
+**Estimativa**: 10 minutos
+
+**Benefícios**:
+- ✅ Swagger funciona em qualquer ambiente
+- ✅ Menos configuração manual
+- ✅ Funciona com proxies/load balancers
+
+**Checklist**:
+- [ ] Remover linha `docs.SwaggerInfo.Host = addr`
+- [ ] Testar Swagger UI localmente
+- [ ] Testar Swagger UI em produção (se houver)
+
+---
+
+### #15: Falta de Testes de Integração
+
+**Problema**: Apenas testes unitários, sem testes de integração com MongoDB
+
+**Localização**: Ausência de `*_integration_test.go` ou `tests/integration/`
+
+**Impactos**:
+- ❌ **Bugs em produção**: Índices, queries, aggregations podem falhar
+- ❌ **Refactor arriscado**: Sem garantia de que repository funciona com MongoDB real
+- ❌ **Sem validação E2E**: Fluxo completo não é testado
+- ❌ **Confiança baixa**: Deploy sem garantia de funcionamento
+
+**Solução Proposta**:
+
+**Opção 1: Testcontainers (Recomendado)**
+```go
+// internal/auth/infrastructure/user_repository_integration_test.go (NOVO)
+//go:build integration
+// +build integration
+
+package infrastructure_test
+
+import (
+    "context"
+    "testing"
+    "time"
+    
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/testcontainers/testcontainers-go"
+    "github.com/testcontainers/testcontainers-go/modules/mongodb"
+    
+    "pinnado/internal/auth/domain"
+    "pinnado/internal/auth/infrastructure"
+)
+
+func setupMongoContainer(t *testing.T) (*mongo.Client, func()) {
+    ctx := context.Background()
+    
+    mongoC, err := mongodb.RunContainer(ctx,
+        testcontainers.WithImage("mongo:8"),
+    )
+    require.NoError(t, err)
+    
+    endpoint, err := mongoC.Endpoint(ctx, "")
+    require.NoError(t, err)
+    
+    client, err := mongo.Connect(ctx, options.Client().ApplyURI(endpoint))
+    require.NoError(t, err)
+    
+    cleanup := func() {
+        client.Disconnect(ctx)
+        mongoC.Terminate(ctx)
+    }
+    
+    return client, cleanup
+}
+
+func TestUserRepository_Create_Integration(t *testing.T) {
+    client, cleanup := setupMongoContainer(t)
+    defer cleanup()
+    
+    db := client.Database("test")
+    collection := db.Collection(domain.UsersCollectionName)
+    repo := infrastructure.NewUserRepository(collection)
+    
+    email, _ := domain.NewEmail("test@example.com")
+    password, _ := domain.NewPassword("Pass123!")
+    user := domain.NewUser(email, password)
+    
+    err := repo.Create(context.Background(), user)
+    
+    require.NoError(t, err)
+    
+    // Verifica no banco
+    exists, err := repo.ExistsByEmail(context.Background(), email)
+    require.NoError(t, err)
+    assert.True(t, exists)
+}
+```
+
+```makefile
+# Makefile (ADICIONAR)
+test-integration:
+	go test -tags=integration ./... -v
+
+test-all:
+	make test && make test-integration
+```
+
+**Opção 2: MongoDB Memory Server (Alternativa)**
+```bash
+# Menos recomendado, mas mais rápido
+go get github.com/tryvium-travels/memongo
+```
+
+**Recomendação**: **Testcontainers** (ambiente real)
+
+**Estimativa**: 2 dias (setup + testes de repositories)
+
+**Benefícios**:
+- ✅ Valida queries MongoDB
+- ✅ Testa índices únicos
+- ✅ Detecta bugs antes de produção
+- ✅ Aumenta confiança em deploys
+
+**Checklist**:
+- [ ] Adicionar `testcontainers-go` no `go.mod`
+- [ ] Criar helper `setupMongoContainer()`
+- [ ] Adicionar testes de integração para `UserRepository`
+- [ ] Adicionar testes de integração para `NoteRepository`
+- [ ] Adicionar `make test-integration`
+- [ ] Configurar CI/CD para rodar testes de integração
+
+---
+
+### #16: Makefile Limitado
+
+**Problema**: Makefile tem apenas comandos básicos
+
+**Localização**: `Makefile` (16 linhas apenas)
+
+```makefile
+# CÓDIGO ATUAL (limitado)
+all:
+	go install github.com/vektra/mockery/v3@v3.6.3
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go mod download
+
+run:
+	go run cmd/api/main.go
+
+mock:
+	mockery
+
+test:
+	go test ./... -cover
+
+swag:
+	swag init -g cmd/api/main.go -o docs
+```
+
+**Impactos**:
+- ❌ **Produtividade baixa**: Desenvolvedores digitam comandos longos
+- ❌ **Falta comandos úteis**: Coverage HTML, race detector, lint, docker
+- ❌ **Sem padronização**: Cada dev roda testes de forma diferente
+
+**Solução Proposta**:
+
+```makefile
+# Makefile (EXPANDIDO)
+.PHONY: all install run test test-race test-coverage test-integration mock swag lint format clean docker-up docker-down docker-logs help
+
+# Instalação de dependências
+all: install
+
+install:
+	@echo "Installing dependencies..."
+	go install github.com/vektra/mockery/v3@v3.6.3
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go mod download
+
+# Desenvolvimento
+run:
+	go run cmd/api/main.go
+
+# Testes
+test:
+	go test ./... -cover -v
+
+test-race:
+	go test ./... -race
+
+test-coverage:
+	go test ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
+
+test-integration:
+	go test -tags=integration ./... -v
+
+test-all: test test-integration
+
+# Geração de código
+mock:
+	mockery
+
+swag:
+	swag init -g cmd/api/main.go -o docs
+
+# Qualidade de código
+lint:
+	golangci-lint run
+
+format:
+	go fmt ./...
+	goimports -w .
+
+# Docker
+docker-up:
+	docker-compose up -d
+
+docker-down:
+	docker-compose down
+
+docker-logs:
+	docker-compose logs -f
+
+# Limpeza
+clean:
+	rm -f coverage.out coverage.html
+	go clean -testcache
+
+# Ajuda
+help:
+	@echo "Available commands:"
+	@echo "  make install          - Install dependencies"
+	@echo "  make run              - Run application"
+	@echo "  make test             - Run unit tests"
+	@echo "  make test-race        - Run tests with race detector"
+	@echo "  make test-coverage    - Generate coverage report"
+	@echo "  make test-integration - Run integration tests"
+	@echo "  make test-all         - Run all tests"
+	@echo "  make mock             - Generate mocks"
+	@echo "  make swag             - Generate Swagger docs"
+	@echo "  make lint             - Run linter"
+	@echo "  make format           - Format code"
+	@echo "  make docker-up        - Start Docker services"
+	@echo "  make docker-down      - Stop Docker services"
+	@echo "  make clean            - Clean build artifacts"
+	@echo "  make help             - Show this help"
+```
+
+**Estimativa**: 1 hora
+
+**Benefícios**:
+- ✅ Comandos padronizados
+- ✅ Produtividade aumentada
+- ✅ Fácil onboarding de novos devs
+- ✅ Integração fácil com CI/CD
+
+**Checklist**:
+- [ ] Expandir Makefile com novos comandos
+- [ ] Adicionar `make help`
+- [ ] Documentar comandos no README
+- [ ] Configurar CI/CD para usar `make test-all`
+
+---
+
+### #17: Falta de Validação de Environment Variables
+
+**Problema**: `LoadConfig()` usa defaults sem validar obrigatoriedade
+
+**Localização**: `internal/shared/infrastructure/config.go`
+
+**Impactos**:
+- ❌ **App sobe com config inválida**: Ex: JWT secret vazio
+- ❌ **Bugs em runtime**: Conexão MongoDB falha depois de 30s
+- ❌ **Difícil debug**: Erro aparece longe da causa raiz
+- ❌ **Insegurança**: Pode usar JWT secret padrão em produção
+
+**Solução Proposta**:
+
+```go
+// internal/shared/infrastructure/config.go (ADICIONAR VALIDAÇÃO)
+package infrastructure
+
+import (
+    "fmt"
+    "log"
+    "os"
+)
+
+func LoadConfig(opts ...LoadConfigOption) Config {
+    config := Config{
+        Api: ApiConfig{
+            Host: getEnv("API_HOST", "0.0.0.0"),
+            Port: getEnv("API_PORT", "8080"),
+        },
+        Mongo: MongoConfig{
+            Host:   getEnv("MONGO_HOST", "localhost"),
+            Port:   getEnv("MONGO_PORT", "27017"),
+            DBName: getEnv("MONGO_DB_NAME", "pinnado"),
+            User:   getEnv("MONGO_USER", ""),
+            Pass:   getEnv("MONGO_PASS", ""),
+            // ...
+        },
+    }
+    
+    // VALIDAR configurações obrigatórias
+    if err := config.Validate(); err != nil {
+        log.Fatalf("invalid configuration: %v", err)
+    }
+    
+    return config
+}
+
+// Validate verifica se configuração é válida
+func (c Config) Validate() error {
+    // Validar MongoDB
+    if c.Mongo.DBName == "" {
+        return fmt.Errorf("MONGO_DB_NAME is required")
+    }
+    
+    // Validar API
+    if c.Api.Port == "" {
+        return fmt.Errorf("API_PORT is required")
+    }
+    
+    // Validar em produção
+    if os.Getenv("ENV") == "production" {
+        if c.Mongo.User == "" || c.Mongo.Pass == "" {
+            return fmt.Errorf("MONGO_USER and MONGO_PASS are required in production")
+        }
+    }
+    
+    return nil
+}
+```
+
+```go
+// internal/auth/infrastructure/config.go (VALIDAR JWT)
+func LoadAuthConfig() AuthConfig {
+    config := AuthConfig{
+        JWT: JWTConfig{
+            Secret:     getEnv("JWT_SECRET", ""),
+            Expiration: getEnvAsDuration("JWT_EXPIRATION_MS", 24*time.Hour),
+        },
+    }
+    
+    if err := config.Validate(); err != nil {
+        log.Fatalf("invalid auth configuration: %v", err)
+    }
+    
+    return config
+}
+
+func (c AuthConfig) Validate() error {
+    if c.JWT.Secret == "" {
+        return fmt.Errorf("JWT_SECRET is required")
+    }
+    
+    if len(c.JWT.Secret) < 32 {
+        return fmt.Errorf("JWT_SECRET must be at least 32 characters")
+    }
+    
+    if c.JWT.Expiration < time.Minute {
+        return fmt.Errorf("JWT_EXPIRATION must be at least 1 minute")
+    }
+    
+    return nil
+}
+```
+
+**Estimativa**: 2 horas
+
+**Benefícios**:
+- ✅ Fail-fast no startup
+- ✅ Erros claros sobre config faltando
+- ✅ Segurança (força JWT secret forte)
+- ✅ Documentação implícita (quais configs são obrigatórias)
+
+**Checklist**:
+- [ ] Adicionar `Validate()` em `shared/infrastructure/config.go`
+- [ ] Adicionar `Validate()` em `auth/infrastructure/config.go`
+- [ ] Validar JWT secret tem > 32 caracteres
+- [ ] Validar MongoDB credentials em produção
+- [ ] Documentar env vars obrigatórias no README
+- [ ] Adicionar exemplo de `.env.example`
+
+---
+
+### #18: Estrutura de Erros Simples
+
+**Problema**: Erros são apenas `errors.New()` sem contexto adicional
+
+**Localização**: `internal/auth/domain/errors.go`, etc
+
+```go
+// CÓDIGO ATUAL (simples)
+var (
+    ErrUserNotFound      = errors.New("user not found")
+    ErrUserAlreadyExists = errors.New("user already exists")
+    ErrInvalidEmail      = errors.New("invalid email format")
+)
+```
+
+**Impactos**:
+- ⚠️ **Sem contexto**: Não sabe qual email/user causou erro
+- ⚠️ **Difícil debug**: Erro genérico sem detalhes
+- ⚠️ **Logging pobre**: Logs não têm informações úteis
+- ⚠️ **API responses genéricos**: Cliente não recebe detalhes
+
+**Solução Proposta**:
+
+```go
+// internal/auth/domain/errors.go (ENRIQUECIDO)
+package domain
+
+import "fmt"
+
+// DomainError representa um erro de domínio com contexto
+type DomainError struct {
+    Code    string         `json:"code"`
+    Message string         `json:"message"`
+    Details map[string]any `json:"details,omitempty"`
+}
+
+func (e *DomainError) Error() string {
+    if len(e.Details) == 0 {
+        return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+    }
+    return fmt.Sprintf("[%s] %s (details: %v)", e.Code, e.Message, e.Details)
+}
+
+// Construtores de erros
+func ErrUserNotFound(userID string) *DomainError {
+    return &DomainError{
+        Code:    "USER_NOT_FOUND",
+        Message: "user not found",
+        Details: map[string]any{"user_id": userID},
+    }
+}
+
+func ErrUserAlreadyExists(email Email) *DomainError {
+    return &DomainError{
+        Code:    "USER_ALREADY_EXISTS",
+        Message: "user with this email already exists",
+        Details: map[string]any{"email": string(email)},
+    }
+}
+
+func ErrInvalidEmail(value string) *DomainError {
+    return &DomainError{
+        Code:    "INVALID_EMAIL",
+        Message: "invalid email format",
+        Details: map[string]any{"email": value},
+    }
+}
+```
+
+```go
+// internal/auth/presentation/handler.go (USAR)
+func MapErrorToHTTPStatus(err error) (int, ErrorResponse) {
+    var domainErr *domain.DomainError
+    if errors.As(err, &domainErr) {
+        switch domainErr.Code {
+        case "USER_NOT_FOUND":
+            return http.StatusNotFound, ErrorResponse{
+                Message: domainErr.Message,
+                Code:    domainErr.Code,
+                Details: domainErr.Details,
+            }
+        case "USER_ALREADY_EXISTS":
+            return http.StatusConflict, ErrorResponse{
+                Message: domainErr.Message,
+                Code:    domainErr.Code,
+            }
+        default:
+            return http.StatusBadRequest, ErrorResponse{
+                Message: domainErr.Message,
+                Code:    domainErr.Code,
+            }
+        }
+    }
+    
+    return http.StatusInternalServerError, ErrorResponse{
+        Message: "internal server error",
+    }
+}
+```
+
+**Estimativa**: 1 dia (refactor de todos os erros)
+
+**Benefícios**:
+- ✅ Erros com contexto rico
+- ✅ Facilita debugging
+- ✅ API responses mais úteis
+- ✅ Logs estruturados com detalhes
+
+**Nota**: Implementação opcional. Pode adicionar complexidade desnecessária se erros simples são suficientes.
+
+**Checklist**:
+- [ ] Criar `DomainError` struct
+- [ ] Refatorar erros de `auth/domain`
+- [ ] Refatorar erros de `notes/domain`
+- [ ] Atualizar `MapErrorToHTTPStatus`
+- [ ] Atualizar testes
+
+---
+
+### #19: Falta Context Timeout em Handlers
+
+**Problema**: Handlers não definem timeout para operações longas
+
+**Localização**: Todos os handlers (ex: `internal/auth/presentation/handler.go`)
+
+```go
+// CÓDIGO ATUAL (sem timeout)
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+    // r.Context() não tem timeout
+    output, err := h.authService.Register(r.Context(), input)
+    // se MongoDB travar, request fica pendurada eternamente
+}
+```
+
+**Impactos**:
+- ⚠️ **Requests penduradas**: Se MongoDB travar, requests não retornam
+- ⚠️ **Sem controle**: Cliente não sabe quanto tempo esperar
+- ⚠️ **Recursos vazando**: Goroutines esperando eternamente
+- ⚠️ **Degradação**: Sistema fica lento sem timeout
+
+**Solução Proposta**:
+
+```go
+// internal/auth/presentation/handler.go (COM TIMEOUT)
+package presentation
+
+import (
+    "context"
+    "net/http"
+    "time"
+)
+
+const (
+    requestTimeout = 30 * time.Second
+)
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+    // Criar context com timeout
+    ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+    defer cancel()
+    
+    // Parse request
+    var req RegisterRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{Message: "invalid request"})
+        return
+    }
+    
+    // Chamar service com context com timeout
+    output, err := h.authService.Register(ctx, application.UserInput{
+        Email:    strings.TrimSpace(req.Email),
+        Password: strings.TrimSpace(req.Password),
+    })
+    
+    // Verificar se timeout ocorreu
+    if ctx.Err() == context.DeadlineExceeded {
+        nethttp.JSON(w, http.StatusGatewayTimeout, ErrorResponse{
+            Message: "request timeout",
+        })
+        return
+    }
+    
+    // Continuar normalmente
+    // ...
+}
+```
+
+**Alternativa: Middleware Global**
+```go
+// pkg/nethttp/timeout_middleware.go (NOVO)
+package nethttp
+
+import (
+    "context"
+    "net/http"
+    "time"
+)
+
+func TimeoutMiddleware(timeout time.Duration) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            ctx, cancel := context.WithTimeout(r.Context(), timeout)
+            defer cancel()
+            
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+```
+
+```go
+// internal/auth/presentation/router.go (USAR)
+middleware := nethttp.Chain(
+    nethttp.TimeoutMiddleware(30 * time.Second),
+    nethttp.MakeLoggingMiddleware(options.Logger),
+)
+```
+
+**Recomendação**: **Middleware Global** (mais simples)
+
+**Estimativa**: 2 horas
+
+**Benefícios**:
+- ✅ Proteção contra requests penduradas
+- ✅ Controle de tempo de resposta
+- ✅ Melhor UX (timeout rápido vs espera infinita)
+- ✅ Previne vazamento de recursos
+
+**Checklist**:
+- [ ] Criar `TimeoutMiddleware` em `pkg/nethttp`
+- [ ] Adicionar em chain de middlewares de todos os routers
+- [ ] Testar com MongoDB lento (simular timeout)
+- [ ] Documentar timeout no Swagger (@Param timeout)
+
+---
+
+### #20: Graceful Shutdown Sem Logging Detalhado
+
+**Problema**: Graceful shutdown não loga quantos requests foram finalizados/cancelados
+
+**Localização**: `cmd/api/main.go:135-146`
+
+```go
+// CÓDIGO ATUAL (sem detalhes)
+log.Println("shutting down server...")
+
+shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+defer cancel()
+
+if err := server.Shutdown(shutdownCtx); err != nil {
+    log.Fatalf("server forced to shutdown: %v", err)
+}
+
+log.Println("server exited gracefully")
+```
+
+**Impactos**:
+- ⚠️ **Sem visibilidade**: Não sabe se requests foram finalizados ou cancelados
+- ⚠️ **Debug difícil**: Em caso de problema, não sabe o que aconteceu
+- ⚠️ **Sem métricas**: Impossível medir tempo de shutdown
+
+**Solução Proposta**:
+
+```go
+// cmd/api/main.go (COM LOGGING DETALHADO)
+func main() {
+    // ...
+    
+    appLogger.Info("server starting", "address", addr)
+    
+    go func() {
+        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            appLogger.Error("server failed to start", "error", err)
+            os.Exit(1)
+        }
+    }()
+    
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    sig := <-quit
+    
+    appLogger.Info("shutdown signal received", "signal", sig)
+    
+    shutdownStart := time.Now()
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+    defer cancel()
+    
+    appLogger.Info("shutting down server gracefully", 
+        "timeout", shutdownTimeout.String())
+    
+    if err := server.Shutdown(shutdownCtx); err != nil {
+        appLogger.Error("server forced to shutdown", 
+            "error", err,
+            "elapsed", time.Since(shutdownStart))
+        os.Exit(1)
+    }
+    
+    appLogger.Info("server exited gracefully", 
+        "elapsed", time.Since(shutdownStart))
+}
+```
+
+**Estimativa**: 30 minutos
+
+**Benefícios**:
+- ✅ Visibilidade de shutdown
+- ✅ Métricas de tempo de shutdown
+- ✅ Facilita debug de problemas
+- ✅ Logs estruturados
+
+**Checklist**:
+- [ ] Adicionar logging detalhado no shutdown
+- [ ] Logar sinal recebido (SIGINT, SIGTERM)
+- [ ] Logar tempo de shutdown
+- [ ] Testar com `kill -SIGTERM <pid>`
+
+---
+
 ## 📈 Roadmap de Implementação
 
-### **Fase 1: Fundação** (Semana 1-2)
+### **Fase 1: Correções Críticas** (Semana 1)
 - [x] Análise de débitos técnicos
+- [ ] #8: Resolver violação `pkg/` → `internal/` (4h)
+- [ ] #9: Extrair middleware duplicado (2h)
+- [ ] #10: Padronizar middleware (incluído no #9)
+- [ ] #11: Remover `User.Update()` (15min)
 - [ ] #5: Unificar logger (2h)
-- [ ] #2: Refatorar shared/config (1 dia)
-- [ ] #4: Adicionar Request ID (1 dia)
 
-**Resultado**: Logs rastreáveis + módulos desacoplados
+**Resultado**: Arquitetura consistente + código limpo
 
 ---
 
-### **Fase 2: Infraestrutura** (Semana 3-4)
-- [ ] #3: Migração de índices (1 dia)
-- [ ] #6: Middleware chain (1 dia)
+### **Fase 2: Qualidade e Padronização** (Semana 2)
+- [ ] #12: Padronizar logging no `main.go` (30min)
+- [ ] #13: Validação de sort fields (1h)
+- [ ] #14: Remover Swagger Host desnecessário (10min)
+- [ ] #2: Refatorar `shared/config` (1 dia)
+- [ ] #16: Expandir Makefile (1h)
+- [ ] #17: Validar env vars obrigatórias (2h)
+
+**Resultado**: Código padronizado + melhor DX
+
+---
+
+### **Fase 3: Observabilidade** (Semana 3)
+- [ ] #4: Adicionar Request ID (1 dia)
+- [ ] #19: Context timeout em handlers (2h)
+- [ ] #20: Logging detalhado no shutdown (30min)
 - [ ] #7: Health check robusto (1 dia)
 
-**Resultado**: Deploy mais seguro + observabilidade
+**Resultado**: Logs rastreáveis + observabilidade
 
 ---
 
-### **Fase 3: Escalabilidade** (Semana 5-6)
+### **Fase 4: Infraestrutura** (Semana 4)
+- [ ] #3: Migração de índices (1 dia)
+- [ ] #6: Middleware chain (1 dia)
+- [ ] #15: Testes de integração (2 dias)
+
+**Resultado**: Deploy mais seguro + cobertura de testes
+
+---
+
+### **Fase 5: Escalabilidade** (Semana 5-6)
 - [ ] #1: Dependency Injection (Wire) (3 dias)
+- [ ] #18: Estrutura de erros rica (1 dia) - Opcional
 - [ ] Integração com APM (DataDog/New Relic) (2 dias)
 - [ ] Métricas Prometheus (1 dia)
 
@@ -985,20 +2332,30 @@ spec:
 Quando este documento estiver **100% implementado**:
 
 **Código**:
-- ✅ `main.go` < 50 linhas (vs 127 atual)
+- ✅ `main.go` < 50 linhas (vs 150 atual)
 - ✅ Startup < 100ms (vs ~2s atual)
 - ✅ Logs rastreáveis com request_id
 - ✅ Módulos 100% desacoplados
+- ✅ Zero violações de arquitetura (`pkg/` agnóstico)
+- ✅ Zero duplicação de código (middleware centralizado)
+- ✅ Logging 100% estruturado (slog)
 
 **Deploy**:
 - ✅ Zero-downtime (Kubernetes readiness)
 - ✅ Rollback de migrations (make migrate-down)
 - ✅ CI/CD automatizado (migrations + deploy)
+- ✅ Validação de env vars no startup
+
+**Testes**:
+- ✅ Cobertura unitária > 80%
+- ✅ Testes de integração (repositories)
+- ✅ Testes E2E básicos
 
 **Monitoramento**:
 - ✅ APM integrado (traces correlacionados)
 - ✅ Métricas Prometheus (latência, erros, throughput)
 - ✅ Health check detalhado (status por dependência)
+- ✅ Request timeout configurável
 
 ---
 
@@ -1023,8 +2380,28 @@ Quando este documento estiver **100% implementado**:
 ## 📝 Notas
 
 - **Data de criação**: 2026-02-08
+- **Última atualização**: 2026-02-15
 - **Responsável**: Equipe de Arquitetura
 - **Revisão**: Mensal (ou quando adicionar novo módulo)
 - **Arquivo vivo**: Sempre atualizar quando resolver débito
+
+---
+
+## 📋 Changelog
+
+### 2026-02-15 - Auditoria de Estrutura
+- Adicionados 13 novos débitos técnicos (#8 a #20)
+- Identificada violação crítica: `pkg/` importando `internal/` (#8)
+- Identificada duplicação de código em middlewares (#9, #10)
+- Adicionados débitos de qualidade de código (#11, #12, #13, #14)
+- Adicionados débitos de infraestrutura (#15, #16, #17)
+- Adicionados débitos de melhorias opcionais (#18, #19, #20)
+- Reorganizado roadmap em 5 fases
+- Atualizado score da arquitetura (mantém 8/10)
+
+### 2026-02-08 - Criação Inicial
+- Documento criado com 7 débitos técnicos originais
+- Definidas prioridades P0 a P3
+- Estruturado roadmap de 3 fases
 
 ----
