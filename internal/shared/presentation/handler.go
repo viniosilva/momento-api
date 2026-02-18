@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"pinnado/internal/shared/domain"
 	"pinnado/internal/shared/presentation/response"
-	"pinnado/pkg/nethttp"
+	nethttp_utils "pinnado/pkg/nethttp/utils"
 )
 
 type healthHandler struct {
@@ -37,5 +37,5 @@ func (h *healthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		statusCode = http.StatusServiceUnavailable
 	}
 
-	nethttp.JSON(w, statusCode, response)
+	nethttp_utils.JSON(w, statusCode, response)
 }

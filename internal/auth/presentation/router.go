@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"pinnado/pkg/nethttp"
+	logging "pinnado/pkg/nethttp/logging"
 )
 
 type SetupRouterOptions struct {
@@ -13,31 +15,22 @@ type SetupRouterOptions struct {
 	Prefix      string
 	AuthService AuthService
 	Logger      *slog.Logger
+	Timeout     *time.Duration
 }
 
 func SetupRouter(options SetupRouterOptions) {
 	handler := NewAuthHandler(options.AuthService)
-	loggingMiddleware := makeLoggingMiddleware(options.Logger)
 
-	registerHandler := addMiddleware(handler.Register, loggingMiddleware)
-	options.Mux.Handle(fmt.Sprintf("POST %s/auth/register", options.Prefix), registerHandler)
+	chain := nethttp.NewDefaultChain(options.Logger, nethttp.WithTimeout(options.Timeout))
+	chain.AddMiddleware(logging.LoggingMiddleware(options.Logger))
 
-	loginHandler := addMiddleware(handler.Login, loggingMiddleware)
-	options.Mux.Handle(fmt.Sprintf("POST %s/auth/login", options.Prefix), loginHandler)
-}
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/register", options.Prefix),
+		chain.ThenFunc(handler.Register),
+	)
 
-type middlewareFunc func(http.Handler) http.Handler
-
-func addMiddleware(handler http.HandlerFunc, middleware middlewareFunc) http.Handler {
-	return middleware(handler)
-}
-
-func makeLoggingMiddleware(logger *slog.Logger) middlewareFunc {
-	return func(handler http.Handler) http.Handler {
-		if logger != nil {
-			return nethttp.LoggingMiddleware(logger)(handler)
-		}
-
-		return handler
-	}
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/login", options.Prefix),
+		chain.ThenFunc(handler.Login),
+	)
 }

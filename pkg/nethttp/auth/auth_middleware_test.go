@@ -1,17 +1,16 @@
-package nethttp_test
+package nethttp_auth_test
 
 import (
 	"net/http"
 	"net/http/httptest"
+	"pinnado/internal/auth/domain"
+	"pinnado/internal/auth/infrastructure"
+	nethttp "pinnado/pkg/nethttp/auth"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"pinnado/internal/auth/domain"
-	"pinnado/internal/auth/infrastructure"
-	"pinnado/pkg/nethttp"
 )
 
 func TestAuthMiddleware(t *testing.T) {
@@ -34,7 +33,7 @@ func TestAuthMiddleware(t *testing.T) {
 			ctxEmail := r.Context().Value(nethttp.ContextKeyEmail)
 
 			assert.Equal(t, userID, ctxUserID)
-			assert.Equal(t, email, ctxEmail)
+			assert.Equal(t, string(email), ctxEmail)
 
 			nethttp.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		})
@@ -181,6 +180,6 @@ func TestAuthMiddleware_ContextValues(t *testing.T) {
 		wrappedHandler.ServeHTTP(rec, req)
 
 		assert.Equal(t, "user123", capturedUserID)
-		assert.Equal(t, domain.Email("test@example.com"), capturedEmail)
+		assert.Equal(t, "test@example.com", capturedEmail)
 	})
 }

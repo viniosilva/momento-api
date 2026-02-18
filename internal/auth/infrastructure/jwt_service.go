@@ -20,6 +20,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+func (c *Claims) GetUserID() string {
+	return c.UserID
+}
+
+func (c *Claims) GetEmail() string {
+	return string(c.Email)
+}
+
 type jwtService struct {
 	secret     []byte
 	expiration time.Duration

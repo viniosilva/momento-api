@@ -4,13 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-
 	"pinnado/internal/auth/application"
 	"pinnado/internal/auth/infrastructure"
+	"pinnado/internal/auth/mocks"
 	"pinnado/internal/auth/presentation"
-	"pinnado/mocks"
 	"pinnado/pkg/logger"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -10,7 +10,8 @@ import (
 	"pinnado/internal/notes/domain"
 	sharedresp "pinnado/internal/shared/presentation/response"
 	"pinnado/pkg/listopts"
-	"pinnado/pkg/nethttp"
+	nethttp_auth "pinnado/pkg/nethttp/auth"
+	nethttp_utils "pinnado/pkg/nethttp/utils"
 	"pinnado/pkg/tools"
 )
 
@@ -38,9 +39,9 @@ func NewNoteHandler(noteService NoteService) *noteHandler {
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /api/notes [post]
 func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(nethttp.ContextKeyUserID).(string)
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
 	if !ok || userID == "" {
-		nethttp.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
 			Message: "unauthorized",
 		})
 		return
@@ -48,7 +49,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	var req CreateNoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		nethttp.JSON(w, http.StatusBadRequest, sharedresp.ErrorResponse{
+		nethttp_utils.JSON(w, http.StatusBadRequest, sharedresp.ErrorResponse{
 			Message: "invalid request body",
 		})
 		return
@@ -62,7 +63,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	output, err := h.noteService.CreateNote(r.Context(), input)
 	if err != nil {
 		statusCode, message := MapErrorToHTTPStatus(err)
-		nethttp.JSON(w, statusCode, sharedresp.ErrorResponse{
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
 			Message: message,
 		})
 		return
@@ -76,7 +77,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: output.UpdatedAt.Format(time.RFC3339),
 	}
 
-	nethttp.JSON(w, http.StatusCreated, response)
+	nethttp_utils.JSON(w, http.StatusCreated, response)
 }
 
 // ListNotes godoc
@@ -96,9 +97,9 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /api/notes [get]
 func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(nethttp.ContextKeyUserID).(string)
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
 	if !ok || userID == "" {
-		nethttp.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
 			Message: "unauthorized",
 		})
 		return
@@ -123,7 +124,7 @@ func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
 	output, err := h.noteService.ListNotes(r.Context(), input)
 	if err != nil {
 		statusCode, message := MapErrorToHTTPStatus(err)
-		nethttp.JSON(w, statusCode, sharedresp.ErrorResponse{
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
 			Message: message,
 		})
 		return
@@ -139,7 +140,7 @@ func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
 		Pagination: listopts.PaginationApplicationToResponse(output.Pagination),
 	}
 
-	nethttp.JSON(w, http.StatusOK, response)
+	nethttp_utils.JSON(w, http.StatusOK, response)
 }
 
 func MapErrorToHTTPStatus(err error) (int, string) {

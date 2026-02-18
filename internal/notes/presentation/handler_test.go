@@ -3,20 +3,20 @@ package presentation_test
 import (
 	"context"
 	"net/http"
+	"pinnado/internal/notes/application"
+	"pinnado/internal/notes/domain"
+	"pinnado/internal/notes/mocks"
+	"pinnado/internal/notes/presentation"
+	sharedresp "pinnado/internal/shared/presentation/response"
+	"pinnado/pkg/listopts"
+	"pinnado/pkg/nethttp"
+	nethttp_auth "pinnado/pkg/nethttp/auth"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"pinnado/internal/notes/application"
-	"pinnado/internal/notes/domain"
-	"pinnado/internal/notes/presentation"
-	sharedresp "pinnado/internal/shared/presentation/response"
-	"pinnado/mocks"
-	"pinnado/pkg/listopts"
-	"pinnado/pkg/nethttp"
 )
 
 var mapErrorToHTTPStatus = presentation.MapErrorToHTTPStatus
@@ -55,7 +55,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, presentation.NoteResponse](
 			t.Context(), http.MethodPost, "/notes", reqBody, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.CreateNote(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, sharedresp.ErrorResponse](
 			t.Context(), http.MethodPost, "/notes", reqBody, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.CreateNote(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, sharedresp.ErrorResponse](
 			t.Context(), http.MethodPost, "/notes", reqBody, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.CreateNote(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -134,7 +134,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[string, sharedresp.ErrorResponse](
 			t.Context(), http.MethodPost, "/notes", "invalid json", func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.CreateNote(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -209,7 +209,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes?page=1&page_size=10", nil, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -244,7 +244,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -272,7 +272,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		resp, _, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -298,7 +298,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		resp, _, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes?page=2&page_size=10&sort_by=updated_at&sort_order=asc", nil, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)
@@ -328,7 +328,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[any, sharedresp.ErrorResponse](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), nethttp.ContextKeyUserID, validUserID)
+				ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, validUserID)
 				handler.ListNotes(w, r.WithContext(ctx))
 			})
 		require.NoError(t, err)

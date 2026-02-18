@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
-
 	"pinnado/internal/auth/application"
 	"pinnado/internal/auth/domain"
-	"pinnado/pkg/nethttp"
+	nethttp_utils "pinnado/pkg/nethttp/utils"
+	"strings"
 )
 
 type authHandler struct {
@@ -36,7 +35,7 @@ func NewAuthHandler(authService AuthService) *authHandler {
 func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{
+		nethttp_utils.JSON(w, http.StatusBadRequest, ErrorResponse{
 			Message: "invalid request body",
 		})
 		return
@@ -50,7 +49,7 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	output, err := h.authService.Register(r.Context(), input)
 	if err != nil {
 		statusCode, message := MapErrorToHTTPStatus(err)
-		nethttp.JSON(w, statusCode, ErrorResponse{
+		nethttp_utils.JSON(w, statusCode, ErrorResponse{
 			Message: message,
 		})
 		return
@@ -61,7 +60,7 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Email: string(output.Email),
 	}
 
-	nethttp.JSON(w, http.StatusCreated, response)
+	nethttp_utils.JSON(w, http.StatusCreated, response)
 }
 
 // Login godoc
@@ -79,7 +78,7 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{
+		nethttp_utils.JSON(w, http.StatusBadRequest, ErrorResponse{
 			Message: "invalid request body",
 		})
 		return
@@ -93,7 +92,7 @@ func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	output, err := h.authService.Login(r.Context(), input)
 	if err != nil {
 		statusCode, message := MapErrorToHTTPStatus(err)
-		nethttp.JSON(w, statusCode, ErrorResponse{
+		nethttp_utils.JSON(w, statusCode, ErrorResponse{
 			Message: message,
 		})
 		return
@@ -103,7 +102,7 @@ func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Token: output.Token,
 	}
 
-	nethttp.JSON(w, http.StatusOK, response)
+	nethttp_utils.JSON(w, http.StatusOK, response)
 }
 
 // MapErrorToHTTPStatus maps domain/application errors to appropriate HTTP status codes

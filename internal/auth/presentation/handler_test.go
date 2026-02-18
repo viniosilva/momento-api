@@ -13,8 +13,8 @@ import (
 	"pinnado/internal/auth/application"
 	"pinnado/internal/auth/domain"
 	"pinnado/internal/auth/infrastructure"
+	"pinnado/internal/auth/mocks"
 	"pinnado/internal/auth/presentation"
-	"pinnado/mocks"
 	"pinnado/pkg/nethttp"
 )
 

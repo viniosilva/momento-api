@@ -1,18 +1,16 @@
 package application_test
 
 import (
+	"pinnado/internal/notes/application"
+	"pinnado/internal/notes/domain"
+	"pinnado/internal/notes/mocks"
+	"pinnado/pkg/listopts"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"pinnado/internal/notes/application"
-	"pinnado/internal/notes/domain"
-	"pinnado/mocks"
-	"pinnado/pkg/listopts"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

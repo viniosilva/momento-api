@@ -1,4 +1,4 @@
-package nethttp_test
+package nethttp_logging_test
 
 import (
 	"bytes"
@@ -7,13 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	nethttp_logging "pinnado/pkg/nethttp/logging"
+	nethttp_utils "pinnado/pkg/nethttp/utils"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"pinnado/pkg/nethttp"
 )
 
 func TestJSON(t *testing.T) {
@@ -23,7 +23,7 @@ func TestJSON(t *testing.T) {
 			"result": "ok",
 		}
 
-		nethttp.JSON(w, http.StatusOK, data)
+		nethttp_utils.JSON(w, http.StatusOK, data)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
@@ -42,10 +42,10 @@ func TestLoggingMiddleware(t *testing.T) {
 		logger := slog.New(slog.NewJSONHandler(&logOutput, nil))
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nethttp.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+			nethttp_utils.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -67,10 +67,10 @@ func TestLoggingMiddleware(t *testing.T) {
 		logger := slog.New(slog.NewJSONHandler(&logOutput, nil))
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nethttp.JSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+			nethttp_utils.JSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		req := httptest.NewRequest(http.MethodGet, "/notfound", nil)
@@ -87,10 +87,10 @@ func TestLoggingMiddleware(t *testing.T) {
 		logger := slog.New(slog.NewJSONHandler(&logOutput, nil))
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nethttp.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+			nethttp_utils.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		methods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete}
@@ -113,10 +113,10 @@ func TestLoggingMiddleware(t *testing.T) {
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(10 * time.Millisecond)
-			nethttp.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+			nethttp_utils.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -133,10 +133,10 @@ func TestLoggingMiddleware(t *testing.T) {
 		logger := slog.New(slog.NewJSONHandler(&logOutput, nil))
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nethttp.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+			nethttp_utils.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		ctx := context.WithValue(context.Background(), "trace_id", "test-trace-123")
@@ -159,7 +159,7 @@ func TestLoggingMiddleware(t *testing.T) {
 			w.Write([]byte("ok"))
 		})
 
-		middleware := nethttp.LoggingMiddleware(logger)
+		middleware := nethttp_logging.LoggingMiddleware(logger)
 		wrappedHandler := middleware(handler)
 
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)

@@ -3,18 +3,17 @@ package presentation_test
 import (
 	"errors"
 	"net/http"
+	"pinnado/internal/shared/application"
+	"pinnado/internal/shared/domain"
+	"pinnado/internal/shared/mocks"
+	"pinnado/internal/shared/presentation"
+	"pinnado/internal/shared/presentation/response"
+	"pinnado/pkg/nethttp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/domain"
-	"pinnado/internal/shared/presentation"
-	"pinnado/internal/shared/presentation/response"
-	"pinnado/mocks"
-	"pinnado/pkg/nethttp"
 )
 
 func TestHealthHandler_HealthCheck(t *testing.T) {

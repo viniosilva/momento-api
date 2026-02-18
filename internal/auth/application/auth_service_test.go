@@ -11,7 +11,7 @@ import (
 	"pinnado/internal/auth/application"
 	"pinnado/internal/auth/domain"
 	"pinnado/internal/auth/infrastructure"
-	"pinnado/mocks"
+	"pinnado/internal/auth/mocks"
 )
 
 const (

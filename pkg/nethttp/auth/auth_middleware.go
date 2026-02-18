@@ -1,7 +1,8 @@
-package nethttp
+package nethttp_auth
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -13,7 +14,14 @@ const (
 	ContextKeyEmail  contextKey = "email"
 )
 
-func AuthMiddleware(jwtService JWTService) func(http.Handler) http.Handler {
+type claims interface {
+	GetUserID() string
+	GetEmail() string
+}
+
+func AuthMiddleware[T claims](jwtService interface {
+	Validate(tokenString string) (T, error)
+}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -41,10 +49,17 @@ func AuthMiddleware(jwtService JWTService) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
-			ctx = context.WithValue(ctx, ContextKeyEmail, claims.Email)
+			ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.GetUserID())
+			ctx = context.WithValue(ctx, ContextKeyEmail, claims.GetEmail())
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func JSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	json.NewEncoder(w).Encode(data)
 }

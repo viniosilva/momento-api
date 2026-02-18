@@ -4,7 +4,7 @@ import (
 	"errors"
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/domain"
-	"pinnado/mocks"
+	"pinnado/internal/shared/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -4,13 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	authinfra "pinnado/internal/auth/infrastructure"
+	"pinnado/internal/notes/mocks"
+	"pinnado/internal/notes/presentation"
+	"pinnado/pkg/logger"
 	"testing"
 	"time"
-
-	authinfra "pinnado/internal/auth/infrastructure"
-	"pinnado/internal/notes/presentation"
-	"pinnado/mocks"
-	"pinnado/pkg/logger"
 
 	"github.com/stretchr/testify/assert"
 )

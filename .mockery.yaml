@@ -4,7 +4,12 @@ pkgname: "mocks"
 all: true
 recursive: true
 packages:
-  pinnado/internal:
+  pinnado/internal/auth:
     config:
-      all: true
-      recursive: true
+      dir: "internal/auth/mocks"      
+  pinnado/internal/notes:
+    config:
+      dir: "internal/notes/mocks"      
+  pinnado/internal/shared:
+    config:
+      dir: "internal/shared/mocks"

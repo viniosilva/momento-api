@@ -67,8 +67,8 @@ func TestJWTService_Validate(t *testing.T) {
 		claims, err := service.Validate(token)
 		require.NoError(t, err)
 
-		assert.Equal(t, userID, claims.UserID)
-		assert.Equal(t, email, claims.Email)
+		assert.Equal(t, userID, claims.GetUserID())
+		assert.Equal(t, string(email), claims.GetEmail())
 		assert.NotNil(t, claims.ExpiresAt)
 		assert.NotNil(t, claims.IssuedAt)
 	})

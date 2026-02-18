@@ -2,6 +2,7 @@ package nethttp
 
 import (
 	"net/http"
+	nethttp_utils "pinnado/pkg/nethttp/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,7 @@ func TestRequest(t *testing.T) {
 	t.Run("should return 200 ok response", func(t *testing.T) {
 		body := map[string]string{"status": "ok"}
 		cb := func(w http.ResponseWriter, r *http.Request) {
-			JSON(w, http.StatusOK, body)
+			nethttp_utils.JSON(w, http.StatusOK, body)
 		}
 
 		resp, err := Request(t.Context(), http.MethodGet, "/test", body, cb)
@@ -25,7 +26,7 @@ func TestRequest(t *testing.T) {
 	t.Run("should return 500 error response", func(t *testing.T) {
 		body := map[string]string{"error": "internal server error"}
 		cb := func(w http.ResponseWriter, r *http.Request) {
-			JSON(w, http.StatusInternalServerError, body)
+			nethttp_utils.JSON(w, http.StatusInternalServerError, body)
 		}
 
 		resp, err := Request(t.Context(), http.MethodGet, "/test", body, cb)
@@ -61,7 +62,7 @@ func TestRequestWithResponse(t *testing.T) {
 		}
 
 		cb := func(w http.ResponseWriter, r *http.Request) {
-			JSON(w, http.StatusOK, responseBody)
+			nethttp_utils.JSON(w, http.StatusOK, responseBody)
 		}
 
 		type ResponseType struct {

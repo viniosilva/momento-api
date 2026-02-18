@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"pinnado/pkg/nethttp"
+	logging "pinnado/pkg/nethttp/logging"
+	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -15,15 +17,18 @@ type SetupRouterOptions struct {
 	Prefix        string
 	HealthService HealthService
 	Logger        *slog.Logger
+	Timeout       *time.Duration
 }
 
 func SetupRouter(options SetupRouterOptions) {
 	handler := NewHealthHandler(options.HealthService)
-	loggingMiddleware := makeLoggingMiddleware(options.Logger)
+
+	chain := nethttp.NewDefaultChain(options.Logger, nethttp.WithTimeout(options.Timeout))
+	chain.AddMiddleware(logging.LoggingMiddleware(options.Logger))
+
+	healthCheckHandler := chain.ThenFunc(handler.HealthCheck)
 
 	serveSwaggerJSON(options)
-
-	healthCheckHandler := addMiddleware(handler.HealthCheck, loggingMiddleware)
 	options.Mux.Handle(fmt.Sprintf("GET %s/healthcheck", options.Prefix), healthCheckHandler)
 }
 
@@ -39,20 +44,4 @@ func serveSwaggerJSON(options SetupRouterOptions) {
 	options.Mux.HandleFunc("GET /docs/*any", httpSwagger.Handler(
 		httpSwagger.URL("/docs/swagger.json"),
 	))
-}
-
-type middlewareFunc func(http.Handler) http.Handler
-
-func addMiddleware(handler http.HandlerFunc, middleware middlewareFunc) http.Handler {
-	return middleware(handler)
-}
-
-func makeLoggingMiddleware(logger *slog.Logger) middlewareFunc {
-	return func(handler http.Handler) http.Handler {
-		if logger != nil {
-			return nethttp.LoggingMiddleware(logger)(handler)
-		}
-
-		return handler
-	}
 }
