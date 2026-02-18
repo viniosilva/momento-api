@@ -34,9 +34,3 @@ func NewUser(email Email, password Password) User {
 		UpdatedAt: now,
 	}
 }
-
-func (u *User) Update(email Email, password Password) {
-	u.Email = email
-	u.Password = password
-	u.UpdatedAt = time.Now().UTC()
-}

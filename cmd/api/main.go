@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,7 +21,7 @@ import (
 	"pinnado/internal/shared/application"
 	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
-	"pinnado/pkg/logger"
+	pkglogger "pinnado/pkg/logger"
 	"pinnado/pkg/mongodb"
 )
 
@@ -45,12 +43,12 @@ const (
 // @description Type "Bearer" followed by a space and JWT token.
 // @BasePath /api
 func main() {
-	slog.SetDefault(logger.NewLogger("info"))
+	logger := pkglogger.NewLogger("info")
 
-	log.Println("loading configuration...")
+	logger.Info("loading configuration")
 	config := infrastructure.LoadConfig()
 
-	log.Println("connecting to MongoDB...")
+	logger.Info("connecting to MongoDB")
 	ctx := context.Background()
 	mongoClient, err := mongodb.NewMongoClient(ctx,
 		config.Mongo.Host,
@@ -62,16 +60,17 @@ func main() {
 		config.Mongo.RetryDelay,
 		config.Mongo.ConnectTimeout)
 	if err != nil {
-		log.Fatalf("failed to connect to MongoDB: %v", err)
+		logger.Error("failed to connect to MongoDB", "error", err)
+		os.Exit(1)
 	}
 	defer func() {
-		log.Println("disconnecting from MongoDB...")
+		logger.Info("disconnecting from MongoDB")
 		if err := mongoClient.Disconnect(context.Background()); err != nil {
-			log.Printf("error disconnecting from MongoDB: %v", err)
+			logger.Error("error disconnecting from MongoDB", "error", err)
 		}
 	}()
 
-	log.Println("initializing services...")
+	logger.Info("initializing services")
 	healthService := application.NewHealthService(mongoClient)
 
 	db := mongoClient.Database(config.Mongo.DBName)
@@ -87,21 +86,20 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr
 
-	appLogger := logger.NewLogger("info")
 	mux := http.NewServeMux()
 
 	presentation.SetupRouter(presentation.SetupRouterOptions{
 		Mux:           mux,
 		Prefix:        "/api",
 		HealthService: healthService,
-		Logger:        appLogger,
+		Logger:        logger,
 	})
 
 	authpres.SetupRouter(authpres.SetupRouterOptions{
 		Mux:         mux,
 		Prefix:      "/api",
 		AuthService: authService,
-		Logger:      appLogger,
+		Logger:      logger,
 	})
 
 	notespres.SetupRouter(notespres.SetupRouterOptions{
@@ -109,7 +107,7 @@ func main() {
 		Prefix:      "/api",
 		NoteService: noteService,
 		JWTService:  jwtService,
-		Logger:      appLogger,
+		Logger:      logger,
 	})
 
 	server := &http.Server{
@@ -118,24 +116,29 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("server starting on %s", addr)
+		logger.Info("server starting", "address", addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server failed to start: %v", err)
+			logger.Error("server failed to start", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	sig := <-quit
 
-	log.Println("shutting down server...")
+	logger.Info("shutdown signal received", "signal", sig)
 
+	shutdownStart := time.Now()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
+	logger.Info("shutting down server gracefully", "timeout", shutdownTimeout.String())
+
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("server forced to shutdown: %v", err)
+		logger.Error("server forced to shutdown", "error", err, "elapsed", time.Since(shutdownStart))
+		os.Exit(1)
 	}
 
-	log.Println("server exited gracefully")
+	logger.Info("server exited gracefully", "elapsed", time.Since(shutdownStart))
 }
