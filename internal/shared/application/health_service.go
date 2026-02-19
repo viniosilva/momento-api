@@ -7,17 +7,17 @@ import (
 	"pinnado/internal/shared/domain"
 )
 
-type healthService struct {
+type HealthService struct {
 	mongoClient MongoClient
 }
 
-func NewHealthService(mongoClient MongoClient) *healthService {
-	return &healthService{
+func NewHealthService(mongoClient MongoClient) *HealthService {
+	return &HealthService{
 		mongoClient: mongoClient,
 	}
 }
 
-func (s *healthService) HealthCheck(ctx context.Context) dto.HealthOutput {
+func (s *HealthService) HealthCheck(ctx context.Context) dto.HealthOutput {
 	if s.mongoClient == nil {
 		healthStatus := domain.HealthStatusError()
 		return dto.HealthOutput{

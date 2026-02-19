@@ -16,7 +16,6 @@
 - ✅ Migração de índices desacoplada do startup
 - ✅ Middleware centralizado em `pkg/nethttp` (Chain, Request ID, Timeout, Recovery, Auth, Logging)
 - ✅ `pkg/` agnóstico de domínio (sem importar `internal/`)
-- ⚠️ Orquestração precária (DI manual)
 - ⚠️ Escalabilidade limitada
 
 ---
@@ -25,141 +24,9 @@
 
 | Prioridade | Débito | Impacto | Esforço | Status |
 |------------|--------|---------|---------|--------|
-| 🔴 P0 | [#1] Dependency Injection Container | Alto | Médio | 🔜 Pendente |
 | 🟠 P1 | [#2] Refatorar `shared/config` | Alto | Baixo | 🔜 Pendente |
-| 🟡 P2 | [#13] Falta validação de sort fields | Baixo | Baixo | 🔜 Pendente |
 | 🟢 P3 | [#7] Health Check Simplista | Baixo | Baixo | 🔜 Pendente |
 | 🟢 P3 | [#17] Falta validação de env vars | Médio | Baixo | 🔜 Pendente |
-
----
-
-## 🔴 P0 - Crítico
-
-### #1: Dependency Injection Container
-
-**Problema**: Todas as dependências são instanciadas manualmente no `cmd/api/main.go`
-
-**Localização**: `cmd/api/main.go:72-78`
-
-```go
-// CÓDIGO ATUAL (problemático)
-userRepository := authinfra.NewUserRepository(userCollection)
-jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
-authService := authapp.NewAuthService(userRepository, jwtService)
-```
-
-**Impactos**:
-- ❌ Crescimento linear com novos módulos (exemplo: adicionar 10 módulos = +100 linhas no main)
-- ❌ Viola Single Responsibility (main conhece implementação de TODOS os módulos)
-- ❌ Dificulta testes de integração (impossível mockar setup)
-- ❌ Impossível trocar implementações em runtime
-- ❌ Manutenção cara (cada novo módulo = alterar main.go)
-
-**Solução Proposta**:
-
-**Opção 1: Wire (Google) - Recomendado**
-```go
-// internal/di/wire.go
-//go:build wireinject
-// +build wireinject
-
-package di
-
-import (
-    "github.com/google/wire"
-    "go.mongodb.org/mongo-driver/mongo"
-    
-    authapp "pinnado/internal/auth/application"
-    authinfra "pinnado/internal/auth/infrastructure"
-    "pinnado/internal/shared/infrastructure"
-)
-
-func InitializeAuthModule(db *mongo.Database, config infrastructure.Config) authapp.AuthService {
-    wire.Build(
-        authinfra.NewUserRepository,
-        authinfra.NewJWTService,
-        authapp.NewAuthService,
-        wire.Bind(new(authapp.UserRepository), new(*authinfra.UserRepository)),
-    )
-    return nil
-}
-
-// cmd/api/main.go
-authService := di.InitializeAuthModule(db, config)
-```
-
-**Opção 2: Dig (Uber)**
-```go
-// internal/di/container.go
-package di
-
-import (
-    "go.uber.org/dig"
-    "go.mongodb.org/mongo-driver/mongo"
-)
-
-type Container struct {
-    *dig.Container
-}
-
-func NewContainer() *Container {
-    return &Container{dig.New()}
-}
-
-func (c *Container) RegisterAuth(db *mongo.Database, config Config) error {
-    c.Provide(authinfra.NewUserRepository)
-    c.Provide(authinfra.NewJWTService)
-    c.Provide(authapp.NewAuthService)
-    return nil
-}
-
-// cmd/api/main.go
-container := di.NewContainer()
-container.RegisterAuth(db, config)
-var authService authapp.AuthService
-container.Invoke(func(s authapp.AuthService) { authService = s })
-```
-
-**Opção 3: Factory Pattern (Manual)**
-```go
-// internal/di/factory.go
-package di
-
-type Factory struct {
-    db     *mongo.Database
-    config Config
-}
-
-func NewFactory(db *mongo.Database, config Config) *Factory {
-    return &Factory{db: db, config: config}
-}
-
-func (f *Factory) CreateAuthModule() authapp.AuthService {
-    userCollection := f.db.Collection(authdomain.UsersCollectionName)
-    userRepo := authinfra.NewUserRepository(userCollection)
-    jwtService := authinfra.NewJWTService(f.config.JWT.Secret, f.config.JWT.Expiration)
-    return authapp.NewAuthService(userRepo, jwtService)
-}
-
-// cmd/api/main.go
-factory := di.NewFactory(db, config)
-authService := factory.CreateAuthModule()
-healthService := factory.CreateHealthModule()
-```
-
-**Recomendação**: **Wire** (compile-time safety + performance)
-
-**Estimativa**: 2-3 dias (setup inicial + refactor de 2 módulos)
-
-**Benefícios**:
-- ✅ Reduz `main.go` de 127 para ~50 linhas
-- ✅ Facilita adicionar novos módulos (sem mexer no main)
-- ✅ Testabilidade (mockar container inteiro)
-- ✅ Troca de implementações sem tocar no main
-
-**Referências**:
-- [Wire Tutorial](https://github.com/google/wire/blob/main/docs/guide.md)
-- [Dig Tutorial](https://github.com/uber-go/dig)
 
 ---
 
@@ -281,12 +148,6 @@ jwtService := authinfra.NewJWTService(authConfig.JWT.Secret, authConfig.JWT.Expi
 - [ ] Atualizar `cmd/api/main.go` para usar 2 configs
 - [ ] Atualizar testes de `shared/infrastructure/config_test.go`
 - [ ] Atualizar `.cursorrules` com novo padrão
-
----
-
-## 🟡 P2 - Médio Impacto
-
-_(Seção #13 abaixo)_
 
 ---
 
@@ -472,104 +333,6 @@ spec:
 
 ---
 
-### #13: Falta de Validação de Sort Fields
-
-**Problema**: `SortDTO` aceita qualquer campo sem validação
-
-**Localização**: `internal/shared/application/dto/sort_dto.go`
-
-```go
-// CÓDIGO ATUAL (sem validação)
-type SortDTO struct {
-    Field string `json:"field"`
-    Order string `json:"order"` // "asc" ou "desc"
-}
-```
-
-**Impactos**:
-- ❌ **Possível NoSQL injection**: Campo malicioso pode acessar dados sensíveis
-- ❌ **Erros em runtime**: MongoDB retorna erro se campo não existe
-- ❌ **Experiência ruim**: Cliente não sabe quais campos são válidos
-- ❌ **Sem documentação**: Swagger não lista campos permitidos
-
-**Solução Proposta**:
-
-```go
-// internal/shared/application/dto/sort_dto.go (REFATORADO)
-package dto
-
-import "fmt"
-
-type SortDTO struct {
-    Field string `json:"field" example:"created_at"`
-    Order string `json:"order" example:"desc" enums:"asc,desc"`
-}
-
-func (s SortDTO) Validate(allowedFields []string) error {
-    // Valida order
-    if s.Order != "asc" && s.Order != "desc" {
-        return fmt.Errorf("invalid sort order: %s (allowed: asc, desc)", s.Order)
-    }
-    
-    // Valida field
-    if !contains(allowedFields, s.Field) {
-        return fmt.Errorf("invalid sort field: %s (allowed: %v)", s.Field, allowedFields)
-    }
-    
-    return nil
-}
-
-func contains(slice []string, item string) bool {
-    for _, s := range slice {
-        if s == item {
-            return true
-        }
-    }
-    return false
-}
-```
-
-```go
-// internal/notes/presentation/handler.go (USAR)
-package presentation
-
-var allowedSortFields = []string{"created_at", "updated_at", "title"}
-
-func (h *NoteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
-    // Parse query params
-    sortField := r.URL.Query().Get("sort_field")
-    sortOrder := r.URL.Query().Get("sort_order")
-    
-    sort := dto.SortDTO{Field: sortField, Order: sortOrder}
-    
-    // Validar campos permitidos
-    if err := sort.Validate(allowedSortFields); err != nil {
-        nethttp.JSON(w, http.StatusBadRequest, ErrorResponse{Message: err.Error()})
-        return
-    }
-    
-    // Continuar com listagem
-    // ...
-}
-```
-
-**Estimativa**: 1 hora
-
-**Benefícios**:
-- ✅ Segurança contra NoSQL injection
-- ✅ Validação em tempo de request
-- ✅ Mensagens claras de erro
-- ✅ Documentação implícita (campos permitidos)
-
-**Checklist**:
-- [ ] Adicionar `Validate()` em `SortDTO`
-- [ ] Definir `allowedSortFields` em cada handler que usa sort
-- [ ] Adicionar validação antes de chamar service
-- [ ] Atualizar Swagger com campos permitidos
-- [ ] Adicionar testes de validação
-
----
-
 ### #17: Falta de Validação de Environment Variables
 
 **Problema**: `LoadConfig()` usa defaults sem validar obrigatoriedade
@@ -703,7 +466,6 @@ func (c AuthConfig) Validate() error {
 ---
 
 ### **Fase 2: Qualidade e Padronização** (Semana 2)
-- [ ] #13: Validação de sort fields (1h)
 - [ ] #2: Refatorar `shared/config` (1 dia)
 - [ ] #17: Validar env vars obrigatórias (2h)
 
@@ -719,7 +481,6 @@ func (c AuthConfig) Validate() error {
 ---
 
 ### **Fase 4: Escalabilidade** (Semana 4-5)
-- [ ] #1: Dependency Injection (Wire) (3 dias)
 - [ ] Integração com APM (DataDog/New Relic) (2 dias)
 - [ ] Métricas Prometheus (1 dia)
 
@@ -759,10 +520,6 @@ Quando este documento estiver **100% implementado**:
 
 ## 📚 Referências
 
-**Dependency Injection**:
-- [Wire - Google](https://github.com/google/wire)
-- [Dig - Uber](https://github.com/uber-go/dig)
-
 **Observabilidade**:
 - [Request ID Pattern](https://www.oreilly.com/library/view/cloud-native-go/9781492076322/)
 - [Health Check API](https://microservices.io/patterns/observability/health-check-api.html)
@@ -786,6 +543,11 @@ Quando este documento estiver **100% implementado**:
 ---
 
 ## 📋 Changelog
+
+### 2026-02-18 - Remoção dos débitos #1 e #13
+- **#1** (Dependency Injection Container): Removido por decisão de escopo — DI manual aceito no tamanho atual do projeto; reavaliar se o main crescer.
+- **#13** (Falta de validação de sort fields): Removido — validação já existe em `pkg/listopts` (NewSortInput com normalização para defaults).
+- Tabela de priorização, seção P0, seção P2 (#13), roadmap, referências (Wire/Dig) e resumo executivo atualizados.
 
 ### 2026-02-18 - Remoção dos débitos #15, #16 e #18
 - **#15** (Falta de testes de integração), **#16** (Makefile limitado) e **#18** (Estrutura de erros simples) removidos do documento por decisão de escopo.

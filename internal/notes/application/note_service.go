@@ -10,17 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type noteService struct {
+type NoteService struct {
 	noteRepository NoteRepository
 }
 
-func NewNoteService(noteRepository NoteRepository) *noteService {
-	return &noteService{
+func NewNoteService(noteRepository NoteRepository) *NoteService {
+	return &NoteService{
 		noteRepository: noteRepository,
 	}
 }
 
-func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutput, error) {
+func (s *NoteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutput, error) {
 	userID, err := primitive.ObjectIDFromHex(input.UserID)
 	if err != nil {
 		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
@@ -40,7 +40,7 @@ func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutp
 	return NoteApplicationToOutput(note), nil
 }
 
-func (s *noteService) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
+func (s *NoteService) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
 	userID, err := primitive.ObjectIDFromHex(input.UserID)
 	if err != nil {
 		return ListNotesOutput{}, fmt.Errorf("invalid user ID: %w", err)

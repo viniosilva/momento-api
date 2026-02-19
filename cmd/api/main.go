@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,10 +24,13 @@ import (
 	"pinnado/internal/shared/presentation"
 	pkglogger "pinnado/pkg/logger"
 	"pinnado/pkg/mongodb"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
 	shutdownTimeout = 10 * time.Second
+	apiPrefixPath   = "/api"
 )
 
 // @title Pinnado API
@@ -48,67 +52,23 @@ func main() {
 	logger.Info("loading configuration")
 	config := infrastructure.LoadConfig()
 
-	logger.Info("connecting to MongoDB")
-	ctx := context.Background()
-	mongoClient, err := mongodb.NewMongoClient(ctx,
-		config.Mongo.Host,
-		config.Mongo.Port,
-		config.Mongo.DBName,
-		config.Mongo.User,
-		config.Mongo.Pass,
-		config.Mongo.MaxRetries,
-		config.Mongo.RetryDelay,
-		config.Mongo.ConnectTimeout)
+	di, err := setupDependencies(context.Background(), config, logger)
 	if err != nil {
-		logger.Error("failed to connect to MongoDB", "error", err)
+		logger.Error("failed to setup dependencies", "error", err)
 		os.Exit(1)
 	}
 	defer func() {
 		logger.Info("disconnecting from MongoDB")
-		if err := mongoClient.Disconnect(context.Background()); err != nil {
+		if err := di.MongoClient.Disconnect(context.Background()); err != nil {
 			logger.Error("error disconnecting from MongoDB", "error", err)
 		}
 	}()
-
-	logger.Info("initializing services")
-	healthService := application.NewHealthService(mongoClient)
-
-	db := mongoClient.Database(config.Mongo.DBName)
-	userCollection := db.Collection(authdomain.UsersCollectionName)
-	userRepository := authinfra.NewUserRepository(userCollection)
-	jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
-	authService := authapp.NewAuthService(userRepository, jwtService)
-
-	noteCollection := db.Collection(notesdomain.NotesCollectionName)
-	noteRepository := notesinfra.NewNoteRepository(noteCollection)
-	noteService := notesapp.NewNoteService(noteRepository)
 
 	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
 	docs.SwaggerInfo.Host = addr
 
 	mux := http.NewServeMux()
-
-	presentation.SetupRouter(presentation.SetupRouterOptions{
-		Mux:           mux,
-		Prefix:        "/api",
-		HealthService: healthService,
-		Logger:        logger,
-	})
-
-	authpres.SetupRouter(authpres.SetupRouterOptions{
-		Mux:         mux,
-		Prefix:      "/api",
-		AuthService: authService,
-		Logger:      logger,
-	})
-
-	notespres.SetupRouter(notespres.SetupRouterOptions{
-		Mux:         mux,
-		Prefix:      "/api",
-		NoteService: noteService,
-		JWTService:  jwtService,
-		Logger:      logger,
-	})
+	setupRoutes(mux, di, logger)
 
 	server := &http.Server{
 		Addr:    addr,
@@ -141,4 +101,68 @@ func main() {
 	}
 
 	logger.Info("server exited gracefully", "elapsed", time.Since(shutdownStart))
+}
+
+type Dependencies struct {
+	MongoClient   *mongo.Client
+	HealthService *application.HealthService
+	JwtService    *authinfra.JwtService
+	AuthService   *authapp.AuthService
+	NoteService   *notesapp.NoteService
+}
+
+func setupDependencies(ctx context.Context, config infrastructure.Config, logger *slog.Logger) (*Dependencies, error) {
+	logger.Info("connecting to MongoDB")
+	mongoClient, err := mongodb.NewMongoClient(ctx,
+		config.Mongo.Host,
+		config.Mongo.Port,
+		config.Mongo.DBName,
+		config.Mongo.User,
+		config.Mongo.Pass,
+		config.Mongo.MaxRetries,
+		config.Mongo.RetryDelay,
+		config.Mongo.ConnectTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+	}
+
+	logger.Info("initializing services")
+
+	db := mongoClient.Database(config.Mongo.DBName)
+	userRepository := authinfra.NewUserRepository(db.Collection(authdomain.UsersCollectionName))
+	noteRepository := notesinfra.NewNoteRepository(db.Collection(notesdomain.NotesCollectionName))
+
+	jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
+
+	return &Dependencies{
+		MongoClient:   mongoClient,
+		HealthService: application.NewHealthService(mongoClient),
+		JwtService:    jwtService,
+		AuthService:   authapp.NewAuthService(userRepository, jwtService),
+		NoteService:   notesapp.NewNoteService(noteRepository),
+	}, nil
+}
+
+func setupRoutes(mux *http.ServeMux, di *Dependencies, logger *slog.Logger) {
+	presentation.SetupRouter(presentation.SetupRouterOptions{
+		Mux:           mux,
+		Prefix:        apiPrefixPath,
+		HealthService: di.HealthService,
+		Logger:        logger,
+	})
+
+	authpres.SetupRouter(authpres.SetupRouterOptions{
+		Mux:         mux,
+		Prefix:      apiPrefixPath,
+		AuthService: di.AuthService,
+		Logger:      logger,
+	})
+
+	notespres.SetupRouter(notespres.SetupRouterOptions{
+		Mux:         mux,
+		Prefix:      apiPrefixPath,
+		NoteService: di.NoteService,
+		JWTService:  di.JwtService,
+		Logger:      logger,
+	})
 }

@@ -28,19 +28,19 @@ func (c *Claims) GetEmail() string {
 	return string(c.Email)
 }
 
-type jwtService struct {
+type JwtService struct {
 	secret     []byte
 	expiration time.Duration
 }
 
-func NewJWTService(secret string, expiration time.Duration) *jwtService {
-	return &jwtService{
+func NewJWTService(secret string, expiration time.Duration) *JwtService {
+	return &JwtService{
 		secret:     []byte(secret),
 		expiration: expiration,
 	}
 }
 
-func (s *jwtService) Generate(userID string, email domain.Email) (string, error) {
+func (s *JwtService) Generate(userID string, email domain.Email) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		UserID: userID,
@@ -61,7 +61,7 @@ func (s *jwtService) Generate(userID string, email domain.Email) (string, error)
 	return tokenString, nil
 }
 
-func (s *jwtService) Validate(tokenString string) (*Claims, error) {
+func (s *JwtService) Validate(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken

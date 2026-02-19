@@ -7,19 +7,19 @@ import (
 	"pinnado/internal/auth/domain"
 )
 
-type authService struct {
+type AuthService struct {
 	userRepository UserRepository
 	jwtService     JWTService
 }
 
-func NewAuthService(userRepository UserRepository, jwtService JWTService) *authService {
-	return &authService{
+func NewAuthService(userRepository UserRepository, jwtService JWTService) *AuthService {
+	return &AuthService{
 		userRepository: userRepository,
 		jwtService:     jwtService,
 	}
 }
 
-func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
+func (s *AuthService) Register(ctx context.Context, input UserInput) (UserOutput, error) {
 	email, err := domain.NewEmail(input.Email)
 	if err != nil {
 		return UserOutput{}, err
@@ -51,7 +51,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 	}, nil
 }
 
-func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error) {
+func (s *AuthService) Login(ctx context.Context, input LoginInput) (LoginOutput, error) {
 	email, err := domain.NewEmail(input.Email)
 	if err != nil {
 		return LoginOutput{}, err
