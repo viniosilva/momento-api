@@ -4,13 +4,12 @@ import (
 	"context"
 	"log"
 	"log/slog"
-	"time"
-
 	authinfra "pinnado/internal/auth/infrastructure"
+	"pinnado/internal/config"
 	notesinfra "pinnado/internal/notes/infrastructure"
-	"pinnado/internal/shared/infrastructure"
 	"pinnado/pkg/logger"
 	"pinnado/pkg/mongodb"
+	"time"
 )
 
 const (
@@ -21,19 +20,19 @@ func main() {
 	slog.SetDefault(logger.NewLogger("info"))
 
 	log.Println("loading configuration...")
-	config := infrastructure.LoadConfig()
+	cfg := config.LoadConfig()
 
 	log.Println("connecting to MongoDB...")
 	ctx := context.Background()
 	mongoClient, err := mongodb.NewMongoClient(ctx,
-		config.Mongo.Host,
-		config.Mongo.Port,
-		config.Mongo.DBName,
-		config.Mongo.User,
-		config.Mongo.Pass,
-		config.Mongo.MaxRetries,
-		config.Mongo.RetryDelay,
-		config.Mongo.ConnectTimeout)
+		cfg.Mongo.Host,
+		cfg.Mongo.Port,
+		cfg.Mongo.DBName,
+		cfg.Mongo.User,
+		cfg.Mongo.Pass,
+		cfg.Mongo.MaxRetries,
+		cfg.Mongo.RetryDelay,
+		cfg.Mongo.ConnectTimeout)
 	if err != nil {
 		log.Fatalf("failed to connect to MongoDB: %v", err)
 	}
@@ -45,10 +44,10 @@ func main() {
 	}()
 
 	log.Println("creating MongoDB indexes...")
-	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
+	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create MongoDB indexes: %v", err)
 	}
-	if err := notesinfra.CreateIndexes(ctx, mongoClient.Database(config.Mongo.DBName)); err != nil {
+	if err := notesinfra.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create notes indexes: %v", err)
 	}
 

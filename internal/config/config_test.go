@@ -1,14 +1,13 @@
-package infrastructure_test
+package config_test
 
 import (
 	"os"
 	"path/filepath"
+	"pinnado/internal/config"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"pinnado/internal/shared/infrastructure"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -17,7 +16,7 @@ func TestLoadConfig(t *testing.T) {
 			clearEnvVars(t)
 		})
 
-		got := infrastructure.LoadConfig()
+		got := config.LoadConfig()
 
 		assert.Equal(t, "", got.Api.Host)
 		assert.Equal(t, "8080", got.Api.Port)
@@ -38,8 +37,8 @@ func TestLoadConfig(t *testing.T) {
 			clearEnvVars(t)
 		})
 
-		envExamplePath := filepath.Join("..", "..", "..", ".env.example")
-		got := infrastructure.LoadConfig(infrastructure.WithCustomPath(envExamplePath))
+		envExamplePath := filepath.Join("..", "..", ".env.example")
+		got := config.LoadConfig(config.WithCustomPath(envExamplePath))
 
 		assert.Equal(t, "0.0.0.0", got.Api.Host)
 		assert.Equal(t, "8080", got.Api.Port)
@@ -62,7 +61,7 @@ func TestLoadConfig(t *testing.T) {
 
 		os.Setenv("MONGO_MAX_RETRIES", "invalid")
 
-		got := infrastructure.LoadConfig()
+		got := config.LoadConfig()
 
 		assert.Equal(t, 3, got.Mongo.MaxRetries)
 	})

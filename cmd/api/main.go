@@ -15,12 +15,12 @@ import (
 	authdomain "pinnado/internal/auth/domain"
 	authinfra "pinnado/internal/auth/infrastructure"
 	authpres "pinnado/internal/auth/presentation"
+	"pinnado/internal/config"
 	notesapp "pinnado/internal/notes/application"
 	notesdomain "pinnado/internal/notes/domain"
 	notesinfra "pinnado/internal/notes/infrastructure"
 	notespres "pinnado/internal/notes/presentation"
 	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/infrastructure"
 	"pinnado/internal/shared/presentation"
 	pkglogger "pinnado/pkg/logger"
 	"pinnado/pkg/mongodb"
@@ -50,9 +50,9 @@ func main() {
 	logger := pkglogger.NewLogger("info")
 
 	logger.Info("loading configuration")
-	config := infrastructure.LoadConfig()
+	cfg := config.LoadConfig()
 
-	di, err := setupDependencies(context.Background(), config, logger)
+	di, err := setupDependencies(context.Background(), cfg, logger)
 	if err != nil {
 		logger.Error("failed to setup dependencies", "error", err)
 		os.Exit(1)
@@ -64,7 +64,7 @@ func main() {
 		}
 	}()
 
-	addr := fmt.Sprintf("%s:%s", config.Api.Host, config.Api.Port)
+	addr := fmt.Sprintf("%s:%s", cfg.Api.Host, cfg.Api.Port)
 	docs.SwaggerInfo.Host = addr
 
 	mux := http.NewServeMux()
@@ -111,7 +111,7 @@ type Dependencies struct {
 	NoteService   *notesapp.NoteService
 }
 
-func setupDependencies(ctx context.Context, config infrastructure.Config, logger *slog.Logger) (*Dependencies, error) {
+func setupDependencies(ctx context.Context, config config.Config, logger *slog.Logger) (*Dependencies, error) {
 	logger.Info("connecting to MongoDB")
 	mongoClient, err := mongodb.NewMongoClient(ctx,
 		config.Mongo.Host,
