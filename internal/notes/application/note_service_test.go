@@ -331,3 +331,69 @@ func TestNoteService_ListNotes(t *testing.T) {
 		assert.Contains(t, err.Error(), "s.noteRepository.ListByUserID")
 	})
 }
+
+func TestNoteService_GetUserNoteByID(t *testing.T) {
+	userID := primitive.NewObjectID()
+	noteID := primitive.NewObjectID()
+
+	defaultInput := application.GetUserNoteByIDInput{
+		UserID: userID.Hex(),
+		ID:     userID.Hex(),
+	}
+
+	now := time.Now()
+	noteMock := domain.Note{
+		ID:        noteID,
+		UserID:    userID,
+		Content:   "Content",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	t.Run("should get user's note by ID", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, mock.Anything, mock.Anything).Return(noteMock, nil)
+
+		got, err := noteService.GetUserNoteByID(t.Context(), defaultInput)
+		require.NoError(t, err)
+
+		assert.Equal(t, noteMock.ID.Hex(), got.ID)
+		assert.Equal(t, noteMock.UserID.Hex(), got.UserID)
+		assert.Equal(t, noteMock.Content, got.Content)
+		assert.Equal(t, noteMock.CreatedAt, got.CreatedAt)
+		assert.Equal(t, noteMock.UpdatedAt, got.UpdatedAt)
+	})
+
+	t.Run("should throw error when ID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.ID = "invalid"
+		_, err := noteService.GetUserNoteByID(t.Context(), input)
+		assert.EqualError(t, err, "invalid ID: the provided hex string is not a valid ObjectID")
+	})
+
+	t.Run("should throw error when UserID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.UserID = "invalid"
+		_, err := noteService.GetUserNoteByID(t.Context(), input)
+		assert.EqualError(t, err, "invalid user ID: the provided hex string is not a valid ObjectID")
+	})
+
+	t.Run("should throw error when GetUserNoteByID fails", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, mock.Anything, mock.Anything).Return(domain.Note{}, assert.AnError)
+
+		_, err := noteService.GetUserNoteByID(t.Context(), defaultInput)
+
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+}

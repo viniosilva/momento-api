@@ -11,4 +11,5 @@ import (
 type NoteRepository interface {
 	Create(ctx context.Context, note domain.Note) error
 	ListByUserID(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error)
+	GetByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) (domain.Note, error)
 }

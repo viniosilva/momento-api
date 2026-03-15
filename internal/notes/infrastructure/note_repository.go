@@ -48,3 +48,22 @@ func (r *noteRepository) ListByUserID(ctx context.Context, userID primitive.Obje
 
 	return listopts.NewPaginated(notes, totalCount, params.Pagination), nil
 }
+
+func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) (domain.Note, error) {
+	filter := bson.M{
+		"_id":     id,
+		"user_id": userID,
+	}
+
+	res := r.collection.FindOne(ctx, filter)
+	if err := res.Err(); err != nil {
+		return domain.Note{}, err
+	}
+
+	var note domain.Note
+	if err := res.Decode(&note); err != nil {
+		return domain.Note{}, err
+	}
+
+	return note, nil
+}

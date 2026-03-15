@@ -27,6 +27,11 @@ type ListNotesInput struct {
 
 type ListNotesOutput listopts.Paginated[NoteOutput]
 
+type GetUserNoteByIDInput struct {
+	UserID string
+	ID     string
+}
+
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
 		ID:        note.ID.Hex(),

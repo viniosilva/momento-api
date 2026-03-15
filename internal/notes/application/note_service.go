@@ -65,3 +65,23 @@ func (s *NoteService) ListNotes(ctx context.Context, input ListNotesInput) (List
 		Pagination: paginatedNotes.Pagination,
 	}, nil
 }
+
+func (s *NoteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByIDInput) (NoteOutput, error) {
+	id, err := primitive.ObjectIDFromHex(input.ID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("invalid ID: %w", err)
+	}
+
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
+	}
+
+	noteOutput := NoteApplicationToOutput(note)
+	return noteOutput, nil
+}
