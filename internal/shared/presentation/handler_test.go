@@ -26,7 +26,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, response.HealthResponse](
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, response.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",
@@ -48,7 +48,7 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 		healthService := application.NewHealthService(mockMongoClient)
 		handler := presentation.NewHealthHandler(healthService)
 
-		resp, got, err := nethttp.RequestWithResponse[map[string]interface{}, response.HealthResponse](
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, response.HealthResponse](
 			t.Context(),
 			http.MethodGet,
 			"/api/healthcheck",

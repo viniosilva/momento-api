@@ -65,7 +65,7 @@ type MockNoteRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - note domain.Note
-func (_e *MockNoteRepository_Expecter) Create(ctx interface{}, note interface{}) *MockNoteRepository_Create_Call {
+func (_e *MockNoteRepository_Expecter) Create(ctx any, note any) *MockNoteRepository_Create_Call {
 	return &MockNoteRepository_Create_Call{Call: _e.mock.On("Create", ctx, note)}
 }
 
@@ -132,7 +132,7 @@ type MockNoteRepository_GetByIDAndUserID_Call struct {
 //   - ctx context.Context
 //   - id primitive.ObjectID
 //   - userID primitive.ObjectID
-func (_e *MockNoteRepository_Expecter) GetByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_GetByIDAndUserID_Call {
+func (_e *MockNoteRepository_Expecter) GetByIDAndUserID(ctx any, id any, userID any) *MockNoteRepository_GetByIDAndUserID_Call {
 	return &MockNoteRepository_GetByIDAndUserID_Call{Call: _e.mock.On("GetByIDAndUserID", ctx, id, userID)}
 }
 
@@ -204,7 +204,7 @@ type MockNoteRepository_ListByUserID_Call struct {
 //   - ctx context.Context
 //   - userID primitive.ObjectID
 //   - params listopts.ListParams
-func (_e *MockNoteRepository_Expecter) ListByUserID(ctx interface{}, userID interface{}, params interface{}) *MockNoteRepository_ListByUserID_Call {
+func (_e *MockNoteRepository_Expecter) ListByUserID(ctx any, userID any, params any) *MockNoteRepository_ListByUserID_Call {
 	return &MockNoteRepository_ListByUserID_Call{Call: _e.mock.On("ListByUserID", ctx, userID, params)}
 }
 

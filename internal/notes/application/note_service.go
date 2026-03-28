@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"pinnado/internal/notes/domain"
@@ -79,6 +80,10 @@ func (s *NoteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByID
 
 	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
 	if err != nil {
+		if errors.Is(err, domain.ErrNoteNotFound) {
+			return NoteOutput{}, domain.ErrNoteNotFound
+		}
+
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
 	}
 

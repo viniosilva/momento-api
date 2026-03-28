@@ -63,7 +63,7 @@ func TestContextHandler_Handle(t *testing.T) {
 		err = baseHandler.Handle(ctx, newRecord)
 		require.NoError(t, err)
 
-		var result map[string]interface{}
+		var result map[string]any
 		err = json.Unmarshal(buf.Bytes(), &result)
 		require.NoError(t, err)
 
@@ -89,7 +89,7 @@ func TestContextHandler_Handle(t *testing.T) {
 		err = baseHandler.Handle(ctx, newRecord)
 		require.NoError(t, err)
 
-		var result map[string]interface{}
+		var result map[string]any
 		err = json.Unmarshal(buf.Bytes(), &result)
 		require.NoError(t, err)
 
@@ -124,7 +124,7 @@ func TestContextHandler_Handle(t *testing.T) {
 		err = baseHandler.Handle(ctx, record)
 		require.NoError(t, err)
 
-		var result map[string]interface{}
+		var result map[string]any
 		err = json.Unmarshal(buf.Bytes(), &result)
 		require.NoError(t, err)
 
@@ -146,7 +146,7 @@ func TestContextHandler_Handle(t *testing.T) {
 		err = baseHandler.Handle(ctx, record)
 		require.NoError(t, err)
 
-		var result map[string]interface{}
+		var result map[string]any
 		err = json.Unmarshal(buf.Bytes(), &result)
 		require.NoError(t, err)
 

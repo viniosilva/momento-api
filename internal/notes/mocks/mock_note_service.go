@@ -72,7 +72,7 @@ type MockNoteService_CreateNote_Call struct {
 // CreateNote is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input application.NoteInput
-func (_e *MockNoteService_Expecter) CreateNote(ctx interface{}, input interface{}) *MockNoteService_CreateNote_Call {
+func (_e *MockNoteService_Expecter) CreateNote(ctx any, input any) *MockNoteService_CreateNote_Call {
 	return &MockNoteService_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, input)}
 }
 
@@ -100,6 +100,72 @@ func (_c *MockNoteService_CreateNote_Call) Return(noteOutput application.NoteOut
 }
 
 func (_c *MockNoteService_CreateNote_Call) RunAndReturn(run func(ctx context.Context, input application.NoteInput) (application.NoteOutput, error)) *MockNoteService_CreateNote_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUserNoteByID provides a mock function for the type MockNoteService
+func (_mock *MockNoteService) GetUserNoteByID(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserNoteByID")
+	}
+
+	var r0 application.NoteOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.GetUserNoteByIDInput) (application.NoteOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.GetUserNoteByIDInput) application.NoteOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(application.NoteOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, application.GetUserNoteByIDInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockNoteService_GetUserNoteByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserNoteByID'
+type MockNoteService_GetUserNoteByID_Call struct {
+	*mock.Call
+}
+
+// GetUserNoteByID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input application.GetUserNoteByIDInput
+func (_e *MockNoteService_Expecter) GetUserNoteByID(ctx any, input any) *MockNoteService_GetUserNoteByID_Call {
+	return &MockNoteService_GetUserNoteByID_Call{Call: _e.mock.On("GetUserNoteByID", ctx, input)}
+}
+
+func (_c *MockNoteService_GetUserNoteByID_Call) Run(run func(ctx context.Context, input application.GetUserNoteByIDInput)) *MockNoteService_GetUserNoteByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 application.GetUserNoteByIDInput
+		if args[1] != nil {
+			arg1 = args[1].(application.GetUserNoteByIDInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteService_GetUserNoteByID_Call) Return(noteOutput application.NoteOutput, err error) *MockNoteService_GetUserNoteByID_Call {
+	_c.Call.Return(noteOutput, err)
+	return _c
+}
+
+func (_c *MockNoteService_GetUserNoteByID_Call) RunAndReturn(run func(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error)) *MockNoteService_GetUserNoteByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -138,7 +204,7 @@ type MockNoteService_ListNotes_Call struct {
 // ListNotes is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input application.ListNotesInput
-func (_e *MockNoteService_Expecter) ListNotes(ctx interface{}, input interface{}) *MockNoteService_ListNotes_Call {
+func (_e *MockNoteService_Expecter) ListNotes(ctx any, input any) *MockNoteService_ListNotes_Call {
 	return &MockNoteService_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, input)}
 }
 

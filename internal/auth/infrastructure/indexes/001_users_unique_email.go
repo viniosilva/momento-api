@@ -12,7 +12,7 @@ func CreateUserEmailIndex(ctx context.Context, db *mongo.Database) error {
 	collection := db.Collection(domain.UsersCollectionName)
 
 	indexModel := mongo.IndexModel{
-		Keys:    map[string]interface{}{"email": 1},
+		Keys:    map[string]any{"email": 1},
 		Options: options.Index().SetUnique(true).SetName("unique_email"),
 	}
 

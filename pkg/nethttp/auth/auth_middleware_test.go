@@ -162,7 +162,7 @@ func TestAuthMiddleware_ContextValues(t *testing.T) {
 		token, err := jwtService.Generate(userID, email)
 		require.NoError(t, err)
 
-		var capturedUserID, capturedEmail interface{}
+		var capturedUserID, capturedEmail any
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			capturedUserID = r.Context().Value(nethttp.ContextKeyUserID)

@@ -12,7 +12,7 @@ func CreateNoteUserIDIndex(ctx context.Context, db *mongo.Database) error {
 	collection := db.Collection(domain.NotesCollectionName)
 
 	indexModel := mongo.IndexModel{
-		Keys:    map[string]interface{}{"user_id": 1},
+		Keys:    map[string]any{"user_id": 1},
 		Options: options.Index().SetName("idx_user_id"),
 	}
 

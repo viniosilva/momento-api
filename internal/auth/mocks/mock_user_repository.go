@@ -63,7 +63,7 @@ type MockUserRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - user domain.User
-func (_e *MockUserRepository_Expecter) Create(ctx interface{}, user interface{}) *MockUserRepository_Create_Call {
+func (_e *MockUserRepository_Expecter) Create(ctx any, user any) *MockUserRepository_Create_Call {
 	return &MockUserRepository_Create_Call{Call: _e.mock.On("Create", ctx, user)}
 }
 
@@ -129,7 +129,7 @@ type MockUserRepository_ExistsByEmail_Call struct {
 // ExistsByEmail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email domain.Email
-func (_e *MockUserRepository_Expecter) ExistsByEmail(ctx interface{}, email interface{}) *MockUserRepository_ExistsByEmail_Call {
+func (_e *MockUserRepository_Expecter) ExistsByEmail(ctx any, email any) *MockUserRepository_ExistsByEmail_Call {
 	return &MockUserRepository_ExistsByEmail_Call{Call: _e.mock.On("ExistsByEmail", ctx, email)}
 }
 
@@ -195,7 +195,7 @@ type MockUserRepository_FindByEmail_Call struct {
 // FindByEmail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email domain.Email
-func (_e *MockUserRepository_Expecter) FindByEmail(ctx interface{}, email interface{}) *MockUserRepository_FindByEmail_Call {
+func (_e *MockUserRepository_Expecter) FindByEmail(ctx any, email any) *MockUserRepository_FindByEmail_Call {
 	return &MockUserRepository_FindByEmail_Call{Call: _e.mock.On("FindByEmail", ctx, email)}
 }
 

@@ -2,7 +2,10 @@ package presentation_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"pinnado/internal/notes/application"
 	"pinnado/internal/notes/domain"
 	"pinnado/internal/notes/mocks"
@@ -17,14 +20,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var mapErrorToHTTPStatus = presentation.MapErrorToHTTPStatus
 
 func TestNewNoteHandler(t *testing.T) {
 	t.Run("should create note handler", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
 		assert.NotNil(t, handler)
 	})
@@ -34,19 +39,12 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 	validUserID := "507f1f77bcf86cd799439011"
 
 	t.Run("should return 201 when note is created successfully", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		output := application.NoteOutput{
-			ID:        "note123",
-			UserID:    validUserID,
-			Content:   domain.NoteContent("Valid note content"),
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-		}
-
-		mockService.EXPECT().CreateNote(mock.Anything, mock.Anything).
-			Return(output, nil).
+		mockRepo.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(nil).
 			Once()
 
 		reqBody := map[string]any{
@@ -61,18 +59,14 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
-		assert.Equal(t, "note123", got.ID)
+		assert.NotEmpty(t, got.ID)
 		assert.Equal(t, validUserID, got.UserID)
 		assert.Equal(t, "Valid note content", got.Content)
 	})
 
 	t.Run("should return 400 when content is empty", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
-
-		mockService.EXPECT().CreateNote(mock.Anything, mock.Anything).
-			Return(application.NoteOutput{}, domain.ErrContentEmpty).
-			Once()
+		svc := application.NewNoteService(nil)
+		handler := presentation.NewNoteHandler(svc)
 
 		reqBody := map[string]any{
 			"content": "",
@@ -86,12 +80,13 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-		assert.Contains(t, got.Message, "content cannot be empty")
+		assert.Equal(t, "content cannot be empty", got.Message)
 	})
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
 		reqBody := map[string]any{
 			"content": "Valid note content",
@@ -106,11 +101,12 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 	})
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		mockService.EXPECT().CreateNote(mock.Anything, mock.Anything).
-			Return(application.NoteOutput{}, assert.AnError).
+		mockRepo.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(assert.AnError).
 			Once()
 
 		reqBody := map[string]any{
@@ -129,8 +125,9 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 	})
 
 	t.Run("should return 400 when request body is invalid JSON", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
 		resp, got, err := nethttp.RequestWithResponse[string, sharedresp.ErrorResponse](
 			t.Context(), http.MethodPost, "/notes", "invalid json", func(w http.ResponseWriter, r *http.Request) {
@@ -174,25 +171,27 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 	validUserID := "507f1f77bcf86cd799439011"
 
 	t.Run("should return 200 with notes list", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
+		userID := primitive.NewObjectID()
 		now := time.Now().UTC()
-		output := application.ListNotesOutput{
-			Data: []application.NoteOutput{
+		mockList := listopts.Paginated[domain.Note]{
+			Data: []domain.Note{
 				{
-					ID:        "note1",
-					UserID:    validUserID,
+					ID:        primitive.NewObjectID(),
+					UserID:    userID,
 					Content:   domain.NoteContent("Note 1 content"),
 					CreatedAt: now,
 					UpdatedAt: now,
 				},
 				{
-					ID:        "note2",
-					UserID:    validUserID,
+					ID:        primitive.NewObjectID(),
+					UserID:    userID,
 					Content:   domain.NoteContent("Note 2 content"),
-					CreatedAt: now.Add(-time.Hour),
-					UpdatedAt: now.Add(-time.Hour),
+					CreatedAt: now,
+					UpdatedAt: now,
 				},
 			},
 			Pagination: listopts.PaginationOutput{
@@ -202,9 +201,8 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 				TotalPages: 1,
 			},
 		}
-
-		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).
-			Return(output, nil).
+		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).
+			Return(mockList, nil).
 			Once()
 
 		resp, got, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
@@ -220,16 +218,19 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 		assert.Equal(t, 1, got.Pagination.Page)
 		assert.Equal(t, 10, got.Pagination.PageSize)
 		assert.Equal(t, 1, got.Pagination.TotalPages)
-		assert.Equal(t, "note1", got.Data[0].ID)
+		assert.NotEmpty(t, got.Data[0].ID)
 		assert.Equal(t, "Note 1 content", got.Data[0].Content)
+		assert.NotEmpty(t, got.Data[1].ID)
+		assert.Equal(t, "Note 2 content", got.Data[1].Content)
 	})
 
 	t.Run("should return 200 with empty list when no notes found", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		output := application.ListNotesOutput{
-			Data: []application.NoteOutput{},
+		mockList := listopts.Paginated[domain.Note]{
+			Data: []domain.Note{},
 			Pagination: listopts.PaginationOutput{
 				TotalCount: 0,
 				Page:       1,
@@ -237,9 +238,8 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 				TotalPages: 0,
 			},
 		}
-
-		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).
-			Return(output, nil).
+		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).
+			Return(mockList, nil).
 			Once()
 
 		resp, got, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
@@ -255,11 +255,12 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 	})
 
 	t.Run("should use default values when query parameters are missing", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		output := application.ListNotesOutput{
-			Data: []application.NoteOutput{},
+		mockList := listopts.Paginated[domain.Note]{
+			Data: []domain.Note{},
 			Pagination: listopts.PaginationOutput{
 				TotalCount: 0,
 				Page:       1,
@@ -267,8 +268,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 				TotalPages: 0,
 			},
 		}
-
-		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).Return(output, nil).Once()
+		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).Return(mockList, nil).Once()
 
 		resp, _, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes", nil, func(w http.ResponseWriter, r *http.Request) {
@@ -281,11 +281,12 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 	})
 
 	t.Run("should parse query parameters correctly", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		output := application.ListNotesOutput{
-			Data: []application.NoteOutput{},
+		mockList := listopts.Paginated[domain.Note]{
+			Data: []domain.Note{},
 			Pagination: listopts.PaginationOutput{
 				TotalCount: 0,
 				Page:       2,
@@ -293,8 +294,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 				TotalPages: 0,
 			},
 		}
-
-		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).Return(output, nil).Once()
+		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).Return(mockList, nil).Once()
 
 		resp, _, err := nethttp.RequestWithResponse[any, listopts.PaginatedResponse[presentation.NoteResponse]](
 			t.Context(), http.MethodGet, "/notes?page=2&page_size=10&sort_by=updated_at&sort_order=asc", nil, func(w http.ResponseWriter, r *http.Request) {
@@ -307,8 +307,9 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 	})
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
 		resp, got, err := nethttp.RequestWithResponse[any, sharedresp.ErrorResponse](
 			t.Context(), http.MethodGet, "/notes", nil, handler.ListNotes)
@@ -319,11 +320,12 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 	})
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
-		mockService := mocks.NewMockNoteService(t)
-		handler := presentation.NewNoteHandler(mockService)
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
 
-		mockService.EXPECT().ListNotes(mock.Anything, mock.Anything).
-			Return(application.ListNotesOutput{}, assert.AnError).
+		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).
+			Return(listopts.Paginated[domain.Note]{}, assert.AnError).
 			Once()
 
 		resp, got, err := nethttp.RequestWithResponse[any, sharedresp.ErrorResponse](
@@ -334,6 +336,127 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		assert.Equal(t, "internal server error", got.Message)
+	})
+}
+
+func TestNoteHandler_GetUserNoteByID(t *testing.T) {
+	t.Run("should return 200 with note details", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		now := time.Now().UTC()
+		mockNote := domain.Note{
+			ID:        primitive.NewObjectID(),
+			UserID:    primitive.NewObjectID(),
+			Content:   domain.NoteContent("Note content"),
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
+
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, mockNote.ID, mockNote.UserID).Return(mockNote, nil).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, mockNote.UserID.Hex())
+			handler.GetUserNoteByID(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s", mockNote.ID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var got presentation.NoteResponse
+		err := json.Unmarshal(rec.Body.Bytes(), &got)
+		require.NoError(t, err)
+
+		assert.Equal(t, mockNote.ID.Hex(), got.ID)
+		assert.Equal(t, "Note content", got.Content)
+	})
+
+	t.Run("should return 404 when note not found", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+		userID := primitive.NewObjectID()
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, domain.ErrNoteNotFound).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			handler.GetUserNoteByID(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "note not found", got.Message)
+	})
+
+	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /notes/{id}", handler.GetUserNoteByID)
+
+		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "unauthorized", got.Message)
+	})
+
+	t.Run("should return 500 when service returns error", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+		userID := primitive.NewObjectID()
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, assert.AnError).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			handler.GetUserNoteByID(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
 		assert.Equal(t, "internal server error", got.Message)
 	})
 }

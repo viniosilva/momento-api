@@ -10,6 +10,7 @@ import (
 type NoteService interface {
 	CreateNote(ctx context.Context, input application.NoteInput) (application.NoteOutput, error)
 	ListNotes(ctx context.Context, input application.ListNotesInput) (application.ListNotesOutput, error)
+	GetUserNoteByID(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error)
 }
 
 type JWTService interface {

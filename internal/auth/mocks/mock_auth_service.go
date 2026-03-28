@@ -72,7 +72,7 @@ type MockAuthService_Login_Call struct {
 // Login is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input application.LoginInput
-func (_e *MockAuthService_Expecter) Login(ctx interface{}, input interface{}) *MockAuthService_Login_Call {
+func (_e *MockAuthService_Expecter) Login(ctx any, input any) *MockAuthService_Login_Call {
 	return &MockAuthService_Login_Call{Call: _e.mock.On("Login", ctx, input)}
 }
 
@@ -138,7 +138,7 @@ type MockAuthService_Register_Call struct {
 // Register is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input application.UserInput
-func (_e *MockAuthService_Expecter) Register(ctx interface{}, input interface{}) *MockAuthService_Register_Call {
+func (_e *MockAuthService_Expecter) Register(ctx any, input any) *MockAuthService_Register_Call {
 	return &MockAuthService_Register_Call{Call: _e.mock.On("Register", ctx, input)}
 }
 

@@ -69,7 +69,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := NoteResponse{
+	res := NoteResponse{
 		ID:        output.ID,
 		UserID:    output.UserID,
 		Content:   string(output.Content),
@@ -77,7 +77,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: output.UpdatedAt.Format(time.RFC3339),
 	}
 
-	nethttp_utils.JSON(w, http.StatusCreated, response)
+	nethttp_utils.JSON(w, http.StatusCreated, res)
 }
 
 // ListNotes godoc
@@ -135,12 +135,52 @@ func (h *noteHandler) ListNotes(w http.ResponseWriter, r *http.Request) {
 		data = append(data, NoteApplicationToResponse(note))
 	}
 
-	response := ListNotesResponse{
+	res := ListNotesResponse{
 		Data:       data,
 		Pagination: listopts.PaginationApplicationToResponse(output.Pagination),
 	}
 
-	nethttp_utils.JSON(w, http.StatusOK, response)
+	nethttp_utils.JSON(w, http.StatusOK, res)
+}
+
+// GetUserNoteByID godoc
+// @Summary Retrieve a note by ID
+// @Description Retrieves a specific note for the authenticated user by note ID
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Note ID"
+// @Success 200 {object} NoteResponse
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Note not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/notes/{id} [get]
+func (h *noteHandler) GetUserNoteByID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	input := application.GetUserNoteByIDInput{
+		UserID: userID,
+		ID:     r.PathValue("id"),
+	}
+
+	output, err := h.noteService.GetUserNoteByID(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	res := NoteApplicationToResponse(output)
+	nethttp_utils.JSON(w, http.StatusOK, res)
 }
 
 func MapErrorToHTTPStatus(err error) (int, string) {
@@ -148,6 +188,10 @@ func MapErrorToHTTPStatus(err error) (int, string) {
 		errors.Is(err, domain.ErrContentTooLong) ||
 		errors.Is(err, domain.ErrInvalidNoteContent) {
 		return http.StatusBadRequest, err.Error()
+	}
+
+	if errors.Is(err, domain.ErrNoteNotFound) {
+		return http.StatusNotFound, err.Error()
 	}
 
 	return http.StatusInternalServerError, "internal server error"

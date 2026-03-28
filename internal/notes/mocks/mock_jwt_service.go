@@ -72,7 +72,7 @@ type MockJWTService_Validate_Call struct {
 
 // Validate is a helper method to define mock.On call
 //   - tokenString string
-func (_e *MockJWTService_Expecter) Validate(tokenString interface{}) *MockJWTService_Validate_Call {
+func (_e *MockJWTService_Expecter) Validate(tokenString any) *MockJWTService_Validate_Call {
 	return &MockJWTService_Validate_Call{Call: _e.mock.On("Validate", tokenString)}
 }
 

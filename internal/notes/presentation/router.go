@@ -7,6 +7,7 @@ import (
 	"pinnado/pkg/nethttp"
 	auth "pinnado/pkg/nethttp/auth"
 	logging "pinnado/pkg/nethttp/logging"
+	nethttp_sanitization "pinnado/pkg/nethttp/sanitization"
 	"time"
 )
 
@@ -23,6 +24,7 @@ func SetupRouter(options SetupRouterOptions) {
 	handler := NewNoteHandler(options.NoteService)
 
 	chain := nethttp.NewDefaultChain(options.Logger, nethttp.WithTimeout(options.Timeout))
+	chain.AddMiddleware(nethttp_sanitization.SanitizationMiddleware())
 	chain.AddMiddleware(logging.LoggingMiddleware(options.Logger))
 	chain.AddMiddleware(auth.AuthMiddleware(options.JWTService))
 
@@ -34,5 +36,10 @@ func SetupRouter(options SetupRouterOptions) {
 	options.Mux.Handle(
 		fmt.Sprintf("GET %s/notes", options.Prefix),
 		chain.ThenFunc(handler.ListNotes),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.GetUserNoteByID),
 	)
 }
