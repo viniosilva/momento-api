@@ -510,3 +510,72 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		assert.Contains(t, err.Error(), "s.noteRepository.GetByIDAndUserID")
 	})
 }
+
+func TestNoteService_DeleteNote(t *testing.T) {
+	userID := primitive.NewObjectID()
+	noteID := primitive.NewObjectID()
+
+	defaultInput := application.DeleteNoteInput{
+		UserID: userID.Hex(),
+		ID:     noteID.Hex(),
+	}
+
+	t.Run("should delete note successfully", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
+
+		err := noteService.DeleteNote(t.Context(), defaultInput)
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error when ID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.ID = "invalid"
+
+		err := noteService.DeleteNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid ID")
+	})
+
+	t.Run("should return error when UserID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.UserID = "invalid"
+
+		err := noteService.DeleteNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid user ID")
+	})
+
+	t.Run("should return note not found when repository returns ErrNoteNotFound", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
+
+		err := noteService.DeleteNote(t.Context(), defaultInput)
+
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
+
+	t.Run("should return wrapped error when repository returns generic error", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
+
+		err := noteService.DeleteNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "s.noteRepository.DeleteByIDAndUserID")
+	})
+}

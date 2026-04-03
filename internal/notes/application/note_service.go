@@ -123,3 +123,25 @@ func (s *NoteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (No
 
 	return NoteApplicationToOutput(note), nil
 }
+
+func (s *NoteService) DeleteNote(ctx context.Context, input DeleteNoteInput) error {
+	id, err := primitive.ObjectIDFromHex(input.ID)
+	if err != nil {
+		return fmt.Errorf("invalid ID: %w", err)
+	}
+
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	if err := s.noteRepository.DeleteByIDAndUserID(ctx, id, userID); err != nil {
+		if errors.Is(err, domain.ErrNoteNotFound) {
+			return domain.ErrNoteNotFound
+		}
+
+		return fmt.Errorf("s.noteRepository.DeleteByIDAndUserID: %w", err)
+	}
+
+	return nil
+}

@@ -92,3 +92,21 @@ func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
 
 	return nil
 }
+
+func (r *noteRepository) DeleteByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+	filter := bson.M{
+		"_id":     id,
+		"user_id": userID,
+	}
+
+	result, err := r.collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrNoteNotFound
+	}
+
+	return nil
+}

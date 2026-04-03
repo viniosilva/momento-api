@@ -13,4 +13,5 @@ type NoteRepository interface {
 	ListByUserID(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error)
 	GetByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) (domain.Note, error)
 	Update(ctx context.Context, note domain.Note) error
+	DeleteByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error
 }

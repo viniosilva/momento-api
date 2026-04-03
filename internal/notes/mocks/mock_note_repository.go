@@ -97,6 +97,69 @@ func (_c *MockNoteRepository_Create_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
+// DeleteByIDAndUserID provides a mock function for the type MockNoteRepository
+func (_mock *MockNoteRepository) DeleteByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error {
+	ret := _mock.Called(ctx, id, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteByIDAndUserID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) error); ok {
+		r0 = returnFunc(ctx, id, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockNoteRepository_DeleteByIDAndUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteByIDAndUserID'
+type MockNoteRepository_DeleteByIDAndUserID_Call struct {
+	*mock.Call
+}
+
+// DeleteByIDAndUserID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id primitive.ObjectID
+//   - userID primitive.ObjectID
+func (_e *MockNoteRepository_Expecter) DeleteByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_DeleteByIDAndUserID_Call {
+	return &MockNoteRepository_DeleteByIDAndUserID_Call{Call: _e.mock.On("DeleteByIDAndUserID", ctx, id, userID)}
+}
+
+func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Run(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID)) *MockNoteRepository_DeleteByIDAndUserID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 primitive.ObjectID
+		if args[1] != nil {
+			arg1 = args[1].(primitive.ObjectID)
+		}
+		var arg2 primitive.ObjectID
+		if args[2] != nil {
+			arg2 = args[2].(primitive.ObjectID)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Return(err error) *MockNoteRepository_DeleteByIDAndUserID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error) *MockNoteRepository_DeleteByIDAndUserID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetByIDAndUserID provides a mock function for the type MockNoteRepository
 func (_mock *MockNoteRepository) GetByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (domain.Note, error) {
 	ret := _mock.Called(ctx, id, userID)
