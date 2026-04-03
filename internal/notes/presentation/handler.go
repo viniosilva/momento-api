@@ -183,6 +183,57 @@ func (h *noteHandler) GetUserNoteByID(w http.ResponseWriter, r *http.Request) {
 	nethttp_utils.JSON(w, http.StatusOK, res)
 }
 
+// UpdateNote godoc
+// @Summary Update a note
+// @Description Updates the content of a note for the authenticated user
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Note ID"
+// @Param request body UpdateNoteRequest true "Updated note content"
+// @Success 200 {object} NoteResponse
+// @Failure 400 {object} response.ErrorResponse "Invalid content"
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Note not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/notes/{id} [patch]
+func (h *noteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	var req UpdateNoteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp_utils.JSON(w, http.StatusBadRequest, sharedresp.ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	input := application.UpdateNoteInput{
+		UserID:  userID,
+		ID:      r.PathValue("id"),
+		Content: req.Content,
+	}
+
+	output, err := h.noteService.UpdateNote(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	res := NoteApplicationToResponse(output)
+	nethttp_utils.JSON(w, http.StatusOK, res)
+}
+
 func MapErrorToHTTPStatus(err error) (int, string) {
 	if errors.Is(err, domain.ErrContentEmpty) ||
 		errors.Is(err, domain.ErrContentTooLong) ||

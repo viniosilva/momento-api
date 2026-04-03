@@ -32,6 +32,12 @@ type GetUserNoteByIDInput struct {
 	ID     string
 }
 
+type UpdateNoteInput struct {
+	UserID  string
+	ID      string
+	Content string
+}
+
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
 		ID:        note.ID.Hex(),

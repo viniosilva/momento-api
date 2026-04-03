@@ -42,4 +42,9 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("GET %s/notes/{id}", options.Prefix),
 		chain.ThenFunc(handler.GetUserNoteByID),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.UpdateNote),
+	)
 }

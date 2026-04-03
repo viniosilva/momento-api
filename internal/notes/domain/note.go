@@ -33,3 +33,8 @@ func NewNote(userID primitive.ObjectID, content NoteContent) Note {
 		UpdatedAt: now,
 	}
 }
+
+func (n *Note) SetContent(content NoteContent) {
+	n.Content = content
+	n.UpdatedAt = time.Now().UTC()
+}

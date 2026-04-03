@@ -24,10 +24,10 @@ func TestNewNoteService(t *testing.T) {
 }
 
 func TestNoteService_CreateNote(t *testing.T) {
-	validUserID := primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 
 	defaultInput := application.NoteInput{
-		UserID:  validUserID,
+		UserID:  userID,
 		Content: "Valid note content",
 	}
 
@@ -41,7 +41,7 @@ func TestNoteService_CreateNote(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, validUserID, got.UserID)
+		assert.Equal(t, userID, got.UserID)
 		assert.Equal(t, domain.NoteContent("Valid note content"), got.Content)
 		assert.WithinDuration(t, time.Now().UTC(), got.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now().UTC(), got.UpdatedAt, time.Second)
@@ -103,10 +103,10 @@ func TestNoteService_CreateNote(t *testing.T) {
 }
 
 func TestNoteService_ListNotes(t *testing.T) {
-	validUserID := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
 
 	defaultInput := application.ListNotesInput{
-		UserID: validUserID.Hex(),
+		UserID: userID.Hex(),
 		Pagination: listopts.PaginationInput{
 			Page:     1,
 			PageSize: 10,
@@ -124,14 +124,14 @@ func TestNoteService_ListNotes(t *testing.T) {
 		expectedNotes := []domain.Note{
 			{
 				ID:        primitive.NewObjectID(),
-				UserID:    validUserID,
+				UserID:    userID,
 				Content:   "Note 1",
 				CreatedAt: time.Now().UTC(),
 				UpdatedAt: time.Now().UTC(),
 			},
 			{
 				ID:        primitive.NewObjectID(),
-				UserID:    validUserID,
+				UserID:    userID,
 				Content:   "Note 2",
 				CreatedAt: time.Now().UTC().Add(-time.Hour),
 				UpdatedAt: time.Now().UTC().Add(-time.Hour),
@@ -139,7 +139,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		}
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{
 				Data: expectedNotes,
 				Pagination: listopts.PaginationOutput{
@@ -168,7 +168,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		noteService := application.NewNoteService(noteRepoMock)
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
 				Pagination: listopts.PaginationOutput{
@@ -195,7 +195,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		noteService := application.NewNoteService(noteRepoMock)
 
 		input := application.ListNotesInput{
-			UserID: validUserID.Hex(),
+			UserID: userID.Hex(),
 			Pagination: listopts.PaginationInput{
 				Page:     1,
 				PageSize: 10,
@@ -207,7 +207,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		}
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
 				Pagination: listopts.PaginationOutput{
@@ -232,7 +232,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		noteService := application.NewNoteService(noteRepoMock)
 
 		input := application.ListNotesInput{
-			UserID: validUserID.Hex(),
+			UserID: userID.Hex(),
 			Pagination: listopts.PaginationInput{
 				Page:     0,
 				PageSize: 0,
@@ -244,7 +244,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		}
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
 				Pagination: listopts.PaginationOutput{
@@ -274,7 +274,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		}
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{
 				Data: []domain.Note{},
 				Pagination: listopts.PaginationOutput{
@@ -321,7 +321,7 @@ func TestNoteService_ListNotes(t *testing.T) {
 		noteService := application.NewNoteService(noteRepoMock)
 
 		noteRepoMock.EXPECT().
-			ListByUserID(mock.Anything, validUserID, mock.Anything).
+			ListByUserID(mock.Anything, userID, mock.Anything).
 			Return(listopts.Paginated[domain.Note]{}, assert.AnError).
 			Once()
 
@@ -395,5 +395,118 @@ func TestNoteService_GetUserNoteByID(t *testing.T) {
 		_, err := noteService.GetUserNoteByID(t.Context(), defaultInput)
 
 		assert.ErrorIs(t, err, assert.AnError)
+	})
+}
+
+func TestNoteService_UpdateNote(t *testing.T) {
+	userID := primitive.NewObjectID()
+	noteID := primitive.NewObjectID()
+
+	defaultInput := application.UpdateNoteInput{
+		UserID:  userID.Hex(),
+		ID:      noteID.Hex(),
+		Content: "Updated content",
+	}
+
+	now := time.Now().UTC().Add(-time.Hour)
+	noteMock := domain.Note{
+		ID:        noteID,
+		UserID:    userID,
+		Content:   "Initial content",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	t.Run("should update note successfully", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+
+		got, err := noteService.UpdateNote(t.Context(), defaultInput)
+		require.NoError(t, err)
+
+		assert.Equal(t, noteID.Hex(), got.ID)
+		assert.Equal(t, userID.Hex(), got.UserID)
+		assert.Equal(t, domain.NoteContent("Updated content"), got.Content)
+		assert.Equal(t, noteMock.CreatedAt, got.CreatedAt)
+		assert.NotEqual(t, noteMock.UpdatedAt, got.UpdatedAt)
+		assert.WithinDuration(t, time.Now().UTC(), got.UpdatedAt, time.Second)
+	})
+
+	t.Run("should return error when ID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.ID = "invalid"
+
+		_, err := noteService.UpdateNote(t.Context(), input)
+
+		assert.EqualError(t, err, "invalid ID: the provided hex string is not a valid ObjectID")
+	})
+
+	t.Run("should return error when UserID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.UserID = "invalid"
+
+		_, err := noteService.UpdateNote(t.Context(), input)
+
+		assert.EqualError(t, err, "invalid user ID: the provided hex string is not a valid ObjectID")
+	})
+
+	t.Run("should return error when content is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+
+		input := defaultInput
+		input.Content = ""
+
+		_, err := noteService.UpdateNote(t.Context(), input)
+
+		assert.ErrorIs(t, err, domain.ErrContentEmpty)
+	})
+
+	t.Run("should return note not found when repository Update returns ErrNoteNotFound", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.ErrNoteNotFound).Once()
+
+		_, err := noteService.UpdateNote(t.Context(), defaultInput)
+
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
+
+	t.Run("should return error when repository Update fails", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(assert.AnError).Once()
+
+		_, err := noteService.UpdateNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "s.noteRepository.Update")
+	})
+
+	t.Run("should return error when repository GetByIDAndUserID fails", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, assert.AnError).Once()
+
+		_, err := noteService.UpdateNote(t.Context(), defaultInput)
+
+		assert.ErrorIs(t, err, assert.AnError)
+		assert.Contains(t, err.Error(), "s.noteRepository.GetByIDAndUserID")
 	})
 }

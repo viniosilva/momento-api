@@ -67,3 +67,28 @@ func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID primit
 
 	return note, nil
 }
+
+func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
+	filter := bson.M{
+		"_id":     note.ID,
+		"user_id": note.UserID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"content":    note.Content,
+			"updated_at": note.UpdatedAt,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrNoteNotFound
+	}
+
+	return nil
+}

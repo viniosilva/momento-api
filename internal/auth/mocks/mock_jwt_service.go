@@ -71,7 +71,7 @@ type MockJWTService_Generate_Call struct {
 // Generate is a helper method to define mock.On call
 //   - userID string
 //   - email domain.Email
-func (_e *MockJWTService_Expecter) Generate(userID any, email any) *MockJWTService_Generate_Call {
+func (_e *MockJWTService_Expecter) Generate(userID interface{}, email interface{}) *MockJWTService_Generate_Call {
 	return &MockJWTService_Generate_Call{Call: _e.mock.On("Generate", userID, email)}
 }
 

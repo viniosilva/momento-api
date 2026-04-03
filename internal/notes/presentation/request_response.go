@@ -10,6 +10,10 @@ type CreateNoteRequest struct {
 	Content string `json:"content" example:"My important note content"`
 }
 
+type UpdateNoteRequest struct {
+	Content string `json:"content" example:"My updated note content"`
+}
+
 type NoteResponse struct {
 	ID        string `json:"id" example:"507f1f77bcf86cd799439011"`
 	UserID    string `json:"user_id" example:"507f1f77bcf86cd799439011"`

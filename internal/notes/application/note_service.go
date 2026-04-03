@@ -90,3 +90,36 @@ func (s *NoteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByID
 	noteOutput := NoteApplicationToOutput(note)
 	return noteOutput, nil
 }
+
+func (s *NoteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (NoteOutput, error) {
+	id, err := primitive.ObjectIDFromHex(input.ID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("invalid ID: %w", err)
+	}
+
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
+	}
+
+	content, err := domain.NewNoteContent(input.Content)
+	if err != nil {
+		return NoteOutput{}, err
+	}
+	note.SetContent(content)
+
+	if err := s.noteRepository.Update(ctx, note); err != nil {
+		if errors.Is(err, domain.ErrNoteNotFound) {
+			return NoteOutput{}, domain.ErrNoteNotFound
+		}
+
+		return NoteOutput{}, fmt.Errorf("s.noteRepository.Update: %w", err)
+	}
+
+	return NoteApplicationToOutput(note), nil
+}

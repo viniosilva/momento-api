@@ -65,7 +65,7 @@ type MockNoteRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - note domain.Note
-func (_e *MockNoteRepository_Expecter) Create(ctx any, note any) *MockNoteRepository_Create_Call {
+func (_e *MockNoteRepository_Expecter) Create(ctx interface{}, note interface{}) *MockNoteRepository_Create_Call {
 	return &MockNoteRepository_Create_Call{Call: _e.mock.On("Create", ctx, note)}
 }
 
@@ -132,7 +132,7 @@ type MockNoteRepository_GetByIDAndUserID_Call struct {
 //   - ctx context.Context
 //   - id primitive.ObjectID
 //   - userID primitive.ObjectID
-func (_e *MockNoteRepository_Expecter) GetByIDAndUserID(ctx any, id any, userID any) *MockNoteRepository_GetByIDAndUserID_Call {
+func (_e *MockNoteRepository_Expecter) GetByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_GetByIDAndUserID_Call {
 	return &MockNoteRepository_GetByIDAndUserID_Call{Call: _e.mock.On("GetByIDAndUserID", ctx, id, userID)}
 }
 
@@ -204,7 +204,7 @@ type MockNoteRepository_ListByUserID_Call struct {
 //   - ctx context.Context
 //   - userID primitive.ObjectID
 //   - params listopts.ListParams
-func (_e *MockNoteRepository_Expecter) ListByUserID(ctx any, userID any, params any) *MockNoteRepository_ListByUserID_Call {
+func (_e *MockNoteRepository_Expecter) ListByUserID(ctx interface{}, userID interface{}, params interface{}) *MockNoteRepository_ListByUserID_Call {
 	return &MockNoteRepository_ListByUserID_Call{Call: _e.mock.On("ListByUserID", ctx, userID, params)}
 }
 
@@ -237,6 +237,63 @@ func (_c *MockNoteRepository_ListByUserID_Call) Return(paginated listopts.Pagina
 }
 
 func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Update provides a mock function for the type MockNoteRepository
+func (_mock *MockNoteRepository) Update(ctx context.Context, note domain.Note) error {
+	ret := _mock.Called(ctx, note)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.Note) error); ok {
+		r0 = returnFunc(ctx, note)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockNoteRepository_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type MockNoteRepository_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - ctx context.Context
+//   - note domain.Note
+func (_e *MockNoteRepository_Expecter) Update(ctx interface{}, note interface{}) *MockNoteRepository_Update_Call {
+	return &MockNoteRepository_Update_Call{Call: _e.mock.On("Update", ctx, note)}
+}
+
+func (_c *MockNoteRepository_Update_Call) Run(run func(ctx context.Context, note domain.Note)) *MockNoteRepository_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 domain.Note
+		if args[1] != nil {
+			arg1 = args[1].(domain.Note)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteRepository_Update_Call) Return(err error) *MockNoteRepository_Update_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockNoteRepository_Update_Call) RunAndReturn(run func(ctx context.Context, note domain.Note) error) *MockNoteRepository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

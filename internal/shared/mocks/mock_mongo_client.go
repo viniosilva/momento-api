@@ -63,7 +63,7 @@ type MockMongoClient_Ping_Call struct {
 // Ping is a helper method to define mock.On call
 //   - ctx context.Context
 //   - readPreference *readpref.ReadPref
-func (_e *MockMongoClient_Expecter) Ping(ctx any, readPreference any) *MockMongoClient_Ping_Call {
+func (_e *MockMongoClient_Expecter) Ping(ctx interface{}, readPreference interface{}) *MockMongoClient_Ping_Call {
 	return &MockMongoClient_Ping_Call{Call: _e.mock.On("Ping", ctx, readPreference)}
 }
 
