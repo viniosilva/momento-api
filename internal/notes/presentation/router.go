@@ -57,4 +57,9 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("PATCH %s/notes/{id}/archive", options.Prefix),
 		chain.ThenFunc(handler.ArchiveNote),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}/restore", options.Prefix),
+		chain.ThenFunc(handler.RestoreNote),
+	)
 }

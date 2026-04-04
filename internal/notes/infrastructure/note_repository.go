@@ -136,3 +136,28 @@ func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID pr
 
 	return nil
 }
+
+func (r *noteRepository) RestoreByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+	filter := bson.M{
+		"_id":         id,
+		"user_id":     userID,
+		"archived_at": bson.M{"$exists": true},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"archived_at": nil,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrNoteNotFound
+	}
+
+	return nil
+}

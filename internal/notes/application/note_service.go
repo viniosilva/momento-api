@@ -168,3 +168,26 @@ func (s *NoteService) ArchiveNote(ctx context.Context, input ArchiveNoteInput) e
 
 	return nil
 }
+
+func (s *NoteService) RestoreNote(ctx context.Context, input RestoreNoteInput) error {
+	id, err := primitive.ObjectIDFromHex(input.ID)
+	if err != nil {
+		return fmt.Errorf("invalid ID: %w", err)
+	}
+
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	err = s.noteRepository.RestoreByIDAndUserID(ctx, id, userID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNoteNotFound) {
+			return domain.ErrNoteNotFound
+		}
+
+		return fmt.Errorf("s.noteRepository.RestoreByIDAndUserID: %w", err)
+	}
+
+	return nil
+}

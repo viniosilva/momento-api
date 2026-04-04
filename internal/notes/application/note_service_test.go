@@ -409,7 +409,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 	}
 
 	now := time.Now().UTC().Add(-time.Hour)
-	noteMock := domain.Note{
+	noteMockDefault := domain.Note{
 		ID:        noteID,
 		UserID:    userID,
 		Content:   "Initial content",
@@ -421,7 +421,10 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		nMock := noteMockDefault
+		nMock.UpdatedAt = time.Now().UTC()
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(nMock, nil).Once()
 		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
 
 		got, err := noteService.UpdateNote(t.Context(), defaultInput)
@@ -430,9 +433,8 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		assert.Equal(t, noteID.Hex(), got.ID)
 		assert.Equal(t, userID.Hex(), got.UserID)
 		assert.Equal(t, domain.NoteContent("Updated content"), got.Content)
-		assert.Equal(t, noteMock.CreatedAt, got.CreatedAt)
-		assert.NotEqual(t, noteMock.UpdatedAt, got.UpdatedAt)
-		assert.WithinDuration(t, time.Now().UTC(), got.UpdatedAt, time.Second)
+		assert.Equal(t, noteMockDefault.CreatedAt, got.CreatedAt)
+		assert.NotEqual(t, noteMockDefault.UpdatedAt, got.UpdatedAt)
 	})
 
 	t.Run("should return error when ID is invalid", func(t *testing.T) {
@@ -463,7 +465,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
 
 		input := defaultInput
 		input.Content = ""
@@ -477,7 +479,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
 		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.ErrNoteNotFound).Once()
 
 		_, err := noteService.UpdateNote(t.Context(), defaultInput)
@@ -489,7 +491,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMock, nil).Once()
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
 		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(assert.AnError).Once()
 
 		_, err := noteService.UpdateNote(t.Context(), defaultInput)
@@ -593,18 +595,7 @@ func TestNoteService_ArchiveNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		note := domain.Note{
-			ID:        noteID,
-			UserID:    userID,
-			Content:   "test content",
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-		}
-
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(note, nil).Once()
-		noteRepoMock.EXPECT().Update(mock.Anything, mock.MatchedBy(func(n domain.Note) bool {
-			return n.ArchivedAt != nil
-		})).Return(nil).Once()
+		noteRepoMock.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
 
 		err := noteService.ArchiveNote(t.Context(), defaultInput)
 		require.NoError(t, err)
@@ -640,7 +631,7 @@ func TestNoteService_ArchiveNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, domain.ErrNoteNotFound).Once()
+		noteRepoMock.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
 
 		err := noteService.ArchiveNote(t.Context(), defaultInput)
 
@@ -652,11 +643,81 @@ func TestNoteService_ArchiveNote(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, assert.AnError).Once()
+		noteRepoMock.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
 
 		err := noteService.ArchiveNote(t.Context(), defaultInput)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "s.noteRepository.GetByIDAndUserID")
+		assert.Contains(t, err.Error(), "s.noteRepository.ArchiveByIDAndUserID")
+	})
+}
+
+func TestNoteService_RestoreNote(t *testing.T) {
+	userID := primitive.NewObjectID()
+	noteID := primitive.NewObjectID()
+
+	defaultInput := application.RestoreNoteInput{
+		UserID: userID.Hex(),
+		ID:     noteID.Hex(),
+	}
+
+	t.Run("should restore note successfully", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
+
+		err := noteService.RestoreNote(t.Context(), defaultInput)
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error when ID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.ID = "invalid"
+
+		err := noteService.RestoreNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid ID")
+	})
+
+	t.Run("should return error when UserID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.UserID = "invalid"
+
+		err := noteService.RestoreNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid user ID")
+	})
+
+	t.Run("should return error when note not found", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
+
+		err := noteService.RestoreNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
+
+	t.Run("should return wrapped error when repository returns generic error", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
+
+		err := noteService.RestoreNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "s.noteRepository.RestoreByIDAndUserID")
 	})
 }

@@ -48,6 +48,11 @@ type ArchiveNoteInput struct {
 	ID     string
 }
 
+type RestoreNoteInput struct {
+	UserID string
+	ID     string
+}
+
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
 		ID:        note.ID.Hex(),

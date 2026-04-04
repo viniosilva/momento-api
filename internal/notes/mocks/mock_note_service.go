@@ -350,6 +350,63 @@ func (_c *MockNoteService_ListNotes_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
+// RestoreNote provides a mock function for the type MockNoteService
+func (_mock *MockNoteService) RestoreNote(ctx context.Context, input application.RestoreNoteInput) error {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RestoreNote")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, application.RestoreNoteInput) error); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockNoteService_RestoreNote_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RestoreNote'
+type MockNoteService_RestoreNote_Call struct {
+	*mock.Call
+}
+
+// RestoreNote is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input application.RestoreNoteInput
+func (_e *MockNoteService_Expecter) RestoreNote(ctx interface{}, input interface{}) *MockNoteService_RestoreNote_Call {
+	return &MockNoteService_RestoreNote_Call{Call: _e.mock.On("RestoreNote", ctx, input)}
+}
+
+func (_c *MockNoteService_RestoreNote_Call) Run(run func(ctx context.Context, input application.RestoreNoteInput)) *MockNoteService_RestoreNote_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 application.RestoreNoteInput
+		if args[1] != nil {
+			arg1 = args[1].(application.RestoreNoteInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockNoteService_RestoreNote_Call) Return(err error) *MockNoteService_RestoreNote_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockNoteService_RestoreNote_Call) RunAndReturn(run func(ctx context.Context, input application.RestoreNoteInput) error) *MockNoteService_RestoreNote_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateNote provides a mock function for the type MockNoteService
 func (_mock *MockNoteService) UpdateNote(ctx context.Context, input application.UpdateNoteInput) (application.NoteOutput, error) {
 	ret := _mock.Called(ctx, input)
