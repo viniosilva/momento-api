@@ -14,4 +14,5 @@ type NoteRepository interface {
 	GetByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) (domain.Note, error)
 	Update(ctx context.Context, note domain.Note) error
 	DeleteByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error
+	ArchiveByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error
 }

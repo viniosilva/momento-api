@@ -52,4 +52,9 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("DELETE %s/notes/{id}", options.Prefix),
 		chain.ThenFunc(handler.DeleteNote),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}/archive", options.Prefix),
+		chain.ThenFunc(handler.ArchiveNote),
+	)
 }

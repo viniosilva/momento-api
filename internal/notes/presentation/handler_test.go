@@ -460,3 +460,110 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 		assert.Equal(t, "internal server error", got.Message)
 	})
 }
+
+func TestNoteHandler_ArchiveNote(t *testing.T) {
+	t.Run("should return 204 no content", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+		userID := primitive.NewObjectID()
+		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			handler.ArchiveNote(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+	})
+
+	t.Run("should return 404 when note not found", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+		userID := primitive.NewObjectID()
+		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			handler.ArchiveNote(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "note not found", got.Message)
+	})
+
+	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("PATCH /notes/{id}/archive", handler.ArchiveNote)
+
+		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "unauthorized", got.Message)
+	})
+
+	t.Run("should return 500 when service returns error", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := application.NewNoteService(mockRepo)
+		handler := presentation.NewNoteHandler(svc)
+
+		noteID := primitive.NewObjectID()
+		userID := primitive.NewObjectID()
+		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			handler.ArchiveNote(w, r.WithContext(ctx))
+		})
+
+		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+		var got sharedresp.ErrorResponse
+		err := json.NewDecoder(rec.Body).Decode(&got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "internal server error", got.Message)
+	})
+}

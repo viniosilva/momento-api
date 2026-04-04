@@ -272,6 +272,45 @@ func (h *noteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ArchiveNote godoc
+// @Summary Archive a note
+// @Description Archives a note belonging to the authenticated user
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Note ID"
+// @Success 200 {object} NoteResponse
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Note not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/notes/{id}/archive [patch]
+func (h *noteHandler) ArchiveNote(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	input := application.ArchiveNoteInput{
+		UserID: userID,
+		ID:     r.PathValue("id"),
+	}
+
+	err := h.noteService.ArchiveNote(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	nethttp_utils.StatusCode(w, http.StatusNoContent)
+}
+
 func MapErrorToHTTPStatus(err error) (int, string) {
 	if errors.Is(err, domain.ErrContentEmpty) ||
 		errors.Is(err, domain.ErrContentTooLong) ||

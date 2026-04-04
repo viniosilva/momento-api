@@ -13,6 +13,7 @@ type NoteService interface {
 	GetUserNoteByID(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error)
 	UpdateNote(ctx context.Context, input application.UpdateNoteInput) (application.NoteOutput, error)
 	DeleteNote(ctx context.Context, input application.DeleteNoteInput) error
+	ArchiveNote(ctx context.Context, input application.ArchiveNoteInput) error
 }
 
 type JWTService interface {

@@ -15,11 +15,12 @@ var (
 )
 
 type Note struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	UserID    primitive.ObjectID `bson:"user_id"`
-	Content   NoteContent        `bson:"content"`
-	CreatedAt time.Time          `bson:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at"`
+	ID         primitive.ObjectID `bson:"_id"`
+	UserID     primitive.ObjectID `bson:"user_id"`
+	Content    NoteContent        `bson:"content"`
+	CreatedAt  time.Time          `bson:"created_at"`
+	UpdatedAt  time.Time          `bson:"updated_at"`
+	ArchivedAt *time.Time         `bson:"archived_at"`
 }
 
 func NewNote(userID primitive.ObjectID, content NoteContent) Note {
@@ -36,5 +37,4 @@ func NewNote(userID primitive.ObjectID, content NoteContent) Note {
 
 func (n *Note) SetContent(content NoteContent) {
 	n.Content = content
-	n.UpdatedAt = time.Now().UTC()
 }

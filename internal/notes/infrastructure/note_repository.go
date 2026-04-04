@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"time"
 
 	"pinnado/internal/notes/domain"
 	"pinnado/pkg/listopts"
@@ -77,7 +78,7 @@ func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
 	update := bson.M{
 		"$set": bson.M{
 			"content":    note.Content,
-			"updated_at": note.UpdatedAt,
+			"updated_at": time.Now().UTC(),
 		},
 	}
 
@@ -105,6 +106,31 @@ func (r *noteRepository) DeleteByIDAndUserID(ctx context.Context, id, userID pri
 	}
 
 	if result.DeletedCount == 0 {
+		return domain.ErrNoteNotFound
+	}
+
+	return nil
+}
+
+func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+	filter := bson.M{
+		"_id":         id,
+		"user_id":     userID,
+		"archived_at": bson.M{"$exists": false},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"archived_at": primitive.NewDateTimeFromTime(time.Now().UTC()),
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
 		return domain.ErrNoteNotFound
 	}
 

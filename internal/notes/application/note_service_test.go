@@ -579,3 +579,84 @@ func TestNoteService_DeleteNote(t *testing.T) {
 		assert.Contains(t, err.Error(), "s.noteRepository.DeleteByIDAndUserID")
 	})
 }
+
+func TestNoteService_ArchiveNote(t *testing.T) {
+	userID := primitive.NewObjectID()
+	noteID := primitive.NewObjectID()
+
+	defaultInput := application.ArchiveNoteInput{
+		UserID: userID.Hex(),
+		ID:     noteID.Hex(),
+	}
+
+	t.Run("should archive note successfully", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		note := domain.Note{
+			ID:        noteID,
+			UserID:    userID,
+			Content:   "test content",
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+		}
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(note, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.MatchedBy(func(n domain.Note) bool {
+			return n.ArchivedAt != nil
+		})).Return(nil).Once()
+
+		err := noteService.ArchiveNote(t.Context(), defaultInput)
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error when ID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.ID = "invalid"
+
+		err := noteService.ArchiveNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid ID")
+	})
+
+	t.Run("should return error when UserID is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.UserID = "invalid"
+
+		err := noteService.ArchiveNote(t.Context(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid user ID")
+	})
+
+	t.Run("should return error when note not found", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, domain.ErrNoteNotFound).Once()
+
+		err := noteService.ArchiveNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
+
+	t.Run("should return wrapped error when repository returns generic error", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, assert.AnError).Once()
+
+		err := noteService.ArchiveNote(t.Context(), defaultInput)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "s.noteRepository.GetByIDAndUserID")
+	})
+}

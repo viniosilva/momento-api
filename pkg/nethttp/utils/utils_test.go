@@ -12,6 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestStatusCode(t *testing.T) {
+	t.Run("should set status code", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		nethttp_utils.StatusCode(rec, http.StatusOK)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+}
+
 func TestJSON(t *testing.T) {
 	t.Run("should set Content-Type application/json", func(t *testing.T) {
 		rec := httptest.NewRecorder()

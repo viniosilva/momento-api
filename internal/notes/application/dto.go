@@ -43,6 +43,11 @@ type DeleteNoteInput struct {
 	ID     string
 }
 
+type ArchiveNoteInput struct {
+	UserID string
+	ID     string
+}
+
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
 		ID:        note.ID.Hex(),
