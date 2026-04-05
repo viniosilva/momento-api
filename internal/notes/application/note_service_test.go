@@ -28,7 +28,8 @@ func TestNoteService_CreateNote(t *testing.T) {
 
 	defaultInput := application.NoteInput{
 		UserID:  userID,
-		Content: "Valid note content",
+		Title:   "Title",
+		Content: "Note content",
 	}
 
 	t.Run("should create note successfully", func(t *testing.T) {
@@ -42,11 +43,24 @@ func TestNoteService_CreateNote(t *testing.T) {
 
 		assert.NotEmpty(t, got.ID)
 		assert.Equal(t, userID, got.UserID)
-		assert.Equal(t, domain.NoteContent("Valid note content"), got.Content)
+		assert.Equal(t, domain.NoteTitle("Title"), got.Title)
+		assert.Equal(t, domain.NoteContent("Note content"), got.Content)
 		assert.WithinDuration(t, time.Now().UTC(), got.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now().UTC(), got.UpdatedAt, time.Second)
 		assert.Equal(t, time.UTC, got.CreatedAt.Location())
 		assert.Equal(t, time.UTC, got.UpdatedAt.Location())
+	})
+
+	t.Run("should return error when title is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		input := defaultInput
+		input.Title = ""
+
+		_, err := noteService.CreateNote(t.Context(), input)
+
+		assert.ErrorIs(t, err, domain.ErrTitleEmpty)
 	})
 
 	t.Run("should return error when content is invalid", func(t *testing.T) {
@@ -386,6 +400,17 @@ func TestNoteService_GetUserNoteByID(t *testing.T) {
 		assert.EqualError(t, err, "invalid user ID: the provided hex string is not a valid ObjectID")
 	})
 
+	t.Run("should throw error when GetUserNoteByID return note not found", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, mock.Anything, mock.Anything).Return(domain.Note{}, domain.ErrNoteNotFound)
+
+		_, err := noteService.GetUserNoteByID(t.Context(), defaultInput)
+
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
+
 	t.Run("should throw error when GetUserNoteByID fails", func(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
@@ -405,6 +430,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 	defaultInput := application.UpdateNoteInput{
 		UserID:  userID.Hex(),
 		ID:      noteID.Hex(),
+		Title:   "Updated title",
 		Content: "Updated content",
 	}
 
@@ -412,6 +438,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 	noteMockDefault := domain.Note{
 		ID:        noteID,
 		UserID:    userID,
+		Title:     "Title",
 		Content:   "Initial content",
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -461,11 +488,21 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		assert.EqualError(t, err, "invalid user ID: the provided hex string is not a valid ObjectID")
 	})
 
-	t.Run("should return error when content is invalid", func(t *testing.T) {
+	t.Run("should return error when title is invalid", func(t *testing.T) {
 		noteRepoMock := mocks.NewMockNoteRepository(t)
 		noteService := application.NewNoteService(noteRepoMock)
 
-		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
+		input := defaultInput
+		input.Title = ""
+
+		_, err := noteService.UpdateNote(t.Context(), input)
+
+		assert.ErrorIs(t, err, domain.ErrTitleEmpty)
+	})
+
+	t.Run("should return error when content is invalid", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := application.NewNoteService(noteRepoMock)
 
 		input := defaultInput
 		input.Content = ""

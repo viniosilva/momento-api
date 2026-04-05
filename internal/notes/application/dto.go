@@ -8,12 +8,14 @@ import (
 
 type NoteInput struct {
 	UserID  string
+	Title   string
 	Content string
 }
 
 type NoteOutput struct {
 	ID        string
 	UserID    string
+	Title     domain.NoteTitle
 	Content   domain.NoteContent
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -35,6 +37,7 @@ type GetUserNoteByIDInput struct {
 type UpdateNoteInput struct {
 	UserID  string
 	ID      string
+	Title   string
 	Content string
 }
 
@@ -57,6 +60,7 @@ func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
 		ID:        note.ID.Hex(),
 		UserID:    note.UserID.Hex(),
+		Title:     note.Title,
 		Content:   note.Content,
 		CreatedAt: note.CreatedAt,
 		UpdatedAt: note.UpdatedAt,

@@ -57,6 +57,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	input := application.NoteInput{
 		UserID:  userID,
+		Title:   req.Title,
 		Content: req.Content,
 	}
 
@@ -72,6 +73,7 @@ func (h *noteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	res := NoteResponse{
 		ID:        output.ID,
 		UserID:    output.UserID,
+		Title:     string(output.Title),
 		Content:   string(output.Content),
 		CreatedAt: output.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: output.UpdatedAt.Format(time.RFC3339),
@@ -218,6 +220,7 @@ func (h *noteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	input := application.UpdateNoteInput{
 		UserID:  userID,
 		ID:      r.PathValue("id"),
+		Title:   req.Title,
 		Content: req.Content,
 	}
 
@@ -232,44 +235,6 @@ func (h *noteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	res := NoteApplicationToResponse(output)
 	nethttp_utils.JSON(w, http.StatusOK, res)
-}
-
-// DeleteNote godoc
-// @Summary Delete a note
-// @Description Deletes a note belonging to the authenticated user
-// @Tags notes
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Param id path string true "Note ID"
-// @Success 204
-// @Failure 401 {object} response.ErrorResponse "Unauthorized"
-// @Failure 404 {object} response.ErrorResponse "Note not found"
-// @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /api/notes/{id} [delete]
-func (h *noteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
-	if !ok || userID == "" {
-		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
-			Message: "unauthorized",
-		})
-		return
-	}
-
-	input := application.DeleteNoteInput{
-		UserID: userID,
-		ID:     r.PathValue("id"),
-	}
-
-	if err := h.noteService.DeleteNote(r.Context(), input); err != nil {
-		statusCode, message := MapErrorToHTTPStatus(err)
-		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
-			Message: message,
-		})
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // ArchiveNote godoc
@@ -350,10 +315,49 @@ func (h *noteHandler) RestoreNote(w http.ResponseWriter, r *http.Request) {
 	nethttp_utils.StatusCode(w, http.StatusNoContent)
 }
 
+// DeleteNote godoc
+// @Summary Delete a note
+// @Description Deletes a note belonging to the authenticated user
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Note ID"
+// @Success 204
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Note not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/notes/{id} [delete]
+func (h *noteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, sharedresp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	input := application.DeleteNoteInput{
+		UserID: userID,
+		ID:     r.PathValue("id"),
+	}
+
+	if err := h.noteService.DeleteNote(r.Context(), input); err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, sharedresp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func MapErrorToHTTPStatus(err error) (int, string) {
-	if errors.Is(err, domain.ErrContentEmpty) ||
-		errors.Is(err, domain.ErrContentTooLong) ||
-		errors.Is(err, domain.ErrInvalidNoteContent) {
+	if errors.Is(err, domain.ErrTitleEmpty) ||
+		errors.Is(err, domain.ErrTitleTooLong) ||
+		errors.Is(err, domain.ErrContentEmpty) ||
+		errors.Is(err, domain.ErrContentTooLong) {
 		return http.StatusBadRequest, err.Error()
 	}
 

@@ -27,12 +27,17 @@ func (s *NoteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutp
 		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
 	}
 
+	title, err := domain.NewNoteTitle(input.Title)
+	if err != nil {
+		return NoteOutput{}, err
+	}
+
 	content, err := domain.NewNoteContent(input.Content)
 	if err != nil {
 		return NoteOutput{}, err
 	}
 
-	note := domain.NewNote(userID, content)
+	note := domain.NewNote(userID, title, content)
 
 	if err := s.noteRepository.Create(ctx, note); err != nil {
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.Create: %w", err)
@@ -102,15 +107,21 @@ func (s *NoteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (No
 		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	title, err := domain.NewNoteTitle(input.Title)
 	if err != nil {
-		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
+		return NoteOutput{}, err
 	}
 
 	content, err := domain.NewNoteContent(input.Content)
 	if err != nil {
 		return NoteOutput{}, err
 	}
+
+	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	if err != nil {
+		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
+	}
+	note.SetTitle(title)
 	note.SetContent(content)
 
 	if err := s.noteRepository.Update(ctx, note); err != nil {

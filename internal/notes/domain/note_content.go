@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	ErrContentEmpty       = errors.New("content cannot be empty")
-	ErrContentTooLong     = errors.New("content exceeds maximum length of 100000 characters")
-	ErrInvalidNoteContent = errors.New("invalid note content")
+	ErrContentEmpty   = errors.New("content cannot be empty")
+	ErrContentTooLong = errors.New("content exceeds maximum length of 100000 characters")
 )
 
 type NoteContent string

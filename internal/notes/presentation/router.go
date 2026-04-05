@@ -44,13 +44,8 @@ func SetupRouter(options SetupRouterOptions) {
 	)
 
 	options.Mux.Handle(
-		fmt.Sprintf("PATCH %s/notes/{id}", options.Prefix),
+		fmt.Sprintf("PUT %s/notes/{id}", options.Prefix),
 		chain.ThenFunc(handler.UpdateNote),
-	)
-
-	options.Mux.Handle(
-		fmt.Sprintf("DELETE %s/notes/{id}", options.Prefix),
-		chain.ThenFunc(handler.DeleteNote),
 	)
 
 	options.Mux.Handle(
@@ -61,5 +56,10 @@ func SetupRouter(options SetupRouterOptions) {
 	options.Mux.Handle(
 		fmt.Sprintf("PATCH %s/notes/{id}/restore", options.Prefix),
 		chain.ThenFunc(handler.RestoreNote),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("DELETE %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.DeleteNote),
 	)
 }

@@ -15,5 +15,9 @@ mock:
 test:
 	go test ./... -cover
 
+test-coverage:
+	go test ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o output.html
+
 swag:
 	swag init -g cmd/api/main.go -o docs
