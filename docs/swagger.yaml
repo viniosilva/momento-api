@@ -22,28 +22,31 @@ definitions:
         example: 5
         type: integer
     type: object
-  presentation.CreateNoteRequest:
+  nethttp.ErrorResponse:
+    properties:
+      message:
+        example: internal server error
+        type: string
+    type: object
+  ports.CreateNoteRequest:
     properties:
       content:
         example: My important note content
         type: string
-    type: object
-  presentation.ErrorResponse:
-    properties:
-      message:
-        example: user already exists
+      title:
+        example: My note title
         type: string
     type: object
-  presentation.ListNotesResponse:
+  ports.ListNotesResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/presentation.NoteResponse'
+          $ref: '#/definitions/ports.NoteResponse'
         type: array
       pagination:
         $ref: '#/definitions/listopts.PaginationResponse'
     type: object
-  presentation.LoginRequest:
+  ports.LoginRequest:
     properties:
       email:
         example: user@example.com
@@ -51,17 +54,14 @@ definitions:
       password:
         example: ValidPass123!
         type: string
-    required:
-    - email
-    - password
     type: object
-  presentation.LoginResponse:
+  ports.LoginResponse:
     properties:
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
-  presentation.NoteResponse:
+  ports.NoteResponse:
     properties:
       content:
         example: My important note content
@@ -72,6 +72,9 @@ definitions:
       id:
         example: 507f1f77bcf86cd799439011
         type: string
+      title:
+        example: My note title
+        type: string
       updated_at:
         example: "2026-02-08T10:30:00Z"
         type: string
@@ -79,7 +82,7 @@ definitions:
         example: 507f1f77bcf86cd799439011
         type: string
     type: object
-  presentation.RegisterRequest:
+  ports.RegisterRequest:
     properties:
       email:
         example: user@example.com
@@ -87,11 +90,8 @@ definitions:
       password:
         example: ValidPass123!
         type: string
-    required:
-    - email
-    - password
     type: object
-  presentation.RegisterResponse:
+  ports.RegisterResponse:
     properties:
       email:
         example: user@example.com
@@ -100,16 +100,13 @@ definitions:
         example: 507f1f77bcf86cd799439011
         type: string
     type: object
-  presentation.UpdateNoteRequest:
+  ports.UpdateNoteRequest:
     properties:
       content:
         example: My updated note content
         type: string
-    type: object
-  response.ErrorResponse:
-    properties:
-      message:
-        example: error message
+      title:
+        example: My updated note title
         type: string
     type: object
   response.HealthResponse:
@@ -142,26 +139,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/presentation.LoginRequest'
+          $ref: '#/definitions/ports.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Login successful
           schema:
-            $ref: '#/definitions/presentation.LoginResponse'
+            $ref: '#/definitions/ports.LoginResponse'
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Login with email and password
       tags:
       - auth
@@ -176,26 +173,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/presentation.RegisterRequest'
+          $ref: '#/definitions/ports.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: User created successfully
           schema:
-            $ref: '#/definitions/presentation.RegisterResponse'
+            $ref: '#/definitions/ports.RegisterResponse'
         "400":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "409":
           description: User already exists
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/presentation.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -251,19 +248,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/presentation.ListNotesResponse'
+            $ref: '#/definitions/ports.ListNotesResponse'
         "400":
           description: Invalid query parameters
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: List user notes
@@ -279,26 +276,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/presentation.CreateNoteRequest'
+          $ref: '#/definitions/ports.CreateNoteRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/presentation.NoteResponse'
+            $ref: '#/definitions/ports.NoteResponse'
         "400":
           description: Invalid content
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Create a new note
@@ -323,15 +320,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
           description: Note not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Delete a note
@@ -353,19 +350,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/presentation.NoteResponse'
+            $ref: '#/definitions/ports.NoteResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
           description: Note not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Retrieve a note by ID
@@ -386,30 +383,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/presentation.UpdateNoteRequest'
+          $ref: '#/definitions/ports.UpdateNoteRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/presentation.NoteResponse'
+            $ref: '#/definitions/ports.NoteResponse'
         "400":
           description: Invalid content
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
           description: Note not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Update a note
@@ -432,19 +429,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/presentation.NoteResponse'
+            $ref: '#/definitions/ports.NoteResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
           description: Note not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Archive a note
@@ -467,19 +464,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/presentation.NoteResponse'
+            $ref: '#/definitions/ports.NoteResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
           description: Note not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
       summary: Restore a note

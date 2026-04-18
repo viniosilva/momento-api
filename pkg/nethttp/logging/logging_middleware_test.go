@@ -7,10 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	nethttp_logging "momento/pkg/nethttp/logging"
-	nethttp_utils "momento/pkg/nethttp/utils"
 	"testing"
 	"time"
+
+	nethttp_logging "momento/pkg/nethttp/logging"
+	nethttp_utils "momento/pkg/nethttp/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -2,9 +2,10 @@ package nethttp_logging
 
 import (
 	"net/http"
+	"time"
+
 	nethttp_port "momento/pkg/nethttp/port"
 	nethttp_utils "momento/pkg/nethttp/utils"
-	"time"
 )
 
 func LoggingMiddleware(logger nethttp_port.LoggerSlog) nethttp_utils.MiddlewareFunc {

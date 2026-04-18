@@ -6,7 +6,8 @@ package mocks
 
 import (
 	"context"
-	"momento/internal/auth/application"
+
+	"momento/internal/auth/app"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -39,24 +40,24 @@ func (_m *MockAuthService) EXPECT() *MockAuthService_Expecter {
 }
 
 // Login provides a mock function for the type MockAuthService
-func (_mock *MockAuthService) Login(ctx context.Context, input application.LoginInput) (application.LoginOutput, error) {
+func (_mock *MockAuthService) Login(ctx context.Context, input app.LoginInput) (app.LoginOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Login")
 	}
 
-	var r0 application.LoginOutput
+	var r0 app.LoginOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.LoginInput) (application.LoginOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.LoginInput) (app.LoginOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.LoginInput) application.LoginOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.LoginInput) app.LoginOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.LoginOutput)
+		r0 = ret.Get(0).(app.LoginOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.LoginInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.LoginInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -71,20 +72,20 @@ type MockAuthService_Login_Call struct {
 
 // Login is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.LoginInput
+//   - input app.LoginInput
 func (_e *MockAuthService_Expecter) Login(ctx interface{}, input interface{}) *MockAuthService_Login_Call {
 	return &MockAuthService_Login_Call{Call: _e.mock.On("Login", ctx, input)}
 }
 
-func (_c *MockAuthService_Login_Call) Run(run func(ctx context.Context, input application.LoginInput)) *MockAuthService_Login_Call {
+func (_c *MockAuthService_Login_Call) Run(run func(ctx context.Context, input app.LoginInput)) *MockAuthService_Login_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.LoginInput
+		var arg1 app.LoginInput
 		if args[1] != nil {
-			arg1 = args[1].(application.LoginInput)
+			arg1 = args[1].(app.LoginInput)
 		}
 		run(
 			arg0,
@@ -94,35 +95,35 @@ func (_c *MockAuthService_Login_Call) Run(run func(ctx context.Context, input ap
 	return _c
 }
 
-func (_c *MockAuthService_Login_Call) Return(loginOutput application.LoginOutput, err error) *MockAuthService_Login_Call {
+func (_c *MockAuthService_Login_Call) Return(loginOutput app.LoginOutput, err error) *MockAuthService_Login_Call {
 	_c.Call.Return(loginOutput, err)
 	return _c
 }
 
-func (_c *MockAuthService_Login_Call) RunAndReturn(run func(ctx context.Context, input application.LoginInput) (application.LoginOutput, error)) *MockAuthService_Login_Call {
+func (_c *MockAuthService_Login_Call) RunAndReturn(run func(ctx context.Context, input app.LoginInput) (app.LoginOutput, error)) *MockAuthService_Login_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Register provides a mock function for the type MockAuthService
-func (_mock *MockAuthService) Register(ctx context.Context, input application.UserInput) (application.UserOutput, error) {
+func (_mock *MockAuthService) Register(ctx context.Context, input app.UserInput) (app.UserOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Register")
 	}
 
-	var r0 application.UserOutput
+	var r0 app.UserOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.UserInput) (application.UserOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.UserInput) (app.UserOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.UserInput) application.UserOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.UserInput) app.UserOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.UserOutput)
+		r0 = ret.Get(0).(app.UserOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.UserInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.UserInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -137,20 +138,20 @@ type MockAuthService_Register_Call struct {
 
 // Register is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.UserInput
+//   - input app.UserInput
 func (_e *MockAuthService_Expecter) Register(ctx interface{}, input interface{}) *MockAuthService_Register_Call {
 	return &MockAuthService_Register_Call{Call: _e.mock.On("Register", ctx, input)}
 }
 
-func (_c *MockAuthService_Register_Call) Run(run func(ctx context.Context, input application.UserInput)) *MockAuthService_Register_Call {
+func (_c *MockAuthService_Register_Call) Run(run func(ctx context.Context, input app.UserInput)) *MockAuthService_Register_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.UserInput
+		var arg1 app.UserInput
 		if args[1] != nil {
-			arg1 = args[1].(application.UserInput)
+			arg1 = args[1].(app.UserInput)
 		}
 		run(
 			arg0,
@@ -160,12 +161,12 @@ func (_c *MockAuthService_Register_Call) Run(run func(ctx context.Context, input
 	return _c
 }
 
-func (_c *MockAuthService_Register_Call) Return(userOutput application.UserOutput, err error) *MockAuthService_Register_Call {
+func (_c *MockAuthService_Register_Call) Return(userOutput app.UserOutput, err error) *MockAuthService_Register_Call {
 	_c.Call.Return(userOutput, err)
 	return _c
 }
 
-func (_c *MockAuthService_Register_Call) RunAndReturn(run func(ctx context.Context, input application.UserInput) (application.UserOutput, error)) *MockAuthService_Register_Call {
+func (_c *MockAuthService_Register_Call) RunAndReturn(run func(ctx context.Context, input app.UserInput) (app.UserOutput, error)) *MockAuthService_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }

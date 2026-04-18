@@ -4,12 +4,13 @@ import (
 	"context"
 	"log"
 	"log/slog"
-	authinfra "momento/internal/auth/infrastructure"
+	"time"
+
+	authadapters "momento/internal/auth/adapters"
 	"momento/internal/config"
-	notesinfra "momento/internal/notes/infrastructure"
+	notesadapters "momento/internal/notes/adapters"
 	"momento/pkg/logger"
 	"momento/pkg/mongodb"
-	"time"
 )
 
 const (
@@ -44,10 +45,10 @@ func main() {
 	}()
 
 	log.Println("creating MongoDB indexes...")
-	if err := authinfra.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
+	if err := authadapters.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create MongoDB indexes: %v", err)
 	}
-	if err := notesinfra.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
+	if err := notesadapters.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create notes indexes: %v", err)
 	}
 

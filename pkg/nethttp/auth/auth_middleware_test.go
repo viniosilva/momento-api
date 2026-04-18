@@ -3,11 +3,12 @@ package nethttp_auth_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"momento/internal/auth/domain"
-	"momento/internal/auth/infrastructure"
-	nethttp "momento/pkg/nethttp/auth"
 	"testing"
 	"time"
+
+	"momento/internal/auth/adapters"
+	"momento/internal/auth/domain"
+	nethttp "momento/pkg/nethttp/auth"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,7 @@ import (
 func TestAuthMiddleware(t *testing.T) {
 	secret := "test-secret-key"
 	expiration := 5 * time.Minute
-	jwtService := infrastructure.NewJWTService(secret, expiration)
+	jwtService := adapters.NewJWTService(secret, expiration)
 
 	t.Run("should allow request with valid token", func(t *testing.T) {
 		middleware := nethttp.AuthMiddleware(jwtService)
@@ -120,7 +121,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("should return 401 when token is expired", func(t *testing.T) {
-		expiredJWTService := infrastructure.NewJWTService(secret, -5*time.Second)
+		expiredJWTService := adapters.NewJWTService(secret, -5*time.Second)
 		middleware := nethttp.AuthMiddleware(expiredJWTService)
 
 		userID := "user123"
@@ -150,7 +151,7 @@ func TestAuthMiddleware(t *testing.T) {
 func TestAuthMiddleware_ContextValues(t *testing.T) {
 	secret := "test-secret-key"
 	expiration := 5 * time.Minute
-	jwtService := infrastructure.NewJWTService(secret, expiration)
+	jwtService := adapters.NewJWTService(secret, expiration)
 
 	t.Run("should inject UserID and Email into context", func(t *testing.T) {
 		middleware := nethttp.AuthMiddleware(jwtService)

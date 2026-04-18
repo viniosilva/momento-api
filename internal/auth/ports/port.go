@@ -1,0 +1,12 @@
+package ports
+
+import (
+	"context"
+
+	"momento/internal/auth/app"
+)
+
+type AuthService interface {
+	Register(ctx context.Context, input app.UserInput) (app.UserOutput, error)
+	Login(ctx context.Context, input app.LoginInput) (app.LoginOutput, error)
+}

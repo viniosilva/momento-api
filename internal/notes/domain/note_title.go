@@ -9,7 +9,7 @@ import (
 
 var (
 	ErrTitleEmpty   = errors.New("title cannot be empty")
-	ErrTitleTooLong = errors.New("content exceeds maximum length of 24 characters")
+	ErrTitleTooLong = errors.New("title exceeds maximum length of 24 characters")
 )
 
 type NoteTitle string

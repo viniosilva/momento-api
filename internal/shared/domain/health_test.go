@@ -1,8 +1,9 @@
 package domain_test
 
 import (
-	"momento/internal/shared/domain"
 	"testing"
+
+	"momento/internal/shared/domain"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -11,17 +11,17 @@ import (
 	"time"
 
 	"momento/docs"
-	authapp "momento/internal/auth/application"
+	authadapters "momento/internal/auth/adapters"
+	authapp "momento/internal/auth/app"
 	authdomain "momento/internal/auth/domain"
-	authinfra "momento/internal/auth/infrastructure"
-	authpres "momento/internal/auth/presentation"
+	authports "momento/internal/auth/ports"
 	"momento/internal/config"
-	notesapp "momento/internal/notes/application"
+	notesadapters "momento/internal/notes/adapters"
+	notesapp "momento/internal/notes/app"
 	notesdomain "momento/internal/notes/domain"
-	notesinfra "momento/internal/notes/infrastructure"
-	notespres "momento/internal/notes/presentation"
-	"momento/internal/shared/application"
-	"momento/internal/shared/presentation"
+	notesports "momento/internal/notes/ports"
+	sharedapp "momento/internal/shared/app"
+	sharedports "momento/internal/shared/ports"
 	pkglogger "momento/pkg/logger"
 	"momento/pkg/mongodb"
 
@@ -103,12 +103,17 @@ func main() {
 	logger.Info("server exited gracefully", "elapsed", time.Since(shutdownStart))
 }
 
+type jwtSvc interface {
+	authapp.JWTService
+	notesports.JWTService
+}
+
 type Dependencies struct {
 	MongoClient   *mongo.Client
-	HealthService *application.HealthService
-	JwtService    *authinfra.JwtService
-	AuthService   *authapp.AuthService
-	NoteService   *notesapp.NoteService
+	HealthService sharedports.HealthService
+	JwtService    jwtSvc
+	AuthService   authports.AuthService
+	NoteService   notesports.NoteService
 }
 
 func setupDependencies(ctx context.Context, config config.Config, logger *slog.Logger) (*Dependencies, error) {
@@ -129,14 +134,14 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	logger.Info("initializing services")
 
 	db := mongoClient.Database(config.Mongo.DBName)
-	userRepository := authinfra.NewUserRepository(db.Collection(authdomain.UsersCollectionName))
-	noteRepository := notesinfra.NewNoteRepository(db.Collection(notesdomain.NotesCollectionName))
+	userRepository := authadapters.NewUserRepository(db.Collection(authdomain.UsersCollectionName))
+	noteRepository := notesadapters.NewNoteRepository(db.Collection(notesdomain.NotesCollectionName))
 
-	jwtService := authinfra.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
+	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
 
 	return &Dependencies{
 		MongoClient:   mongoClient,
-		HealthService: application.NewHealthService(mongoClient),
+		HealthService: sharedapp.NewHealthService(mongoClient),
 		JwtService:    jwtService,
 		AuthService:   authapp.NewAuthService(userRepository, jwtService),
 		NoteService:   notesapp.NewNoteService(noteRepository),
@@ -144,21 +149,21 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 }
 
 func setupRoutes(mux *http.ServeMux, di *Dependencies, logger *slog.Logger) {
-	presentation.SetupRouter(presentation.SetupRouterOptions{
+	sharedports.SetupRouter(sharedports.SetupRouterOptions{
 		Mux:           mux,
 		Prefix:        apiPrefixPath,
 		HealthService: di.HealthService,
 		Logger:        logger,
 	})
 
-	authpres.SetupRouter(authpres.SetupRouterOptions{
+	authports.SetupRouter(authports.SetupRouterOptions{
 		Mux:         mux,
 		Prefix:      apiPrefixPath,
 		AuthService: di.AuthService,
 		Logger:      logger,
 	})
 
-	notespres.SetupRouter(notespres.SetupRouterOptions{
+	notesports.SetupRouter(notesports.SetupRouterOptions{
 		Mux:         mux,
 		Prefix:      apiPrefixPath,
 		NoteService: di.NoteService,

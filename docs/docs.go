@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/presentation.LoginRequest"
+                            "$ref": "#/definitions/ports.LoginRequest"
                         }
                     }
                 ],
@@ -51,25 +51,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Login successful",
                         "schema": {
-                            "$ref": "#/definitions/presentation.LoginResponse"
+                            "$ref": "#/definitions/ports.LoginResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -95,7 +95,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/presentation.RegisterRequest"
+                            "$ref": "#/definitions/ports.RegisterRequest"
                         }
                     }
                 ],
@@ -103,25 +103,25 @@ const docTemplate = `{
                     "201": {
                         "description": "User created successfully",
                         "schema": {
-                            "$ref": "#/definitions/presentation.RegisterResponse"
+                            "$ref": "#/definitions/ports.RegisterResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "User already exists",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -208,25 +208,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/presentation.ListNotesResponse"
+                            "$ref": "#/definitions/ports.ListNotesResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -255,7 +255,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/presentation.CreateNoteRequest"
+                            "$ref": "#/definitions/ports.CreateNoteRequest"
                         }
                     }
                 ],
@@ -263,25 +263,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/presentation.NoteResponse"
+                            "$ref": "#/definitions/ports.NoteResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid content",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -318,25 +318,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/presentation.NoteResponse"
+                            "$ref": "#/definitions/ports.NoteResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Note not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -374,19 +374,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Note not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -422,7 +422,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/presentation.UpdateNoteRequest"
+                            "$ref": "#/definitions/ports.UpdateNoteRequest"
                         }
                     }
                 ],
@@ -430,31 +430,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/presentation.NoteResponse"
+                            "$ref": "#/definitions/ports.NoteResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid content",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Note not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -491,25 +491,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/presentation.NoteResponse"
+                            "$ref": "#/definitions/ports.NoteResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Note not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -546,25 +546,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/presentation.NoteResponse"
+                            "$ref": "#/definitions/ports.NoteResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Note not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     }
                 }
@@ -604,31 +604,35 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.CreateNoteRequest": {
+        "nethttp.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "internal server error"
+                }
+            }
+        },
+        "ports.CreateNoteRequest": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string",
                     "example": "My important note content"
-                }
-            }
-        },
-        "presentation.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                },
+                "title": {
                     "type": "string",
-                    "example": "user already exists"
+                    "example": "My note title"
                 }
             }
         },
-        "presentation.ListNotesResponse": {
+        "ports.ListNotesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presentation.NoteResponse"
+                        "$ref": "#/definitions/ports.NoteResponse"
                     }
                 },
                 "pagination": {
@@ -636,12 +640,8 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.LoginRequest": {
+        "ports.LoginRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
             "properties": {
                 "email": {
                     "type": "string",
@@ -653,7 +653,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.LoginResponse": {
+        "ports.LoginResponse": {
             "type": "object",
             "properties": {
                 "token": {
@@ -662,7 +662,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.NoteResponse": {
+        "ports.NoteResponse": {
             "type": "object",
             "properties": {
                 "content": {
@@ -677,6 +677,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
                 },
+                "title": {
+                    "type": "string",
+                    "example": "My note title"
+                },
                 "updated_at": {
                     "type": "string",
                     "example": "2026-02-08T10:30:00Z"
@@ -687,12 +691,8 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.RegisterRequest": {
+        "ports.RegisterRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
             "properties": {
                 "email": {
                     "type": "string",
@@ -704,7 +704,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.RegisterResponse": {
+        "ports.RegisterResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -717,21 +717,16 @@ const docTemplate = `{
                 }
             }
         },
-        "presentation.UpdateNoteRequest": {
+        "ports.UpdateNoteRequest": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string",
                     "example": "My updated note content"
-                }
-            }
-        },
-        "response.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                },
+                "title": {
                     "type": "string",
-                    "example": "error message"
+                    "example": "My updated note title"
                 }
             }
         },

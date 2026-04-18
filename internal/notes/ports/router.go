@@ -1,0 +1,66 @@
+package ports
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"momento/pkg/nethttp"
+	auth "momento/pkg/nethttp/auth"
+	logging "momento/pkg/nethttp/logging"
+	sanitization "momento/pkg/nethttp/sanitization"
+)
+
+type SetupRouterOptions struct {
+	Mux         *http.ServeMux
+	Prefix      string
+	NoteService NoteService
+	JWTService  JWTService
+	Logger      *slog.Logger
+	Timeout     *time.Duration
+}
+
+func SetupRouter(options SetupRouterOptions) {
+	handler := NewNoteHandler(options.NoteService)
+
+	chain := nethttp.NewDefaultChain(options.Logger, nethttp.WithTimeout(options.Timeout))
+	chain.AddMiddleware(logging.LoggingMiddleware(options.Logger))
+	chain.AddMiddleware(sanitization.SanitizationMiddleware())
+	chain.AddMiddleware(auth.AuthMiddleware(options.JWTService))
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/notes", options.Prefix),
+		chain.ThenFunc(handler.CreateNote),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/notes", options.Prefix),
+		chain.ThenFunc(handler.ListNotes),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.GetUserNoteByID),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.UpdateNote),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}/archive", options.Prefix),
+		chain.ThenFunc(handler.ArchiveNote),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("PATCH %s/notes/{id}/restore", options.Prefix),
+		chain.ThenFunc(handler.RestoreNote),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("DELETE %s/notes/{id}", options.Prefix),
+		chain.ThenFunc(handler.DeleteNote),
+	)
+}

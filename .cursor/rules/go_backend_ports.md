@@ -110,6 +110,11 @@ func SetupRouter(opts SetupRouterOptions) { /* registers routes */ }
 
 ## Swagger (Required on All Endpoints)
 
+After creating or updating endpoints with Swagger annotations, run:
+```bash
+make swag  # Generate Swagger docs
+```
+
 ### In main.go (header)
 ```go
 // @title Momento API

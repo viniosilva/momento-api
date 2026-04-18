@@ -6,7 +6,8 @@ package mocks
 
 import (
 	"context"
-	"momento/internal/notes/application"
+
+	"momento/internal/notes/app"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -39,7 +40,7 @@ func (_m *MockNoteService) EXPECT() *MockNoteService_Expecter {
 }
 
 // ArchiveNote provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) ArchiveNote(ctx context.Context, input application.ArchiveNoteInput) error {
+func (_mock *MockNoteService) ArchiveNote(ctx context.Context, input app.ArchiveNoteInput) error {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
@@ -47,7 +48,7 @@ func (_mock *MockNoteService) ArchiveNote(ctx context.Context, input application
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.ArchiveNoteInput) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ArchiveNoteInput) error); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
 		r0 = ret.Error(0)
@@ -62,20 +63,20 @@ type MockNoteService_ArchiveNote_Call struct {
 
 // ArchiveNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.ArchiveNoteInput
+//   - input app.ArchiveNoteInput
 func (_e *MockNoteService_Expecter) ArchiveNote(ctx interface{}, input interface{}) *MockNoteService_ArchiveNote_Call {
 	return &MockNoteService_ArchiveNote_Call{Call: _e.mock.On("ArchiveNote", ctx, input)}
 }
 
-func (_c *MockNoteService_ArchiveNote_Call) Run(run func(ctx context.Context, input application.ArchiveNoteInput)) *MockNoteService_ArchiveNote_Call {
+func (_c *MockNoteService_ArchiveNote_Call) Run(run func(ctx context.Context, input app.ArchiveNoteInput)) *MockNoteService_ArchiveNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.ArchiveNoteInput
+		var arg1 app.ArchiveNoteInput
 		if args[1] != nil {
-			arg1 = args[1].(application.ArchiveNoteInput)
+			arg1 = args[1].(app.ArchiveNoteInput)
 		}
 		run(
 			arg0,
@@ -90,30 +91,30 @@ func (_c *MockNoteService_ArchiveNote_Call) Return(err error) *MockNoteService_A
 	return _c
 }
 
-func (_c *MockNoteService_ArchiveNote_Call) RunAndReturn(run func(ctx context.Context, input application.ArchiveNoteInput) error) *MockNoteService_ArchiveNote_Call {
+func (_c *MockNoteService_ArchiveNote_Call) RunAndReturn(run func(ctx context.Context, input app.ArchiveNoteInput) error) *MockNoteService_ArchiveNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // CreateNote provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) CreateNote(ctx context.Context, input application.NoteInput) (application.NoteOutput, error) {
+func (_mock *MockNoteService) CreateNote(ctx context.Context, input app.NoteInput) (app.NoteOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateNote")
 	}
 
-	var r0 application.NoteOutput
+	var r0 app.NoteOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.NoteInput) (application.NoteOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.NoteInput) (app.NoteOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.NoteInput) application.NoteOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.NoteInput) app.NoteOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.NoteOutput)
+		r0 = ret.Get(0).(app.NoteOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.NoteInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.NoteInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -128,20 +129,20 @@ type MockNoteService_CreateNote_Call struct {
 
 // CreateNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.NoteInput
+//   - input app.NoteInput
 func (_e *MockNoteService_Expecter) CreateNote(ctx interface{}, input interface{}) *MockNoteService_CreateNote_Call {
 	return &MockNoteService_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, input)}
 }
 
-func (_c *MockNoteService_CreateNote_Call) Run(run func(ctx context.Context, input application.NoteInput)) *MockNoteService_CreateNote_Call {
+func (_c *MockNoteService_CreateNote_Call) Run(run func(ctx context.Context, input app.NoteInput)) *MockNoteService_CreateNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.NoteInput
+		var arg1 app.NoteInput
 		if args[1] != nil {
-			arg1 = args[1].(application.NoteInput)
+			arg1 = args[1].(app.NoteInput)
 		}
 		run(
 			arg0,
@@ -151,18 +152,18 @@ func (_c *MockNoteService_CreateNote_Call) Run(run func(ctx context.Context, inp
 	return _c
 }
 
-func (_c *MockNoteService_CreateNote_Call) Return(noteOutput application.NoteOutput, err error) *MockNoteService_CreateNote_Call {
+func (_c *MockNoteService_CreateNote_Call) Return(noteOutput app.NoteOutput, err error) *MockNoteService_CreateNote_Call {
 	_c.Call.Return(noteOutput, err)
 	return _c
 }
 
-func (_c *MockNoteService_CreateNote_Call) RunAndReturn(run func(ctx context.Context, input application.NoteInput) (application.NoteOutput, error)) *MockNoteService_CreateNote_Call {
+func (_c *MockNoteService_CreateNote_Call) RunAndReturn(run func(ctx context.Context, input app.NoteInput) (app.NoteOutput, error)) *MockNoteService_CreateNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // DeleteNote provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) DeleteNote(ctx context.Context, input application.DeleteNoteInput) error {
+func (_mock *MockNoteService) DeleteNote(ctx context.Context, input app.DeleteNoteInput) error {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
@@ -170,7 +171,7 @@ func (_mock *MockNoteService) DeleteNote(ctx context.Context, input application.
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.DeleteNoteInput) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.DeleteNoteInput) error); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
 		r0 = ret.Error(0)
@@ -185,20 +186,20 @@ type MockNoteService_DeleteNote_Call struct {
 
 // DeleteNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.DeleteNoteInput
+//   - input app.DeleteNoteInput
 func (_e *MockNoteService_Expecter) DeleteNote(ctx interface{}, input interface{}) *MockNoteService_DeleteNote_Call {
 	return &MockNoteService_DeleteNote_Call{Call: _e.mock.On("DeleteNote", ctx, input)}
 }
 
-func (_c *MockNoteService_DeleteNote_Call) Run(run func(ctx context.Context, input application.DeleteNoteInput)) *MockNoteService_DeleteNote_Call {
+func (_c *MockNoteService_DeleteNote_Call) Run(run func(ctx context.Context, input app.DeleteNoteInput)) *MockNoteService_DeleteNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.DeleteNoteInput
+		var arg1 app.DeleteNoteInput
 		if args[1] != nil {
-			arg1 = args[1].(application.DeleteNoteInput)
+			arg1 = args[1].(app.DeleteNoteInput)
 		}
 		run(
 			arg0,
@@ -213,30 +214,30 @@ func (_c *MockNoteService_DeleteNote_Call) Return(err error) *MockNoteService_De
 	return _c
 }
 
-func (_c *MockNoteService_DeleteNote_Call) RunAndReturn(run func(ctx context.Context, input application.DeleteNoteInput) error) *MockNoteService_DeleteNote_Call {
+func (_c *MockNoteService_DeleteNote_Call) RunAndReturn(run func(ctx context.Context, input app.DeleteNoteInput) error) *MockNoteService_DeleteNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUserNoteByID provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) GetUserNoteByID(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error) {
+func (_mock *MockNoteService) GetUserNoteByID(ctx context.Context, input app.GetUserNoteByIDInput) (app.NoteOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserNoteByID")
 	}
 
-	var r0 application.NoteOutput
+	var r0 app.NoteOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.GetUserNoteByIDInput) (application.NoteOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUserNoteByIDInput) (app.NoteOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.GetUserNoteByIDInput) application.NoteOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUserNoteByIDInput) app.NoteOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.NoteOutput)
+		r0 = ret.Get(0).(app.NoteOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.GetUserNoteByIDInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.GetUserNoteByIDInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -251,20 +252,20 @@ type MockNoteService_GetUserNoteByID_Call struct {
 
 // GetUserNoteByID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.GetUserNoteByIDInput
+//   - input app.GetUserNoteByIDInput
 func (_e *MockNoteService_Expecter) GetUserNoteByID(ctx interface{}, input interface{}) *MockNoteService_GetUserNoteByID_Call {
 	return &MockNoteService_GetUserNoteByID_Call{Call: _e.mock.On("GetUserNoteByID", ctx, input)}
 }
 
-func (_c *MockNoteService_GetUserNoteByID_Call) Run(run func(ctx context.Context, input application.GetUserNoteByIDInput)) *MockNoteService_GetUserNoteByID_Call {
+func (_c *MockNoteService_GetUserNoteByID_Call) Run(run func(ctx context.Context, input app.GetUserNoteByIDInput)) *MockNoteService_GetUserNoteByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.GetUserNoteByIDInput
+		var arg1 app.GetUserNoteByIDInput
 		if args[1] != nil {
-			arg1 = args[1].(application.GetUserNoteByIDInput)
+			arg1 = args[1].(app.GetUserNoteByIDInput)
 		}
 		run(
 			arg0,
@@ -274,35 +275,35 @@ func (_c *MockNoteService_GetUserNoteByID_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *MockNoteService_GetUserNoteByID_Call) Return(noteOutput application.NoteOutput, err error) *MockNoteService_GetUserNoteByID_Call {
+func (_c *MockNoteService_GetUserNoteByID_Call) Return(noteOutput app.NoteOutput, err error) *MockNoteService_GetUserNoteByID_Call {
 	_c.Call.Return(noteOutput, err)
 	return _c
 }
 
-func (_c *MockNoteService_GetUserNoteByID_Call) RunAndReturn(run func(ctx context.Context, input application.GetUserNoteByIDInput) (application.NoteOutput, error)) *MockNoteService_GetUserNoteByID_Call {
+func (_c *MockNoteService_GetUserNoteByID_Call) RunAndReturn(run func(ctx context.Context, input app.GetUserNoteByIDInput) (app.NoteOutput, error)) *MockNoteService_GetUserNoteByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListNotes provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) ListNotes(ctx context.Context, input application.ListNotesInput) (application.ListNotesOutput, error) {
+func (_mock *MockNoteService) ListNotes(ctx context.Context, input app.ListNotesInput) (app.ListNotesOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListNotes")
 	}
 
-	var r0 application.ListNotesOutput
+	var r0 app.ListNotesOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.ListNotesInput) (application.ListNotesOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListNotesInput) (app.ListNotesOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.ListNotesInput) application.ListNotesOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListNotesInput) app.ListNotesOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.ListNotesOutput)
+		r0 = ret.Get(0).(app.ListNotesOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.ListNotesInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ListNotesInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -317,20 +318,20 @@ type MockNoteService_ListNotes_Call struct {
 
 // ListNotes is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.ListNotesInput
+//   - input app.ListNotesInput
 func (_e *MockNoteService_Expecter) ListNotes(ctx interface{}, input interface{}) *MockNoteService_ListNotes_Call {
 	return &MockNoteService_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, input)}
 }
 
-func (_c *MockNoteService_ListNotes_Call) Run(run func(ctx context.Context, input application.ListNotesInput)) *MockNoteService_ListNotes_Call {
+func (_c *MockNoteService_ListNotes_Call) Run(run func(ctx context.Context, input app.ListNotesInput)) *MockNoteService_ListNotes_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.ListNotesInput
+		var arg1 app.ListNotesInput
 		if args[1] != nil {
-			arg1 = args[1].(application.ListNotesInput)
+			arg1 = args[1].(app.ListNotesInput)
 		}
 		run(
 			arg0,
@@ -340,18 +341,18 @@ func (_c *MockNoteService_ListNotes_Call) Run(run func(ctx context.Context, inpu
 	return _c
 }
 
-func (_c *MockNoteService_ListNotes_Call) Return(listNotesOutput application.ListNotesOutput, err error) *MockNoteService_ListNotes_Call {
+func (_c *MockNoteService_ListNotes_Call) Return(listNotesOutput app.ListNotesOutput, err error) *MockNoteService_ListNotes_Call {
 	_c.Call.Return(listNotesOutput, err)
 	return _c
 }
 
-func (_c *MockNoteService_ListNotes_Call) RunAndReturn(run func(ctx context.Context, input application.ListNotesInput) (application.ListNotesOutput, error)) *MockNoteService_ListNotes_Call {
+func (_c *MockNoteService_ListNotes_Call) RunAndReturn(run func(ctx context.Context, input app.ListNotesInput) (app.ListNotesOutput, error)) *MockNoteService_ListNotes_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // RestoreNote provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) RestoreNote(ctx context.Context, input application.RestoreNoteInput) error {
+func (_mock *MockNoteService) RestoreNote(ctx context.Context, input app.RestoreNoteInput) error {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
@@ -359,7 +360,7 @@ func (_mock *MockNoteService) RestoreNote(ctx context.Context, input application
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.RestoreNoteInput) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.RestoreNoteInput) error); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
 		r0 = ret.Error(0)
@@ -374,20 +375,20 @@ type MockNoteService_RestoreNote_Call struct {
 
 // RestoreNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.RestoreNoteInput
+//   - input app.RestoreNoteInput
 func (_e *MockNoteService_Expecter) RestoreNote(ctx interface{}, input interface{}) *MockNoteService_RestoreNote_Call {
 	return &MockNoteService_RestoreNote_Call{Call: _e.mock.On("RestoreNote", ctx, input)}
 }
 
-func (_c *MockNoteService_RestoreNote_Call) Run(run func(ctx context.Context, input application.RestoreNoteInput)) *MockNoteService_RestoreNote_Call {
+func (_c *MockNoteService_RestoreNote_Call) Run(run func(ctx context.Context, input app.RestoreNoteInput)) *MockNoteService_RestoreNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.RestoreNoteInput
+		var arg1 app.RestoreNoteInput
 		if args[1] != nil {
-			arg1 = args[1].(application.RestoreNoteInput)
+			arg1 = args[1].(app.RestoreNoteInput)
 		}
 		run(
 			arg0,
@@ -402,30 +403,30 @@ func (_c *MockNoteService_RestoreNote_Call) Return(err error) *MockNoteService_R
 	return _c
 }
 
-func (_c *MockNoteService_RestoreNote_Call) RunAndReturn(run func(ctx context.Context, input application.RestoreNoteInput) error) *MockNoteService_RestoreNote_Call {
+func (_c *MockNoteService_RestoreNote_Call) RunAndReturn(run func(ctx context.Context, input app.RestoreNoteInput) error) *MockNoteService_RestoreNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // UpdateNote provides a mock function for the type MockNoteService
-func (_mock *MockNoteService) UpdateNote(ctx context.Context, input application.UpdateNoteInput) (application.NoteOutput, error) {
+func (_mock *MockNoteService) UpdateNote(ctx context.Context, input app.UpdateNoteInput) (app.NoteOutput, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateNote")
 	}
 
-	var r0 application.NoteOutput
+	var r0 app.NoteOutput
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.UpdateNoteInput) (application.NoteOutput, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.UpdateNoteInput) (app.NoteOutput, error)); ok {
 		return returnFunc(ctx, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, application.UpdateNoteInput) application.NoteOutput); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.UpdateNoteInput) app.NoteOutput); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Get(0).(application.NoteOutput)
+		r0 = ret.Get(0).(app.NoteOutput)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, application.UpdateNoteInput) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.UpdateNoteInput) error); ok {
 		r1 = returnFunc(ctx, input)
 	} else {
 		r1 = ret.Error(1)
@@ -440,20 +441,20 @@ type MockNoteService_UpdateNote_Call struct {
 
 // UpdateNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input application.UpdateNoteInput
+//   - input app.UpdateNoteInput
 func (_e *MockNoteService_Expecter) UpdateNote(ctx interface{}, input interface{}) *MockNoteService_UpdateNote_Call {
 	return &MockNoteService_UpdateNote_Call{Call: _e.mock.On("UpdateNote", ctx, input)}
 }
 
-func (_c *MockNoteService_UpdateNote_Call) Run(run func(ctx context.Context, input application.UpdateNoteInput)) *MockNoteService_UpdateNote_Call {
+func (_c *MockNoteService_UpdateNote_Call) Run(run func(ctx context.Context, input app.UpdateNoteInput)) *MockNoteService_UpdateNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 application.UpdateNoteInput
+		var arg1 app.UpdateNoteInput
 		if args[1] != nil {
-			arg1 = args[1].(application.UpdateNoteInput)
+			arg1 = args[1].(app.UpdateNoteInput)
 		}
 		run(
 			arg0,
@@ -463,12 +464,12 @@ func (_c *MockNoteService_UpdateNote_Call) Run(run func(ctx context.Context, inp
 	return _c
 }
 
-func (_c *MockNoteService_UpdateNote_Call) Return(noteOutput application.NoteOutput, err error) *MockNoteService_UpdateNote_Call {
+func (_c *MockNoteService_UpdateNote_Call) Return(noteOutput app.NoteOutput, err error) *MockNoteService_UpdateNote_Call {
 	_c.Call.Return(noteOutput, err)
 	return _c
 }
 
-func (_c *MockNoteService_UpdateNote_Call) RunAndReturn(run func(ctx context.Context, input application.UpdateNoteInput) (application.NoteOutput, error)) *MockNoteService_UpdateNote_Call {
+func (_c *MockNoteService_UpdateNote_Call) RunAndReturn(run func(ctx context.Context, input app.UpdateNoteInput) (app.NoteOutput, error)) *MockNoteService_UpdateNote_Call {
 	_c.Call.Return(run)
 	return _c
 }

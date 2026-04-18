@@ -3,9 +3,10 @@ package config_test
 import (
 	"os"
 	"path/filepath"
-	"momento/internal/config"
 	"testing"
 	"time"
+
+	"momento/internal/config"
 
 	"github.com/stretchr/testify/assert"
 )
