@@ -231,4 +231,76 @@ func TestSanitizationMiddleware(t *testing.T) {
 		handler.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
+
+	t.Run("should reject nesting deeper than 10 levels", func(t *testing.T) {
+		middleware := nethttp_sanitization.SanitizationMiddleware()
+
+		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		// 11 levels deep triggers the depth check (depth > 10)
+		deepJSON := `{"a":{"b":{"c":{"d":{"e":{"f":{"g":{"h":{"i":{"j":{"k":"deep"}}}}}}}}}}}`
+
+		req := httptest.NewRequest("POST", "/notes", bytes.NewReader([]byte(deepJSON)))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "nesting too deep")
+	})
+
+	t.Run("should reject key longer than 100 chars", func(t *testing.T) {
+		middleware := nethttp_sanitization.SanitizationMiddleware()
+
+		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		longKey := bytes.Repeat([]byte("k"), 101)
+		payload := map[string]any{
+			string(longKey): "value",
+		}
+		body, _ := json.Marshal(payload)
+
+		req := httptest.NewRequest("POST", "/notes", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "key too long")
+	})
+
+	t.Run("should remove control characters from strings", func(t *testing.T) {
+		middleware := nethttp_sanitization.SanitizationMiddleware()
+
+		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var body map[string]any
+			json.NewDecoder(r.Body).Decode(&body)
+
+			content := body["content"].(string)
+			assert.NotContains(t, content, "\x01")
+			assert.NotContains(t, content, "\x1f")
+			assert.NotContains(t, content, "\x7f")
+			assert.Contains(t, content, "Hello")
+			assert.Contains(t, content, "\n")
+			assert.Contains(t, content, "\t")
+
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		payload := map[string]any{
+			"content": "Hello\x01World\x1f\x7f\nNewline\tTab",
+		}
+		body, _ := json.Marshal(payload)
+
+		req := httptest.NewRequest("POST", "/notes", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusOK, rec.Code)
+	})
 }

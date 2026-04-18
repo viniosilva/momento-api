@@ -176,7 +176,7 @@ func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID st
 	filter := bson.M{
 		"_id":         oid,
 		"user_id":     uid,
-		"archived_at": bson.M{"$exists": false},
+		"archived_at": nil,
 	}
 
 	update := bson.M{
@@ -211,7 +211,7 @@ func (r *noteRepository) RestoreByIDAndUserID(ctx context.Context, id, userID st
 	filter := bson.M{
 		"_id":         oid,
 		"user_id":     uid,
-		"archived_at": bson.M{"$exists": true},
+		"archived_at": bson.M{"$ne": nil},
 	}
 
 	update := bson.M{
