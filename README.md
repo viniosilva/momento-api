@@ -5,7 +5,7 @@ Um aplicativo de notas para escrever e compartilhar conteúdos de forma colabora
 
 ## Tecnologias Utilizadas
 
-- **Go 1.25.0**: Linguagem de programação
+- **Go 1.26**: Linguagem de programação
 - **MongoDB 8**: Banco de dados NoSQL
 - **Swagger/OpenAPI**: Documentação da API
 - **Testify**: Framework de testes
@@ -15,35 +15,43 @@ Um aplicativo de notas para escrever e compartilhar conteúdos de forma colabora
 
 ## Estrutura do Projeto
 
-O projeto está organizado em módulos independentes dentro de `/internal`:
-- **auth**: Módulo de autenticação e autorização
-- **shared**: Código compartilhado entre módulos (health checks, configuração)
+O projeto está organizado em módulos independentes dentro de `/internal`, seguindo Arquitetura Hexagonal (Ports & Adapters):
+- **auth**: Autenticação e autorização (registro, login, JWT)
+- **notes**: Gerenciamento de notas (criação, listagem, arquivo/restauração)
+- **shared**: Código compartilhado entre módulos (health check)
 
 ```
-/cmd                    	  // Diretório raiz para pontos de entrada da aplicação
-  /api                  	  // Módulo específico para API HTTP (pontos de entrada da aplicação)
-    main.go             	  // Arquivo principal que inicializa e executa o servidor
-/internal               	  // Código interno da aplicação (não exportado para outros projetos)
-  /{module_name}        	  // Placeholder para nome do módulo (ex: user, product, note)
-    /application        	  // Camada de aplicação: Serviços e Casos de Uso (Orquestração)
-	  dto.go            	  // Data Transfer Objects para comunicação entre camadas
-	  {name}_service_test.go  // Testes unitários do serviço de aplicação
-	  {name}_service.go       // Implementação do serviço que orquestra casos de uso
-	  port.go           	  // Interfaces (portas) que definem contratos de serviços
-    /domain             	  // Camada de domínio: Entidades, Value Objects e Interfaces do Domínio
-	  {name}_test.go    	  // Testes unitários das entidades e value objects
-	  {name}.go         	  // Implementação de entidades e value objects do domínio
-    /infrastructure     	  // Camada de infraestrutura: Implementações de Repositórios, DB e Clientes API
-    /presentation       	  // Camada de apresentação: Handlers HTTP/gRPC, DTOs e Definição de Rotas
-	  handler_test.go    	  // Testes unitários dos handlers HTTP
-	  handler.go        	  // Implementação dos handlers que processam requisições HTTP
-	  request_response.go  	  // DTOs específicos para requisições e respostas HTTP
-	  router_test.go   		  // Testes unitários das definições de rotas
-	  router.go        		  // Definição e configuração das rotas da API
-/pkg                   		  // Código compartilhável entre projetos (bibliotecas reutilizáveis)
-  /{name}              		  // Placeholder para nome do pacote compartilhado
-	{name}_test.go     		  // Testes unitários do pacote compartilhado
-	{name}.go          		  // Implementação do pacote compartilhado
+/cmd                          // Pontos de entrada da aplicação
+  /api                        // Ponto de entrada do servidor HTTP
+    main.go                   // Composição da aplicação: injeção de dependências e inicialização
+  /migrate                    // Ponto de entrada das migrações
+    main.go                   // Criação de índices no MongoDB
+
+/internal
+  /{module}                   // Módulo independente (auth, notes, shared)
+    /domain                   // Entidades, Value Objects e erros de domínio (sem dependências externas)
+      {name}.go               // Entidade ou Value Object com validação
+      {name}_test.go          // Testes unitários de domínio
+    /app                      // Serviços de aplicação e interfaces (portas de entrada/saída)
+      port.go                 // Interfaces que o app expõe e consome (UserRepository, JWTService, etc.)
+      dto.go                  // Data Transfer Objects entre camadas (Input/Output)
+      {name}_service.go       // Orquestração de casos de uso
+      {name}_service_test.go  // Testes unitários do serviço com mocks
+    /adapters                 // Implementações de infraestrutura (MongoDB, JWT, etc.)
+      {name}_repository.go    // Implementação do repositório (satisfaz interface de app/port.go)
+      {name}_model.go         // Documento de persistência com bson tags (desacoplado do domínio)
+      mongo_indexes.go        // Orquestrador de criação de índices
+      /indexes
+        001_{name}.go         // Definição individual de índice MongoDB
+    /mocks                    // Mocks gerados pelo Mockery (via make mock)
+      mock_{name}.go          // Mock gerado a partir das interfaces de app/port.go
+    /ports                    // Handlers HTTP, rotas e DTOs de request/response
+      port.go                 // Interfaces do serviço consumidas pelo handler
+      handler.go              // Handlers HTTP que delegam para o serviço de app
+      handler_test.go         // Testes unitários dos handlers com mocks
+      request_response.go     // Structs de request e response HTTP
+      router.go               // Registro de rotas e middlewares
+      router_test.go          // Testes das rotas via httptest
 ```
 
 
