@@ -7,7 +7,7 @@
 - Entities and Value Objects
 - Pure business rules
 - Domain errors
-- Constants (e.g., collection names)
+- ID generation (via `pkg/uid`)
 
 ## Critical Rules
 - ❌ DO NOT import: `app`, `adapters`, `ports`
@@ -36,13 +36,30 @@ func ValidateEmail(value string) error { /* validation logic */ }
 
 ### Entity
 ```go
-const UsersCollectionName = "users"
 type User struct {
-    ID        primitive.ObjectID `bson:"_id"`
-    Email     Email              `bson:"email"`
-    CreatedAt time.Time          `bson:"created_at"`
+    ID        string    // string (not MongoDB ObjectID)
+    Email     Email
+    Password  Password
+    CreatedAt time.Time
+    UpdatedAt time.Time
 }
-func NewUser(email Email) User { /* constructor */ }
+func NewUser(email Email, password Password) User {
+    return User{
+        ID:        uid.New(),  // use pkg/uid for ID generation
+        Email:     email,
+        Password:  password,
+        CreatedAt: time.Now().UTC(),
+        UpdatedAt: time.Now().UTC(),
+    }
+}
 ```
+
+**Important**: Domain entities must NOT know about database implementation:
+- Use primitive types (string, int) - NOT `primitive.ObjectID`
+- NO database tags (`bson`, `json` from DB)
+- Use UUID or string IDs from `pkg/uid`
+
+**See Also**
+- @.cursor/rules/go_backend_adapters.md (for database model with converters)
 
 See `internal/auth/domain/` as reference.

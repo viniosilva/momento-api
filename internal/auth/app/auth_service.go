@@ -45,7 +45,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 	}
 
 	return UserOutput{
-		ID:        user.ID.Hex(),
+		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -70,7 +70,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 		return LoginOutput{}, domain.ErrInvalidCredentials
 	}
 
-	token, err := s.jwtService.Generate(user.ID.Hex(), user.Email)
+	token, err := s.jwtService.Generate(user.ID, user.Email)
 	if err != nil {
 		return LoginOutput{}, fmt.Errorf("s.jwtService.Generate: %w", err)
 	}

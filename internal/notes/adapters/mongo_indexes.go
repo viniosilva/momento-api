@@ -14,7 +14,7 @@ func CreateIndexes(ctx context.Context, db *mongo.Database) error {
 		return fmt.Errorf("mongo client is nil")
 	}
 
-	if err := indexes.CreateNoteUserIDIndex(ctx, db); err != nil {
+	if err := indexes.CreateNoteUserIDIndex(ctx, db, notesCollectionName); err != nil {
 		return fmt.Errorf("failed to create index on user_id field: %w", err)
 	}
 

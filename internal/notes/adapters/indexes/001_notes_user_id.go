@@ -3,14 +3,12 @@ package indexes
 import (
 	"context"
 
-	"momento/internal/notes/domain"
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func CreateNoteUserIDIndex(ctx context.Context, db *mongo.Database) error {
-	collection := db.Collection(domain.NotesCollectionName)
+func CreateNoteUserIDIndex(ctx context.Context, db *mongo.Database, collectionName string) error {
+	collection := db.Collection(collectionName)
 
 	indexModel := mongo.IndexModel{
 		Keys:    map[string]any{"user_id": 1},

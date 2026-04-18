@@ -11,7 +11,6 @@ import (
 	"momento/pkg/listopts"
 
 	mock "github.com/stretchr/testify/mock"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // NewMockNoteRepository creates a new instance of MockNoteRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -42,7 +41,7 @@ func (_m *MockNoteRepository) EXPECT() *MockNoteRepository_Expecter {
 }
 
 // ArchiveByIDAndUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) ArchiveByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error {
+func (_mock *MockNoteRepository) ArchiveByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ret := _mock.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
@@ -50,7 +49,7 @@ func (_mock *MockNoteRepository) ArchiveByIDAndUserID(ctx context.Context, id pr
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
 		r0 = returnFunc(ctx, id, userID)
 	} else {
 		r0 = ret.Error(0)
@@ -65,31 +64,27 @@ type MockNoteRepository_ArchiveByIDAndUserID_Call struct {
 
 // ArchiveByIDAndUserID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id primitive.ObjectID
-//   - userID primitive.ObjectID
+//   - id string
+//   - userID string
 func (_e *MockNoteRepository_Expecter) ArchiveByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_ArchiveByIDAndUserID_Call {
 	return &MockNoteRepository_ArchiveByIDAndUserID_Call{Call: _e.mock.On("ArchiveByIDAndUserID", ctx, id, userID)}
 }
 
-func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) Run(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID)) *MockNoteRepository_ArchiveByIDAndUserID_Call {
+func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) Run(run func(ctx context.Context, id string, userID string)) *MockNoteRepository_ArchiveByIDAndUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 primitive.ObjectID
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
+			arg1 = args[1].(string)
 		}
-		var arg2 primitive.ObjectID
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(primitive.ObjectID)
+			arg2 = args[2].(string)
 		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -99,7 +94,7 @@ func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) Return(err error) *MockN
 	return _c
 }
 
-func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error) *MockNoteRepository_ArchiveByIDAndUserID_Call {
+func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id string, userID string) error) *MockNoteRepository_ArchiveByIDAndUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -143,10 +138,7 @@ func (_c *MockNoteRepository_Create_Call) Run(run func(ctx context.Context, note
 		if args[1] != nil {
 			arg1 = args[1].(domain.Note)
 		}
-		run(
-			arg0,
-			arg1,
-		)
+		run(arg0, arg1)
 	})
 	return _c
 }
@@ -162,7 +154,7 @@ func (_c *MockNoteRepository_Create_Call) RunAndReturn(run func(ctx context.Cont
 }
 
 // DeleteByIDAndUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) DeleteByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error {
+func (_mock *MockNoteRepository) DeleteByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ret := _mock.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
@@ -170,7 +162,7 @@ func (_mock *MockNoteRepository) DeleteByIDAndUserID(ctx context.Context, id pri
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
 		r0 = returnFunc(ctx, id, userID)
 	} else {
 		r0 = ret.Error(0)
@@ -185,31 +177,27 @@ type MockNoteRepository_DeleteByIDAndUserID_Call struct {
 
 // DeleteByIDAndUserID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id primitive.ObjectID
-//   - userID primitive.ObjectID
+//   - id string
+//   - userID string
 func (_e *MockNoteRepository_Expecter) DeleteByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_DeleteByIDAndUserID_Call {
 	return &MockNoteRepository_DeleteByIDAndUserID_Call{Call: _e.mock.On("DeleteByIDAndUserID", ctx, id, userID)}
 }
 
-func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Run(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID)) *MockNoteRepository_DeleteByIDAndUserID_Call {
+func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Run(run func(ctx context.Context, id string, userID string)) *MockNoteRepository_DeleteByIDAndUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 primitive.ObjectID
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
+			arg1 = args[1].(string)
 		}
-		var arg2 primitive.ObjectID
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(primitive.ObjectID)
+			arg2 = args[2].(string)
 		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -219,13 +207,13 @@ func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Return(err error) *MockNo
 	return _c
 }
 
-func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error) *MockNoteRepository_DeleteByIDAndUserID_Call {
+func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id string, userID string) error) *MockNoteRepository_DeleteByIDAndUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetByIDAndUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) GetByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (domain.Note, error) {
+func (_mock *MockNoteRepository) GetByIDAndUserID(ctx context.Context, id string, userID string) (domain.Note, error) {
 	ret := _mock.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
@@ -234,15 +222,15 @@ func (_mock *MockNoteRepository) GetByIDAndUserID(ctx context.Context, id primit
 
 	var r0 domain.Note
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) (domain.Note, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (domain.Note, error)); ok {
 		return returnFunc(ctx, id, userID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) domain.Note); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) domain.Note); ok {
 		r0 = returnFunc(ctx, id, userID)
 	} else {
 		r0 = ret.Get(0).(domain.Note)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, primitive.ObjectID, primitive.ObjectID) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = returnFunc(ctx, id, userID)
 	} else {
 		r1 = ret.Error(1)
@@ -257,31 +245,27 @@ type MockNoteRepository_GetByIDAndUserID_Call struct {
 
 // GetByIDAndUserID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id primitive.ObjectID
-//   - userID primitive.ObjectID
+//   - id string
+//   - userID string
 func (_e *MockNoteRepository_Expecter) GetByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_GetByIDAndUserID_Call {
 	return &MockNoteRepository_GetByIDAndUserID_Call{Call: _e.mock.On("GetByIDAndUserID", ctx, id, userID)}
 }
 
-func (_c *MockNoteRepository_GetByIDAndUserID_Call) Run(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID)) *MockNoteRepository_GetByIDAndUserID_Call {
+func (_c *MockNoteRepository_GetByIDAndUserID_Call) Run(run func(ctx context.Context, id string, userID string)) *MockNoteRepository_GetByIDAndUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 primitive.ObjectID
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
+			arg1 = args[1].(string)
 		}
-		var arg2 primitive.ObjectID
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(primitive.ObjectID)
+			arg2 = args[2].(string)
 		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -291,13 +275,13 @@ func (_c *MockNoteRepository_GetByIDAndUserID_Call) Return(note domain.Note, err
 	return _c
 }
 
-func (_c *MockNoteRepository_GetByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (domain.Note, error)) *MockNoteRepository_GetByIDAndUserID_Call {
+func (_c *MockNoteRepository_GetByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id string, userID string) (domain.Note, error)) *MockNoteRepository_GetByIDAndUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListByUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error) {
+func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID string, params listopts.ListParams) (listopts.Paginated[domain.Note], error) {
 	ret := _mock.Called(ctx, userID, params)
 
 	if len(ret) == 0 {
@@ -306,15 +290,15 @@ func (_mock *MockNoteRepository) ListByUserID(ctx context.Context, userID primit
 
 	var r0 listopts.Paginated[domain.Note]
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, listopts.ListParams) (listopts.Paginated[domain.Note], error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, listopts.ListParams) (listopts.Paginated[domain.Note], error)); ok {
 		return returnFunc(ctx, userID, params)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, listopts.ListParams) listopts.Paginated[domain.Note]); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, listopts.ListParams) listopts.Paginated[domain.Note]); ok {
 		r0 = returnFunc(ctx, userID, params)
 	} else {
 		r0 = ret.Get(0).(listopts.Paginated[domain.Note])
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, primitive.ObjectID, listopts.ListParams) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, listopts.ListParams) error); ok {
 		r1 = returnFunc(ctx, userID, params)
 	} else {
 		r1 = ret.Error(1)
@@ -329,31 +313,27 @@ type MockNoteRepository_ListByUserID_Call struct {
 
 // ListByUserID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - userID primitive.ObjectID
+//   - userID string
 //   - params listopts.ListParams
 func (_e *MockNoteRepository_Expecter) ListByUserID(ctx interface{}, userID interface{}, params interface{}) *MockNoteRepository_ListByUserID_Call {
 	return &MockNoteRepository_ListByUserID_Call{Call: _e.mock.On("ListByUserID", ctx, userID, params)}
 }
 
-func (_c *MockNoteRepository_ListByUserID_Call) Run(run func(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams)) *MockNoteRepository_ListByUserID_Call {
+func (_c *MockNoteRepository_ListByUserID_Call) Run(run func(ctx context.Context, userID string, params listopts.ListParams)) *MockNoteRepository_ListByUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 primitive.ObjectID
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
+			arg1 = args[1].(string)
 		}
 		var arg2 listopts.ListParams
 		if args[2] != nil {
 			arg2 = args[2].(listopts.ListParams)
 		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -363,13 +343,13 @@ func (_c *MockNoteRepository_ListByUserID_Call) Return(paginated listopts.Pagina
 	return _c
 }
 
-func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
+func (_c *MockNoteRepository_ListByUserID_Call) RunAndReturn(run func(ctx context.Context, userID string, params listopts.ListParams) (listopts.Paginated[domain.Note], error)) *MockNoteRepository_ListByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // RestoreByIDAndUserID provides a mock function for the type MockNoteRepository
-func (_mock *MockNoteRepository) RestoreByIDAndUserID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error {
+func (_mock *MockNoteRepository) RestoreByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ret := _mock.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
@@ -377,7 +357,7 @@ func (_mock *MockNoteRepository) RestoreByIDAndUserID(ctx context.Context, id pr
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, primitive.ObjectID, primitive.ObjectID) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
 		r0 = returnFunc(ctx, id, userID)
 	} else {
 		r0 = ret.Error(0)
@@ -392,31 +372,27 @@ type MockNoteRepository_RestoreByIDAndUserID_Call struct {
 
 // RestoreByIDAndUserID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id primitive.ObjectID
-//   - userID primitive.ObjectID
+//   - id string
+//   - userID string
 func (_e *MockNoteRepository_Expecter) RestoreByIDAndUserID(ctx interface{}, id interface{}, userID interface{}) *MockNoteRepository_RestoreByIDAndUserID_Call {
 	return &MockNoteRepository_RestoreByIDAndUserID_Call{Call: _e.mock.On("RestoreByIDAndUserID", ctx, id, userID)}
 }
 
-func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) Run(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID)) *MockNoteRepository_RestoreByIDAndUserID_Call {
+func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) Run(run func(ctx context.Context, id string, userID string)) *MockNoteRepository_RestoreByIDAndUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 primitive.ObjectID
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(primitive.ObjectID)
+			arg1 = args[1].(string)
 		}
-		var arg2 primitive.ObjectID
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(primitive.ObjectID)
+			arg2 = args[2].(string)
 		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -426,7 +402,7 @@ func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) Return(err error) *MockN
 	return _c
 }
 
-func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) error) *MockNoteRepository_RestoreByIDAndUserID_Call {
+func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id string, userID string) error) *MockNoteRepository_RestoreByIDAndUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -470,10 +446,7 @@ func (_c *MockNoteRepository_Update_Call) Run(run func(ctx context.Context, note
 		if args[1] != nil {
 			arg1 = args[1].(domain.Note)
 		}
-		run(
-			arg0,
-			arg1,
-		)
+		run(arg0, arg1)
 	})
 	return _c
 }

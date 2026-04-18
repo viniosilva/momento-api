@@ -15,17 +15,22 @@ type userRepository struct {
 	collection *mongo.Collection
 }
 
-func NewUserRepository(collection *mongo.Collection) *userRepository {
+func NewUserRepository(db *mongo.Database) *userRepository {
 	return &userRepository{
-		collection: collection,
+		collection: db.Collection(usersCollectionName),
 	}
 }
 
 func (r *userRepository) Create(ctx context.Context, user domain.User) error {
-	_, err := r.collection.InsertOne(ctx, user)
+	doc, err := toUserDocument(user)
+	if err != nil {
+		return fmt.Errorf("toUserDocument: %w", err)
+	}
+
+	_, err = r.collection.InsertOne(ctx, doc)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
-			return fmt.Errorf("%w: %s", domain.ErrUserAlreadyExists, user.Email)
+			return domain.ErrUserAlreadyExists
 		}
 
 		return err
@@ -48,8 +53,8 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) 
 func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
 	filter := bson.M{"email": string(email)}
 
-	var user domain.User
-	err := r.collection.FindOne(ctx, filter).Decode(&user)
+	var doc userDocument
+	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return domain.User{}, domain.ErrUserNotFound
@@ -57,5 +62,5 @@ func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (d
 		return domain.User{}, err
 	}
 
-	return user, nil
+	return toUserDomain(doc), nil
 }

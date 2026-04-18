@@ -7,8 +7,6 @@ import (
 
 	"momento/internal/notes/domain"
 	"momento/pkg/listopts"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type noteService struct {
@@ -22,11 +20,6 @@ func NewNoteService(noteRepository NoteRepository) *noteService {
 }
 
 func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutput, error) {
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
-	}
-
 	title, err := domain.NewNoteTitle(input.Title)
 	if err != nil {
 		return NoteOutput{}, err
@@ -37,7 +30,7 @@ func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutp
 		return NoteOutput{}, err
 	}
 
-	note := domain.NewNote(userID, title, content)
+	note := domain.NewNote(input.UserID, title, content)
 
 	if err := s.noteRepository.Create(ctx, note); err != nil {
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.Create: %w", err)
@@ -47,16 +40,11 @@ func (s *noteService) CreateNote(ctx context.Context, input NoteInput) (NoteOutp
 }
 
 func (s *noteService) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return ListNotesOutput{}, fmt.Errorf("invalid user ID: %w", err)
-	}
-
 	params := listopts.ListParams{
 		Pagination: input.Pagination,
 		Sort:       input.Sort,
 	}
-	paginatedNotes, err := s.noteRepository.ListByUserID(ctx, userID, params)
+	paginatedNotes, err := s.noteRepository.ListByUserID(ctx, input.UserID, params)
 	if err != nil {
 		return ListNotesOutput{}, fmt.Errorf("s.noteRepository.ListByUserID: %w", err)
 	}
@@ -73,17 +61,7 @@ func (s *noteService) ListNotes(ctx context.Context, input ListNotesInput) (List
 }
 
 func (s *noteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByIDInput) (NoteOutput, error) {
-	id, err := primitive.ObjectIDFromHex(input.ID)
-	if err != nil {
-		return NoteOutput{}, fmt.Errorf("invalid ID: %w", err)
-	}
-
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	note, err := s.noteRepository.GetByIDAndUserID(ctx, input.ID, input.UserID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {
 			return NoteOutput{}, domain.ErrNoteNotFound
@@ -92,21 +70,10 @@ func (s *noteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByID
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
 	}
 
-	noteOutput := NoteApplicationToOutput(note)
-	return noteOutput, nil
+	return NoteApplicationToOutput(note), nil
 }
 
 func (s *noteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (NoteOutput, error) {
-	id, err := primitive.ObjectIDFromHex(input.ID)
-	if err != nil {
-		return NoteOutput{}, fmt.Errorf("invalid ID: %w", err)
-	}
-
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return NoteOutput{}, fmt.Errorf("invalid user ID: %w", err)
-	}
-
 	title, err := domain.NewNoteTitle(input.Title)
 	if err != nil {
 		return NoteOutput{}, err
@@ -117,7 +84,7 @@ func (s *noteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (No
 		return NoteOutput{}, err
 	}
 
-	note, err := s.noteRepository.GetByIDAndUserID(ctx, id, userID)
+	note, err := s.noteRepository.GetByIDAndUserID(ctx, input.ID, input.UserID)
 	if err != nil {
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
 	}
@@ -135,17 +102,7 @@ func (s *noteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (No
 }
 
 func (s *noteService) DeleteNote(ctx context.Context, input DeleteNoteInput) error {
-	id, err := primitive.ObjectIDFromHex(input.ID)
-	if err != nil {
-		return fmt.Errorf("invalid ID: %w", err)
-	}
-
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	if err := s.noteRepository.DeleteByIDAndUserID(ctx, id, userID); err != nil {
+	if err := s.noteRepository.DeleteByIDAndUserID(ctx, input.ID, input.UserID); err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {
 			return domain.ErrNoteNotFound
 		}
@@ -157,17 +114,7 @@ func (s *noteService) DeleteNote(ctx context.Context, input DeleteNoteInput) err
 }
 
 func (s *noteService) ArchiveNote(ctx context.Context, input ArchiveNoteInput) error {
-	id, err := primitive.ObjectIDFromHex(input.ID)
-	if err != nil {
-		return fmt.Errorf("invalid ID: %w", err)
-	}
-
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	err = s.noteRepository.ArchiveByIDAndUserID(ctx, id, userID)
+	err := s.noteRepository.ArchiveByIDAndUserID(ctx, input.ID, input.UserID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {
 			return domain.ErrNoteNotFound
@@ -180,17 +127,7 @@ func (s *noteService) ArchiveNote(ctx context.Context, input ArchiveNoteInput) e
 }
 
 func (s *noteService) RestoreNote(ctx context.Context, input RestoreNoteInput) error {
-	id, err := primitive.ObjectIDFromHex(input.ID)
-	if err != nil {
-		return fmt.Errorf("invalid ID: %w", err)
-	}
-
-	userID, err := primitive.ObjectIDFromHex(input.UserID)
-	if err != nil {
-		return fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	err = s.noteRepository.RestoreByIDAndUserID(ctx, id, userID)
+	err := s.noteRepository.RestoreByIDAndUserID(ctx, input.ID, input.UserID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {
 			return domain.ErrNoteNotFound

@@ -17,19 +17,29 @@ type noteRepository struct {
 	collection *mongo.Collection
 }
 
-func NewNoteRepository(collection *mongo.Collection) *noteRepository {
+func NewNoteRepository(db *mongo.Database) *noteRepository {
 	return &noteRepository{
-		collection: collection,
+		collection: db.Collection(notesCollectionName),
 	}
 }
 
 func (r *noteRepository) Create(ctx context.Context, note domain.Note) error {
-	_, err := r.collection.InsertOne(ctx, note)
+	doc, err := toNoteDocument(note)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.InsertOne(ctx, doc)
 	return err
 }
 
-func (r *noteRepository) ListByUserID(ctx context.Context, userID primitive.ObjectID, params listopts.ListParams) (listopts.Paginated[domain.Note], error) {
-	filter := bson.M{"user_id": userID}
+func (r *noteRepository) ListByUserID(ctx context.Context, userID string, params listopts.ListParams) (listopts.Paginated[domain.Note], error) {
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return listopts.Paginated[domain.Note]{}, err
+	}
+
+	filter := bson.M{"user_id": uid}
 
 	totalCount, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -43,18 +53,33 @@ func (r *noteRepository) ListByUserID(ctx context.Context, userID primitive.Obje
 	}
 	defer cursor.Close(ctx)
 
-	var notes []domain.Note
-	if err := cursor.All(ctx, &notes); err != nil {
+	var docs []noteDocument
+	if err := cursor.All(ctx, &docs); err != nil {
 		return listopts.Paginated[domain.Note]{}, err
+	}
+
+	notes := make([]domain.Note, len(docs))
+	for i, d := range docs {
+		notes[i] = toNoteDomain(d)
 	}
 
 	return listopts.NewPaginated(notes, totalCount, params.Pagination), nil
 }
 
-func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) (domain.Note, error) {
+func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID string) (domain.Note, error) {
+	oid, err := parseObjectID(id)
+	if err != nil {
+		return domain.Note{}, err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return domain.Note{}, err
+	}
+
 	filter := bson.M{
-		"_id":     id,
-		"user_id": userID,
+		"_id":     oid,
+		"user_id": uid,
 	}
 
 	res := r.collection.FindOne(ctx, filter)
@@ -65,24 +90,34 @@ func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID primit
 		return domain.Note{}, err
 	}
 
-	var note domain.Note
-	if err := res.Decode(&note); err != nil {
+	var doc noteDocument
+	if err := res.Decode(&doc); err != nil {
 		return domain.Note{}, err
 	}
 
-	return note, nil
+	return toNoteDomain(doc), nil
 }
 
 func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
+	oid, err := parseObjectID(note.ID)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(note.UserID)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.M{
-		"_id":     note.ID,
-		"user_id": note.UserID,
+		"_id":     oid,
+		"user_id": uid,
 	}
 
 	update := bson.M{
 		"$set": bson.M{
-			"title":      note.Title,
-			"content":    note.Content,
+			"title":      string(note.Title),
+			"content":    string(note.Content),
 			"updated_at": note.UpdatedAt,
 		},
 	}
@@ -99,10 +134,20 @@ func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
 	return nil
 }
 
-func (r *noteRepository) DeleteByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+func (r *noteRepository) DeleteByIDAndUserID(ctx context.Context, id, userID string) error {
+	oid, err := parseObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.M{
-		"_id":     id,
-		"user_id": userID,
+		"_id":     oid,
+		"user_id": uid,
 	}
 
 	result, err := r.collection.DeleteOne(ctx, filter)
@@ -117,10 +162,20 @@ func (r *noteRepository) DeleteByIDAndUserID(ctx context.Context, id, userID pri
 	return nil
 }
 
-func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID string) error {
+	oid, err := parseObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.M{
-		"_id":         id,
-		"user_id":     userID,
+		"_id":         oid,
+		"user_id":     uid,
 		"archived_at": bson.M{"$exists": false},
 	}
 
@@ -142,10 +197,20 @@ func (r *noteRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID pr
 	return nil
 }
 
-func (r *noteRepository) RestoreByIDAndUserID(ctx context.Context, id, userID primitive.ObjectID) error {
+func (r *noteRepository) RestoreByIDAndUserID(ctx context.Context, id, userID string) error {
+	oid, err := parseObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.M{
-		"_id":         id,
-		"user_id":     userID,
+		"_id":         oid,
+		"user_id":     uid,
 		"archived_at": bson.M{"$exists": true},
 	}
 

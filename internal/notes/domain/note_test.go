@@ -13,7 +13,7 @@ import (
 
 func TestNewNote(t *testing.T) {
 	t.Run("should create note with valid data", func(t *testing.T) {
-		userID := primitive.NewObjectID()
+		userID := primitive.NewObjectID().Hex()
 
 		title, err := domain.NewNoteTitle("Test note title")
 		require.NoError(t, err)
@@ -37,7 +37,7 @@ func TestNewNote(t *testing.T) {
 
 func TestNote_Update(t *testing.T) {
 	t.Run("should update note", func(t *testing.T) {
-		userID := primitive.NewObjectID()
+		userID := primitive.NewObjectID().Hex()
 		title, _ := domain.NewNoteTitle("Test note title")
 		content, _ := domain.NewNoteContent("Test note content")
 

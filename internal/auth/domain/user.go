@@ -4,10 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"momento/pkg/uid"
 )
-
-const UsersCollectionName = "users"
 
 var (
 	ErrUserAlreadyExists  = errors.New("user already exists")
@@ -16,18 +14,18 @@ var (
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	Email     Email              `bson:"email"`
-	Password  Password           `bson:"password"`
-	CreatedAt time.Time          `bson:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at"`
+	ID        string
+	Email     Email
+	Password  Password
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewUser(email Email, password Password) User {
 	now := time.Now().UTC()
 
 	return User{
-		ID:        primitive.NewObjectID(),
+		ID:        uid.New(),
 		Email:     email,
 		Password:  password,
 		CreatedAt: now,

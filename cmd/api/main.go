@@ -13,12 +13,10 @@ import (
 	"momento/docs"
 	authadapters "momento/internal/auth/adapters"
 	authapp "momento/internal/auth/app"
-	authdomain "momento/internal/auth/domain"
 	authports "momento/internal/auth/ports"
 	"momento/internal/config"
 	notesadapters "momento/internal/notes/adapters"
 	notesapp "momento/internal/notes/app"
-	notesdomain "momento/internal/notes/domain"
 	notesports "momento/internal/notes/ports"
 	sharedapp "momento/internal/shared/app"
 	sharedports "momento/internal/shared/ports"
@@ -134,8 +132,8 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	logger.Info("initializing services")
 
 	db := mongoClient.Database(config.Mongo.DBName)
-	userRepository := authadapters.NewUserRepository(db.Collection(authdomain.UsersCollectionName))
-	noteRepository := notesadapters.NewNoteRepository(db.Collection(notesdomain.NotesCollectionName))
+	userRepository := authadapters.NewUserRepository(db)
+	noteRepository := notesadapters.NewNoteRepository(db)
 
 	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
 

@@ -38,7 +38,7 @@ func TestNewNoteHandler(t *testing.T) {
 }
 
 func TestNoteHandler_CreateNote(t *testing.T) {
-	userID := primitive.NewObjectID()
+	userID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 201 when note is created successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockNoteRepository(t)
@@ -49,7 +49,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.CreateNote(w, r.WithContext(ctx))
 		})
 
@@ -70,7 +70,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, userID.Hex(), got.UserID)
+		assert.Equal(t, userID, got.UserID)
 		assert.Equal(t, "Title", got.Title)
 		assert.Equal(t, "Note content", got.Content)
 	})
@@ -81,7 +81,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.CreateNote(w, r.WithContext(ctx))
 		})
 
@@ -141,7 +141,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.CreateNote(w, r.WithContext(ctx))
 		})
 
@@ -171,7 +171,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.CreateNote(w, r.WithContext(ctx))
 		})
 
@@ -191,7 +191,7 @@ func TestNoteHandler_CreateNote(t *testing.T) {
 }
 
 func TestNoteHandler_ListNotes(t *testing.T) {
-	userID := primitive.NewObjectID()
+	userID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 200 with notes list", func(t *testing.T) {
 		mockRepo := mocks.NewMockNoteRepository(t)
@@ -202,14 +202,14 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 		mockList := listopts.Paginated[domain.Note]{
 			Data: []domain.Note{
 				{
-					ID:        primitive.NewObjectID(),
+					ID:        primitive.NewObjectID().Hex(),
 					UserID:    userID,
 					Content:   domain.NoteContent("Note 1 content"),
 					CreatedAt: now,
 					UpdatedAt: now,
 				},
 				{
-					ID:        primitive.NewObjectID(),
+					ID:        primitive.NewObjectID().Hex(),
 					UserID:    userID,
 					Content:   domain.NoteContent("Note 2 content"),
 					CreatedAt: now,
@@ -228,7 +228,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ListNotes(w, r.WithContext(ctx))
 		})
 
@@ -272,7 +272,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ListNotes(w, r.WithContext(ctx))
 		})
 
@@ -308,7 +308,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ListNotes(w, r.WithContext(ctx))
 		})
 
@@ -337,7 +337,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ListNotes(w, r.WithContext(ctx))
 		})
 
@@ -379,7 +379,7 @@ func TestNoteHandler_ListNotes(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ListNotes(w, r.WithContext(ctx))
 		})
 
@@ -405,8 +405,8 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 
 		now := time.Now().UTC()
 		mockNote := domain.Note{
-			ID:        primitive.NewObjectID(),
-			UserID:    primitive.NewObjectID(),
+			ID:        primitive.NewObjectID().Hex(),
+			UserID:    primitive.NewObjectID().Hex(),
 			Content:   domain.NoteContent("Note content"),
 			CreatedAt: now,
 			UpdatedAt: now,
@@ -416,11 +416,11 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, mockNote.UserID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, mockNote.UserID)
 			handler.GetUserNoteByID(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", mockNote.ID.Hex())
+		uri := fmt.Sprintf("/notes/%s", mockNote.ID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -431,7 +431,7 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 		err := json.Unmarshal(rec.Body.Bytes(), &got)
 		require.NoError(t, err)
 
-		assert.Equal(t, mockNote.ID.Hex(), got.ID)
+		assert.Equal(t, mockNote.ID, got.ID)
 		assert.Equal(t, "Note content", got.Content)
 	})
 
@@ -440,17 +440,17 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, domain.ErrNoteNotFound).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.GetUserNoteByID(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -469,12 +469,12 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes/{id}", handler.GetUserNoteByID)
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -493,17 +493,17 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(domain.Note{}, assert.AnError).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.GetUserNoteByID(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -519,8 +519,8 @@ func TestNoteHandler_GetUserNoteByID(t *testing.T) {
 }
 
 func TestNoteHandler_UpdateNote(t *testing.T) {
-	userID := primitive.NewObjectID()
-	noteID := primitive.NewObjectID()
+	userID := primitive.NewObjectID().Hex()
+	noteID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 200 when note is updated successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockNoteRepository(t)
@@ -541,7 +541,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.UpdateNote(w, r.WithContext(ctx))
 		})
 
@@ -550,7 +550,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 			"content": "Updated note content",
 		}
 		body, _ := json.Marshal(reqBody)
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, uri, bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -563,7 +563,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, userID.Hex(), got.UserID)
+		assert.Equal(t, userID, got.UserID)
 		assert.Equal(t, "Updated title", got.Title)
 		assert.Equal(t, "Updated note content", got.Content)
 	})
@@ -574,7 +574,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.UpdateNote(w, r.WithContext(ctx))
 		})
 
@@ -583,7 +583,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 			"content": "",
 		}
 		body, _ := json.Marshal(reqBody)
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, uri, bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -611,7 +611,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 			"content": "Note content",
 		}
 		body, _ := json.Marshal(reqBody)
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, uri, bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -645,7 +645,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.UpdateNote(w, r.WithContext(ctx))
 		})
 
@@ -654,7 +654,7 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 			"content": "Note content",
 		}
 		body, _ := json.Marshal(reqBody)
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, uri, bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -676,11 +676,11 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.UpdateNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, uri, strings.NewReader("invalid json"))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -702,17 +702,17 @@ func TestNoteHandler_ArchiveNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ArchiveNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/archive", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -725,17 +725,17 @@ func TestNoteHandler_ArchiveNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ArchiveNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/archive", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -754,12 +754,12 @@ func TestNoteHandler_ArchiveNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/archive", handler.ArchiveNote)
 
-		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/archive", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -778,17 +778,17 @@ func TestNoteHandler_ArchiveNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/archive", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.ArchiveNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/archive", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/archive", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -809,17 +809,17 @@ func TestNoteHandler_RestoreNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.RestoreNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/restore", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/restore", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -832,17 +832,17 @@ func TestNoteHandler_RestoreNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.RestoreNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/restore", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/restore", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -861,12 +861,12 @@ func TestNoteHandler_RestoreNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/restore", handler.RestoreNote)
 
-		uri := fmt.Sprintf("/notes/%s/restore", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/restore", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -885,17 +885,17 @@ func TestNoteHandler_RestoreNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /notes/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.RestoreNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s/restore", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s/restore", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -916,17 +916,17 @@ func TestNoteHandler_DeleteNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.DeleteNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -939,17 +939,17 @@ func TestNoteHandler_DeleteNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(domain.ErrNoteNotFound).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.DeleteNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -968,12 +968,12 @@ func TestNoteHandler_DeleteNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /notes/{id}", handler.DeleteNote)
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -992,17 +992,17 @@ func TestNoteHandler_DeleteNote(t *testing.T) {
 		svc := app.NewNoteService(mockRepo)
 		handler := ports.NewNoteHandler(svc)
 
-		noteID := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+		noteID := primitive.NewObjectID().Hex()
+		userID := primitive.NewObjectID().Hex()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, noteID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID.Hex())
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
 			handler.DeleteNote(w, r.WithContext(ctx))
 		})
 
-		uri := fmt.Sprintf("/notes/%s", noteID.Hex())
+		uri := fmt.Sprintf("/notes/%s", noteID)
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, uri, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)

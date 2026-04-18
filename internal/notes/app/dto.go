@@ -59,8 +59,8 @@ type RestoreNoteInput struct {
 
 func NoteApplicationToOutput(note domain.Note) NoteOutput {
 	return NoteOutput{
-		ID:        note.ID.Hex(),
-		UserID:    note.UserID.Hex(),
+		ID:        note.ID,
+		UserID:    note.UserID,
 		Title:     note.Title,
 		Content:   note.Content,
 		CreatedAt: note.CreatedAt,
