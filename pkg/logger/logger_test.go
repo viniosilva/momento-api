@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"pinnado/pkg/logger"
+	"momento/pkg/logger"
 	"testing"
 	"time"
 

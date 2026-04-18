@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"pinnado/pkg/nethttp"
-	logging "pinnado/pkg/nethttp/logging"
+	"momento/pkg/nethttp"
+	logging "momento/pkg/nethttp/logging"
 )
 
 type SetupRouterOptions struct {

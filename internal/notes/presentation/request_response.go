@@ -1,8 +1,8 @@
 package presentation
 
 import (
-	"pinnado/internal/notes/application"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/application"
+	"momento/pkg/listopts"
 	"time"
 )
 

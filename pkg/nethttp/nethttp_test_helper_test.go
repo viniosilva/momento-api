@@ -2,7 +2,7 @@ package nethttp
 
 import (
 	"net/http"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_utils "momento/pkg/nethttp/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

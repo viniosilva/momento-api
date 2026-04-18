@@ -1,7 +1,7 @@
 package tools_test
 
 import (
-	"pinnado/pkg/tools"
+	"momento/pkg/tools"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -1,4 +1,4 @@
-# Guia de Documentação - Pinnado
+# Guia de Documentação - Momento
 
 Este projeto utiliza um sistema de **personas/agentes** para diferentes contextos de desenvolvimento. Cada documento serve um propósito específico.
 

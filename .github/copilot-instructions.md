@@ -1,8 +1,8 @@
 ---
-description: "Copilot instructions for code generation following the Clean Architecture with DDD patterns in the Pinnado project"
+description: "Copilot instructions for code generation following the Clean Architecture with DDD patterns in the Momento project"
 ---
 
-# Copilot Instructions - Pinnado Code Patterns
+# Copilot Instructions - Momento Code Patterns
 
 This document defines the architectural and code patterns that should be followed when generating new features. **Consult the ADRs (`/docs/adr/`) when you have questions about architecture decisions.**
 
@@ -156,7 +156,7 @@ package application
 
 import (
 	"context"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -182,7 +182,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 )
 
 type AuthService struct {
@@ -248,7 +248,7 @@ package infrastructure
 import (
 	"context"
 	"errors"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -305,7 +305,7 @@ package infrastructure
 
 import (
 	"context"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -361,10 +361,10 @@ import (
 	"net/http"
 	"time"
 
-	"pinnado/internal/auth/application"
-	"pinnado/internal/auth/domain"
-	sharedresp "pinnado/internal/shared/presentation/response"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	"momento/internal/auth/application"
+	"momento/internal/auth/domain"
+	sharedresp "momento/internal/shared/presentation/response"
+	nethttp_utils "momento/pkg/nethttp/utils"
 )
 
 type authHandler struct {
@@ -449,10 +449,10 @@ import (
 	"net/http"
 	"time"
 
-	"pinnado/pkg/nethttp"
-	auth "pinnado/pkg/nethttp/auth"
-	logging "pinnado/pkg/nethttp/logging"
-	sanitization "pinnado/pkg/nethttp/sanitization"
+	"momento/pkg/nethttp"
+	auth "momento/pkg/nethttp/auth"
+	logging "momento/pkg/nethttp/logging"
+	sanitization "momento/pkg/nethttp/sanitization"
 )
 
 type SetupRouterOptions struct {

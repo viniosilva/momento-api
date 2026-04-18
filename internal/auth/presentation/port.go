@@ -2,7 +2,7 @@ package presentation
 
 import (
 	"context"
-	"pinnado/internal/auth/application"
+	"momento/internal/auth/application"
 )
 
 type AuthService interface {

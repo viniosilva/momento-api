@@ -121,14 +121,14 @@ definitions:
     type: object
 info:
   contact:
-    email: support@pinnado.com
+    email: support@momento.com
     name: API Support
-  description: API documentation for Pinnado application
+  description: API documentation for Momento application
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Pinnado API
+  title: Momento API
   version: "1.0"
 paths:
   /api/auth/login:

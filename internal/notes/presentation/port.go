@@ -3,8 +3,8 @@ package presentation
 import (
 	"context"
 
-	"pinnado/internal/auth/infrastructure"
-	"pinnado/internal/notes/application"
+	"momento/internal/notes/application"
+	appjwt "momento/pkg/jwt"
 )
 
 type NoteService interface {
@@ -18,5 +18,5 @@ type NoteService interface {
 }
 
 type JWTService interface {
-	Validate(tokenString string) (*infrastructure.Claims, error)
+	Validate(tokenString string) (appjwt.UserClaims, error)
 }

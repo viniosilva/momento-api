@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	nethttp_logging "pinnado/pkg/nethttp/logging"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_logging "momento/pkg/nethttp/logging"
+	nethttp_utils "momento/pkg/nethttp/utils"
 	"testing"
 	"time"
 

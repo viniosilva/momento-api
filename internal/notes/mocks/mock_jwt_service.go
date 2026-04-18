@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	"pinnado/internal/auth/infrastructure"
+	appjwt "momento/pkg/jwt"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -38,23 +38,23 @@ func (_m *MockJWTService) EXPECT() *MockJWTService_Expecter {
 }
 
 // Validate provides a mock function for the type MockJWTService
-func (_mock *MockJWTService) Validate(tokenString string) (*infrastructure.Claims, error) {
+func (_mock *MockJWTService) Validate(tokenString string) (appjwt.UserClaims, error) {
 	ret := _mock.Called(tokenString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Validate")
 	}
 
-	var r0 *infrastructure.Claims
+	var r0 appjwt.UserClaims
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string) (*infrastructure.Claims, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) (appjwt.UserClaims, error)); ok {
 		return returnFunc(tokenString)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string) *infrastructure.Claims); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) appjwt.UserClaims); ok {
 		r0 = returnFunc(tokenString)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*infrastructure.Claims)
+			r0 = ret.Get(0).(appjwt.UserClaims)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
@@ -89,12 +89,12 @@ func (_c *MockJWTService_Validate_Call) Run(run func(tokenString string)) *MockJ
 	return _c
 }
 
-func (_c *MockJWTService_Validate_Call) Return(claims *infrastructure.Claims, err error) *MockJWTService_Validate_Call {
+func (_c *MockJWTService_Validate_Call) Return(claims appjwt.UserClaims, err error) *MockJWTService_Validate_Call {
 	_c.Call.Return(claims, err)
 	return _c
 }
 
-func (_c *MockJWTService_Validate_Call) RunAndReturn(run func(tokenString string) (*infrastructure.Claims, error)) *MockJWTService_Validate_Call {
+func (_c *MockJWTService_Validate_Call) RunAndReturn(run func(tokenString string) (appjwt.UserClaims, error)) *MockJWTService_Validate_Call {
 	_c.Call.Return(run)
 	return _c
 }

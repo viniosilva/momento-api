@@ -3,7 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	"pinnado/internal/auth/infrastructure/indexes"
+	"momento/internal/auth/infrastructure/indexes"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )

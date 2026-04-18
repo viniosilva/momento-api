@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/presentation"
-	"pinnado/pkg/logger"
+	"momento/internal/shared/application"
+	"momento/internal/shared/presentation"
+	"momento/pkg/logger"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -2,10 +2,11 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"pinnado/internal/notes/domain"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/domain"
+	"momento/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,6 +59,9 @@ func (r *noteRepository) GetByIDAndUserID(ctx context.Context, id, userID primit
 
 	res := r.collection.FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return domain.Note{}, domain.ErrNoteNotFound
+		}
 		return domain.Note{}, err
 	}
 
@@ -77,8 +81,9 @@ func (r *noteRepository) Update(ctx context.Context, note domain.Note) error {
 
 	update := bson.M{
 		"$set": bson.M{
+			"title":      note.Title,
 			"content":    note.Content,
-			"updated_at": time.Now().UTC(),
+			"updated_at": note.UpdatedAt,
 		},
 	}
 

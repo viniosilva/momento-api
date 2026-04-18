@@ -2,9 +2,9 @@ package presentation
 
 import (
 	"net/http"
-	"pinnado/internal/shared/domain"
-	"pinnado/internal/shared/presentation/response"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	"momento/internal/shared/domain"
+	"momento/internal/shared/presentation/response"
+	nethttp_utils "momento/pkg/nethttp/utils"
 )
 
 type healthHandler struct {

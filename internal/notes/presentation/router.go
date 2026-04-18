@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"pinnado/pkg/nethttp"
-	auth "pinnado/pkg/nethttp/auth"
-	logging "pinnado/pkg/nethttp/logging"
-	sanitization "pinnado/pkg/nethttp/sanitization"
+	"momento/pkg/nethttp"
+	auth "momento/pkg/nethttp/auth"
+	logging "momento/pkg/nethttp/logging"
+	sanitization "momento/pkg/nethttp/sanitization"
 	"time"
 )
 

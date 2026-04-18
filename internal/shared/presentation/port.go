@@ -2,7 +2,7 @@ package presentation
 
 import (
 	"context"
-	shareddto "pinnado/internal/shared/application/dto"
+	shareddto "momento/internal/shared/application/dto"
 )
 
 type HealthService interface {

@@ -6,7 +6,7 @@ package mocks
 
 import (
 	"context"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 
 	mock "github.com/stretchr/testify/mock"
 )

@@ -2,7 +2,7 @@ package indexes
 
 import (
 	"context"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

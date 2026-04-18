@@ -2,9 +2,9 @@ package application_test
 
 import (
 	"errors"
-	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/domain"
-	"pinnado/internal/shared/mocks"
+	"momento/internal/shared/application"
+	"momento/internal/shared/domain"
+	"momento/internal/shared/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

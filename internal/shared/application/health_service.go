@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 
-	"pinnado/internal/shared/application/dto"
-	"pinnado/internal/shared/domain"
+	"momento/internal/shared/application/dto"
+	"momento/internal/shared/domain"
 )
 
 type HealthService struct {

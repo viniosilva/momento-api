@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"pinnado/internal/auth/application"
-	"pinnado/internal/auth/domain"
-	"pinnado/internal/auth/infrastructure"
-	"pinnado/internal/auth/mocks"
+	"momento/internal/auth/application"
+	"momento/internal/auth/domain"
+	"momento/internal/auth/infrastructure"
+	"momento/internal/auth/mocks"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"pinnado/internal/notes/domain"
+	"momento/internal/notes/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,30 +35,18 @@ func TestNewNote(t *testing.T) {
 	})
 }
 
-func TestNote_SetTitle(t *testing.T) {
-	t.Run("should set title", func(t *testing.T) {
+func TestNote_Update(t *testing.T) {
+	t.Run("should update note", func(t *testing.T) {
 		userID := primitive.NewObjectID()
 		title, _ := domain.NewNoteTitle("Test note title")
 		content, _ := domain.NewNoteContent("Test note content")
 
 		note := domain.NewNote(userID, title, content)
 		newTitle, _ := domain.NewNoteTitle("New test note title")
-		note.SetTitle(newTitle)
+		note.Update(newTitle, content)
 
 		assert.Equal(t, newTitle, note.Title)
-	})
-}
-
-func TestNote_SetContent(t *testing.T) {
-	t.Run("should set content", func(t *testing.T) {
-		userID := primitive.NewObjectID()
-		title, _ := domain.NewNoteTitle("Test note title")
-		content, _ := domain.NewNoteContent("Test note content")
-
-		note := domain.NewNote(userID, title, content)
-		newContent, _ := domain.NewNoteContent("New test note content")
-		note.SetContent(newContent)
-
-		assert.Equal(t, newContent, note.Content)
+		assert.Equal(t, content, note.Content)
+		assert.NotEqual(t, note.CreatedAt, note.UpdatedAt)
 	})
 }

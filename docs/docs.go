@@ -12,7 +12,7 @@ const docTemplate = `{
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "email": "support@pinnado.com"
+            "email": "support@momento.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -765,8 +765,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Pinnado API",
-	Description:      "API documentation for Pinnado application",
+	Title:            "Momento API",
+	Description:      "API documentation for Momento application",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

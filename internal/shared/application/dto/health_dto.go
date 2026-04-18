@@ -1,6 +1,6 @@
 package dto
 
-import "pinnado/internal/shared/domain"
+import "momento/internal/shared/domain"
 
 type HealthOutput struct {
 	Status domain.HealthStatusEnum

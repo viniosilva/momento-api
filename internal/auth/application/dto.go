@@ -1,7 +1,7 @@
 package application
 
 import (
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 	"time"
 )
 

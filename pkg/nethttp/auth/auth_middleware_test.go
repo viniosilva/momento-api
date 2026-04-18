@@ -3,9 +3,9 @@ package nethttp_auth_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"pinnado/internal/auth/domain"
-	"pinnado/internal/auth/infrastructure"
-	nethttp "pinnado/pkg/nethttp/auth"
+	"momento/internal/auth/domain"
+	"momento/internal/auth/infrastructure"
+	nethttp "momento/pkg/nethttp/auth"
 	"testing"
 	"time"
 

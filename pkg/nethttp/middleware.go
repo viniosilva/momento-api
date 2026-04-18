@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	nethttp_port "pinnado/pkg/nethttp/port"
-	nethttp_recovery "pinnado/pkg/nethttp/recovery"
-	nethttp_requestid "pinnado/pkg/nethttp/requestid"
-	nethttp_timeout "pinnado/pkg/nethttp/timeout"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_port "momento/pkg/nethttp/port"
+	nethttp_recovery "momento/pkg/nethttp/recovery"
+	nethttp_requestid "momento/pkg/nethttp/requestid"
+	nethttp_timeout "momento/pkg/nethttp/timeout"
+	nethttp_utils "momento/pkg/nethttp/utils"
 )
 
 const defaultTimeout = 10 * time.Second

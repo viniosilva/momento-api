@@ -6,7 +6,7 @@ package mocks
 
 import (
 	"context"
-	"pinnado/internal/notes/application"
+	"momento/internal/notes/application"
 
 	mock "github.com/stretchr/testify/mock"
 )

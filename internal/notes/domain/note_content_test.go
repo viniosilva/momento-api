@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"pinnado/internal/notes/domain"
+	"momento/internal/notes/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

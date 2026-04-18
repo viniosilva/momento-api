@@ -1,8 +1,8 @@
 package application
 
 import (
-	"pinnado/internal/notes/domain"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/domain"
+	"momento/pkg/listopts"
 	"time"
 )
 

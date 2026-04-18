@@ -1,10 +1,10 @@
 package application_test
 
 import (
-	"pinnado/internal/notes/application"
-	"pinnado/internal/notes/domain"
-	"pinnado/internal/notes/mocks"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/application"
+	"momento/internal/notes/domain"
+	"momento/internal/notes/mocks"
+	"momento/pkg/listopts"
 	"testing"
 	"time"
 

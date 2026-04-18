@@ -3,10 +3,10 @@ package presentation
 import (
 	"encoding/json"
 	"errors"
+	"momento/internal/auth/application"
+	"momento/internal/auth/domain"
+	nethttp_utils "momento/pkg/nethttp/utils"
 	"net/http"
-	"pinnado/internal/auth/application"
-	"pinnado/internal/auth/domain"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
 	"strings"
 )
 
@@ -109,7 +109,7 @@ func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 // Exported for testing purposes
 func MapErrorToHTTPStatus(err error) (int, string) {
 	if errors.Is(err, domain.ErrUserAlreadyExists) {
-		return http.StatusConflict, "user already exists"
+		return http.StatusConflict, err.Error()
 	}
 
 	if errors.Is(err, domain.ErrEmailIsEmpty) ||

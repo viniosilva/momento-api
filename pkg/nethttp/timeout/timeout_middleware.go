@@ -3,7 +3,7 @@ package nethttp_timeout
 import (
 	"context"
 	"net/http"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_utils "momento/pkg/nethttp/utils"
 	"time"
 )
 

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
-	"pinnado/pkg/nethttp"
-	logging "pinnado/pkg/nethttp/logging"
+	"momento/pkg/nethttp"
+	logging "momento/pkg/nethttp/logging"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"

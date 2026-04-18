@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_utils "momento/pkg/nethttp/utils"
 
 	"github.com/microcosm-cc/bluemonday"
 )

@@ -2,8 +2,8 @@ package application
 
 import (
 	"context"
-	"pinnado/internal/notes/domain"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/domain"
+	"momento/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

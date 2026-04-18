@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 )
 
 type UserRepository interface {

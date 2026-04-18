@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	nethttp_requestid "pinnado/pkg/nethttp/requestid"
+	nethttp_requestid "momento/pkg/nethttp/requestid"
 
 	"github.com/stretchr/testify/assert"
 )

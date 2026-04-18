@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 )
 
 func TestNewPassword(t *testing.T) {

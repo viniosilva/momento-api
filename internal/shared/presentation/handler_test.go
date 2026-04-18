@@ -3,12 +3,12 @@ package presentation_test
 import (
 	"errors"
 	"net/http"
-	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/domain"
-	"pinnado/internal/shared/mocks"
-	"pinnado/internal/shared/presentation"
-	"pinnado/internal/shared/presentation/response"
-	"pinnado/pkg/nethttp"
+	"momento/internal/shared/application"
+	"momento/internal/shared/domain"
+	"momento/internal/shared/mocks"
+	"momento/internal/shared/presentation"
+	"momento/internal/shared/presentation/response"
+	"momento/pkg/nethttp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

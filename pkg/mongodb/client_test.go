@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"pinnado/pkg/mongodb"
+	"momento/pkg/mongodb"
 )
 
 func TestNewMongoClient(t *testing.T) {

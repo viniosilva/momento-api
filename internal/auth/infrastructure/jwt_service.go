@@ -4,7 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
+	appjwt "momento/pkg/jwt"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -61,7 +62,7 @@ func (s *JwtService) Generate(userID string, email domain.Email) (string, error)
 	return tokenString, nil
 }
 
-func (s *JwtService) Validate(tokenString string) (*Claims, error) {
+func (s *JwtService) Validate(tokenString string) (appjwt.UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken

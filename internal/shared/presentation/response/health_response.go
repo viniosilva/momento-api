@@ -1,6 +1,6 @@
 package response
 
-import "pinnado/internal/shared/domain"
+import "momento/internal/shared/domain"
 
 type HealthResponse struct {
 	Status domain.HealthStatusEnum `json:"status" example:"ok"`

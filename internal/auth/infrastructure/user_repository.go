@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 )
 
 type userRepository struct {

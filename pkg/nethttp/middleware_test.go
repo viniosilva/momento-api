@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"pinnado/pkg/nethttp"
+	"momento/pkg/nethttp"
 
 	"github.com/stretchr/testify/assert"
 )

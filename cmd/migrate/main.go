@@ -4,11 +4,11 @@ import (
 	"context"
 	"log"
 	"log/slog"
-	authinfra "pinnado/internal/auth/infrastructure"
-	"pinnado/internal/config"
-	notesinfra "pinnado/internal/notes/infrastructure"
-	"pinnado/pkg/logger"
-	"pinnado/pkg/mongodb"
+	authinfra "momento/internal/auth/infrastructure"
+	"momento/internal/config"
+	notesinfra "momento/internal/notes/infrastructure"
+	"momento/pkg/logger"
+	"momento/pkg/mongodb"
 	"time"
 )
 

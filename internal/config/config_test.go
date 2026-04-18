@@ -3,7 +3,7 @@ package config_test
 import (
 	"os"
 	"path/filepath"
-	"pinnado/internal/config"
+	"momento/internal/config"
 	"testing"
 	"time"
 
@@ -22,7 +22,7 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, "8080", got.Api.Port)
 		assert.Equal(t, "localhost", got.Mongo.Host)
 		assert.Equal(t, "27017", got.Mongo.Port)
-		assert.Equal(t, "pinnado", got.Mongo.DBName)
+		assert.Equal(t, "momento", got.Mongo.DBName)
 		assert.Equal(t, "admin", got.Mongo.User)
 		assert.Equal(t, "admin", got.Mongo.Pass)
 		assert.Equal(t, 3, got.Mongo.MaxRetries)
@@ -44,7 +44,7 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, "8080", got.Api.Port)
 		assert.Equal(t, "localhost", got.Mongo.Host)
 		assert.Equal(t, "27017", got.Mongo.Port)
-		assert.Equal(t, "pinnado", got.Mongo.DBName)
+		assert.Equal(t, "momento", got.Mongo.DBName)
 		assert.Equal(t, "admin", got.Mongo.User)
 		assert.Equal(t, "admin", got.Mongo.Pass)
 		assert.Equal(t, 3, got.Mongo.MaxRetries)

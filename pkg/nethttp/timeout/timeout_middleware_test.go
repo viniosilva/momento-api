@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	nethttp_timeout "pinnado/pkg/nethttp/timeout"
+	nethttp_timeout "momento/pkg/nethttp/timeout"
 	"testing"
 	"time"
 

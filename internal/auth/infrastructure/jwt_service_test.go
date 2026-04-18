@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"pinnado/internal/auth/domain"
-	"pinnado/internal/auth/infrastructure"
+	"momento/internal/auth/domain"
+	"momento/internal/auth/infrastructure"
 )
 
 func TestNewJWTService(t *testing.T) {
@@ -29,9 +29,9 @@ func TestJWTService_Generate(t *testing.T) {
 		email, err := domain.NewEmail("user@example.com")
 		require.NoError(t, err)
 
-		token, err := service.Generate(userID, email)
+		got, err := service.Generate(userID, email)
 		require.NoError(t, err)
-		assert.NotEmpty(t, token)
+		assert.NotEmpty(t, got)
 	})
 
 	t.Run("should generate different tokens for different users", func(t *testing.T) {
@@ -64,11 +64,14 @@ func TestJWTService_Validate(t *testing.T) {
 		token, err := service.Generate(userID, email)
 		require.NoError(t, err)
 
-		claims, err := service.Validate(token)
+		got, err := service.Validate(token)
 		require.NoError(t, err)
 
-		assert.Equal(t, userID, claims.GetUserID())
-		assert.Equal(t, string(email), claims.GetEmail())
+		assert.Equal(t, userID, got.GetUserID())
+		assert.Equal(t, string(email), got.GetEmail())
+
+		claims, ok := got.(*infrastructure.Claims)
+		require.True(t, ok)
 		assert.NotNil(t, claims.ExpiresAt)
 		assert.NotNil(t, claims.IssuedAt)
 	})

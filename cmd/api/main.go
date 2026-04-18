@@ -10,20 +10,20 @@ import (
 	"syscall"
 	"time"
 
-	"pinnado/docs"
-	authapp "pinnado/internal/auth/application"
-	authdomain "pinnado/internal/auth/domain"
-	authinfra "pinnado/internal/auth/infrastructure"
-	authpres "pinnado/internal/auth/presentation"
-	"pinnado/internal/config"
-	notesapp "pinnado/internal/notes/application"
-	notesdomain "pinnado/internal/notes/domain"
-	notesinfra "pinnado/internal/notes/infrastructure"
-	notespres "pinnado/internal/notes/presentation"
-	"pinnado/internal/shared/application"
-	"pinnado/internal/shared/presentation"
-	pkglogger "pinnado/pkg/logger"
-	"pinnado/pkg/mongodb"
+	"momento/docs"
+	authapp "momento/internal/auth/application"
+	authdomain "momento/internal/auth/domain"
+	authinfra "momento/internal/auth/infrastructure"
+	authpres "momento/internal/auth/presentation"
+	"momento/internal/config"
+	notesapp "momento/internal/notes/application"
+	notesdomain "momento/internal/notes/domain"
+	notesinfra "momento/internal/notes/infrastructure"
+	notespres "momento/internal/notes/presentation"
+	"momento/internal/shared/application"
+	"momento/internal/shared/presentation"
+	pkglogger "momento/pkg/logger"
+	"momento/pkg/mongodb"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -33,12 +33,12 @@ const (
 	apiPrefixPath   = "/api"
 )
 
-// @title Pinnado API
+// @title Momento API
 // @version 1.0
-// @description API documentation for Pinnado application
+// @description API documentation for Momento application
 // @termsOfService http://swagger.io/terms/
 // @contact.name API Support
-// @contact.email support@pinnado.com
+// @contact.email support@momento.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @securityDefinitions.apikey Bearer

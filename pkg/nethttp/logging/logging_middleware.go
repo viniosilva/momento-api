@@ -2,8 +2,8 @@ package nethttp_logging
 
 import (
 	"net/http"
-	nethttp_port "pinnado/pkg/nethttp/port"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
+	nethttp_port "momento/pkg/nethttp/port"
+	nethttp_utils "momento/pkg/nethttp/utils"
 	"time"
 )
 

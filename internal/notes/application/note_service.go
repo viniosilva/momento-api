@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"pinnado/internal/notes/domain"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/domain"
+	"momento/pkg/listopts"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -121,8 +121,7 @@ func (s *NoteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (No
 	if err != nil {
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
 	}
-	note.SetTitle(title)
-	note.SetContent(content)
+	note.Update(title, content)
 
 	if err := s.noteRepository.Update(ctx, note); err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {

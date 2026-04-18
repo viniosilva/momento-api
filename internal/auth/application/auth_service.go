@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"pinnado/internal/auth/domain"
+	"momento/internal/auth/domain"
 )
 
 type AuthService struct {

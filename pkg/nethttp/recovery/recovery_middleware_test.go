@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	nethttp_recovery "pinnado/pkg/nethttp/recovery"
+	nethttp_recovery "momento/pkg/nethttp/recovery"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	nethttp_sanitization "pinnado/pkg/nethttp/sanitization"
+	nethttp_sanitization "momento/pkg/nethttp/sanitization"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

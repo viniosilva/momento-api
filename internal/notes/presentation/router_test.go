@@ -2,12 +2,12 @@ package presentation_test
 
 import (
 	"log/slog"
+	authinfra "momento/internal/auth/infrastructure"
+	"momento/internal/notes/mocks"
+	"momento/internal/notes/presentation"
+	"momento/pkg/logger"
 	"net/http"
 	"net/http/httptest"
-	authinfra "pinnado/internal/auth/infrastructure"
-	"pinnado/internal/notes/mocks"
-	"pinnado/internal/notes/presentation"
-	"pinnado/pkg/logger"
 	"testing"
 	"time"
 

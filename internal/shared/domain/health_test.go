@@ -1,7 +1,7 @@
 package domain_test
 
 import (
-	"pinnado/internal/shared/domain"
+	"momento/internal/shared/domain"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

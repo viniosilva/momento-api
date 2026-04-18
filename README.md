@@ -1,4 +1,4 @@
-# Pinnado: Notas Colaborativas
+# Momento: Notas Colaborativas
 
 Um aplicativo de notas para escrever e compartilhar conteúdos de forma colaborativa. Organizando projetos e estudos com eficiência e segurança.
 

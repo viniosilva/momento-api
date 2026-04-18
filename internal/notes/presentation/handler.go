@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"pinnado/internal/notes/application"
-	"pinnado/internal/notes/domain"
-	sharedresp "pinnado/internal/shared/presentation/response"
-	"pinnado/pkg/listopts"
-	nethttp_auth "pinnado/pkg/nethttp/auth"
-	nethttp_utils "pinnado/pkg/nethttp/utils"
-	"pinnado/pkg/tools"
+	"momento/internal/notes/application"
+	"momento/internal/notes/domain"
+	sharedresp "momento/internal/shared/presentation/response"
+	"momento/pkg/listopts"
+	nethttp_auth "momento/pkg/nethttp/auth"
+	nethttp_utils "momento/pkg/nethttp/utils"
+	"momento/pkg/tools"
 )
 
 type noteHandler struct {

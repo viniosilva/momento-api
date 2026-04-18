@@ -10,8 +10,7 @@ import (
 const NotesCollectionName = "notes"
 
 var (
-	ErrNoteNotFound       = errors.New("note not found")
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrNoteNotFound = errors.New("note not found")
 )
 
 type Note struct {
@@ -37,10 +36,8 @@ func NewNote(userID primitive.ObjectID, title NoteTitle, content NoteContent) No
 	}
 }
 
-func (n *Note) SetTitle(title NoteTitle) {
+func (n *Note) Update(title NoteTitle, content NoteContent) {
 	n.Title = title
-}
-
-func (n *Note) SetContent(content NoteContent) {
 	n.Content = content
+	n.UpdatedAt = time.Now().UTC()
 }

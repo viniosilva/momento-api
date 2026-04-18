@@ -42,7 +42,7 @@ const (
 	defaultApiPort             = "8080"
 	defaultMongoHost           = "localhost"
 	defaultMongoPort           = "27017"
-	defaultMongoDB             = "pinnado"
+	defaultMongoDB             = "momento"
 	defaultMongoUser           = "admin"
 	defaultMongoPass           = "admin"
 	defaultMongoMaxRetries     = 3

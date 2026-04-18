@@ -6,8 +6,8 @@ package mocks
 
 import (
 	"context"
-	"pinnado/internal/notes/domain"
-	"pinnado/pkg/listopts"
+	"momento/internal/notes/domain"
+	"momento/pkg/listopts"
 
 	mock "github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
