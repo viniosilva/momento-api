@@ -31,6 +31,11 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
 		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
+		assert.Equal(t, 7*24*time.Hour, got.JWT.RefreshTokenExpiration)
+		assert.Equal(t, "localhost", got.Redis.Host)
+		assert.Equal(t, "6379", got.Redis.Port)
+		assert.Equal(t, "", got.Redis.Pass)
+		assert.Equal(t, 0, got.Redis.DB)
 	})
 
 	t.Run("should load values from .env.example file", func(t *testing.T) {
@@ -53,6 +58,11 @@ func TestLoadConfig(t *testing.T) {
 		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
 		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
+		assert.Equal(t, 7*24*time.Hour, got.JWT.RefreshTokenExpiration)
+		assert.Equal(t, "localhost", got.Redis.Host)
+		assert.Equal(t, "6379", got.Redis.Port)
+		assert.Equal(t, "", got.Redis.Pass)
+		assert.Equal(t, 0, got.Redis.DB)
 	})
 
 	t.Run("should return default max retries when conversion fails", func(t *testing.T) {
@@ -81,6 +91,11 @@ var envVars []string = []string{
 	"MONGO_CONNECT_TIMEOUT_MS",
 	"JWT_SECRET",
 	"JWT_EXPIRATION_MS",
+	"REFRESH_TOKEN_EXPIRATION_MS",
+	"REDIS_HOST",
+	"REDIS_PORT",
+	"REDIS_PASS",
+	"REDIS_DB",
 }
 
 func clearEnvVars(t *testing.T) {

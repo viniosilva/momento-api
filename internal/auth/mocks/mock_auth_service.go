@@ -6,7 +6,6 @@ package mocks
 
 import (
 	"context"
-
 	"momento/internal/auth/app"
 
 	mock "github.com/stretchr/testify/mock"
@@ -101,6 +100,72 @@ func (_c *MockAuthService_Login_Call) Return(loginOutput app.LoginOutput, err er
 }
 
 func (_c *MockAuthService_Login_Call) RunAndReturn(run func(ctx context.Context, input app.LoginInput) (app.LoginOutput, error)) *MockAuthService_Login_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RefreshToken provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) RefreshToken(ctx context.Context, input app.RefreshTokenInput) (app.LoginOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RefreshToken")
+	}
+
+	var r0 app.LoginOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.RefreshTokenInput) (app.LoginOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.RefreshTokenInput) app.LoginOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(app.LoginOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.RefreshTokenInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockAuthService_RefreshToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RefreshToken'
+type MockAuthService_RefreshToken_Call struct {
+	*mock.Call
+}
+
+// RefreshToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.RefreshTokenInput
+func (_e *MockAuthService_Expecter) RefreshToken(ctx interface{}, input interface{}) *MockAuthService_RefreshToken_Call {
+	return &MockAuthService_RefreshToken_Call{Call: _e.mock.On("RefreshToken", ctx, input)}
+}
+
+func (_c *MockAuthService_RefreshToken_Call) Run(run func(ctx context.Context, input app.RefreshTokenInput)) *MockAuthService_RefreshToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.RefreshTokenInput
+		if args[1] != nil {
+			arg1 = args[1].(app.RefreshTokenInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_RefreshToken_Call) Return(loginOutput app.LoginOutput, err error) *MockAuthService_RefreshToken_Call {
+	_c.Call.Return(loginOutput, err)
+	return _c
+}
+
+func (_c *MockAuthService_RefreshToken_Call) RunAndReturn(run func(ctx context.Context, input app.RefreshTokenInput) (app.LoginOutput, error)) *MockAuthService_RefreshToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

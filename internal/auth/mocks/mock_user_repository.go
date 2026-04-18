@@ -6,7 +6,6 @@ package mocks
 
 import (
 	"context"
-
 	"momento/internal/auth/domain"
 
 	mock "github.com/stretchr/testify/mock"

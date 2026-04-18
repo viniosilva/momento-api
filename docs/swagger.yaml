@@ -57,6 +57,9 @@ definitions:
     type: object
   ports.LoginResponse:
     properties:
+      refresh_token:
+        example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+        type: string
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
@@ -80,6 +83,21 @@ definitions:
         type: string
       user_id:
         example: 507f1f77bcf86cd799439011
+        type: string
+    type: object
+  ports.RefreshRequest:
+    properties:
+      refresh_token:
+        example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+        type: string
+    type: object
+  ports.RefreshResponse:
+    properties:
+      refresh_token:
+        example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
   ports.RegisterRequest:
@@ -132,7 +150,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates a user with email and password credentials
+      description: Authenticates a user and returns a JWT token and a refresh token
       parameters:
       - description: Login request
         in: body
@@ -160,6 +178,41 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Login with email and password
+      tags:
+      - auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a refresh token for a new JWT token and a new refresh
+        token
+      parameters:
+      - description: Refresh request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          schema:
+            $ref: '#/definitions/ports.RefreshResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Refresh access token
       tags:
       - auth
   /api/auth/register:

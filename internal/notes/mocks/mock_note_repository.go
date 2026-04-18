@@ -6,7 +6,6 @@ package mocks
 
 import (
 	"context"
-
 	"momento/internal/notes/domain"
 	"momento/pkg/listopts"
 
@@ -84,7 +83,11 @@ func (_c *MockNoteRepository_ArchiveByIDAndUserID_Call) Run(run func(ctx context
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -138,7 +141,10 @@ func (_c *MockNoteRepository_Create_Call) Run(run func(ctx context.Context, note
 		if args[1] != nil {
 			arg1 = args[1].(domain.Note)
 		}
-		run(arg0, arg1)
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -197,7 +203,11 @@ func (_c *MockNoteRepository_DeleteByIDAndUserID_Call) Run(run func(ctx context.
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -265,7 +275,11 @@ func (_c *MockNoteRepository_GetByIDAndUserID_Call) Run(run func(ctx context.Con
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -333,7 +347,11 @@ func (_c *MockNoteRepository_ListByUserID_Call) Run(run func(ctx context.Context
 		if args[2] != nil {
 			arg2 = args[2].(listopts.ListParams)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -392,7 +410,11 @@ func (_c *MockNoteRepository_RestoreByIDAndUserID_Call) Run(run func(ctx context
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -446,7 +468,10 @@ func (_c *MockNoteRepository_Update_Call) Run(run func(ctx context.Context, note
 		if args[1] != nil {
 			arg1 = args[1].(domain.Note)
 		}
-		run(arg0, arg1)
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

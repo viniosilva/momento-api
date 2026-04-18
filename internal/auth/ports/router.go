@@ -33,4 +33,9 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("POST %s/auth/login", options.Prefix),
 		chain.ThenFunc(handler.Login),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/refresh", options.Prefix),
+		chain.ThenFunc(handler.Refresh),
+	)
 }

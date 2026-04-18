@@ -8,9 +8,12 @@ import (
 )
 
 var (
-	ErrUserAlreadyExists  = errors.New("user already exists")
-	ErrUserNotFound       = errors.New("user not found")
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserAlreadyExists    = errors.New("user already exists")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrInvalidCredentials   = errors.New("invalid credentials")
+	ErrRefreshTokenInvalid  = errors.New("invalid refresh token")
+	ErrRefreshTokenExpired  = errors.New("refresh token expired")
+	ErrRefreshTokenNotFound = errors.New("refresh token not found")
 )
 
 type User struct {

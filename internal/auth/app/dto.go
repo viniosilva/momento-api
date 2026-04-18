@@ -24,5 +24,10 @@ type LoginInput struct {
 }
 
 type LoginOutput struct {
-	Token string
+	Token        string
+	RefreshToken string
+}
+
+type RefreshTokenInput struct {
+	RefreshToken string
 }

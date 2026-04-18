@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	appjwt "momento/pkg/jwt"
+	"momento/pkg/jwt"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -38,23 +38,23 @@ func (_m *MockJWTService) EXPECT() *MockJWTService_Expecter {
 }
 
 // Validate provides a mock function for the type MockJWTService
-func (_mock *MockJWTService) Validate(tokenString string) (appjwt.UserClaims, error) {
+func (_mock *MockJWTService) Validate(tokenString string) (jwt.UserClaims, error) {
 	ret := _mock.Called(tokenString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Validate")
 	}
 
-	var r0 appjwt.UserClaims
+	var r0 jwt.UserClaims
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string) (appjwt.UserClaims, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) (jwt.UserClaims, error)); ok {
 		return returnFunc(tokenString)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string) appjwt.UserClaims); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) jwt.UserClaims); ok {
 		r0 = returnFunc(tokenString)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(appjwt.UserClaims)
+			r0 = ret.Get(0).(jwt.UserClaims)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
@@ -89,12 +89,12 @@ func (_c *MockJWTService_Validate_Call) Run(run func(tokenString string)) *MockJ
 	return _c
 }
 
-func (_c *MockJWTService_Validate_Call) Return(claims appjwt.UserClaims, err error) *MockJWTService_Validate_Call {
-	_c.Call.Return(claims, err)
+func (_c *MockJWTService_Validate_Call) Return(userClaims jwt.UserClaims, err error) *MockJWTService_Validate_Call {
+	_c.Call.Return(userClaims, err)
 	return _c
 }
 
-func (_c *MockJWTService_Validate_Call) RunAndReturn(run func(tokenString string) (appjwt.UserClaims, error)) *MockJWTService_Validate_Call {
+func (_c *MockJWTService_Validate_Call) RunAndReturn(run func(tokenString string) (jwt.UserClaims, error)) *MockJWTService_Validate_Call {
 	_c.Call.Return(run)
 	return _c
 }

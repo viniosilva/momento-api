@@ -6,8 +6,7 @@ package mocks
 
 import (
 	"context"
-
-	sharedapp "momento/internal/shared/app"
+	"momento/internal/shared/app"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -40,18 +39,18 @@ func (_m *MockHealthService) EXPECT() *MockHealthService_Expecter {
 }
 
 // HealthCheck provides a mock function for the type MockHealthService
-func (_mock *MockHealthService) HealthCheck(ctx context.Context) sharedapp.HealthOutput {
+func (_mock *MockHealthService) HealthCheck(ctx context.Context) app.HealthOutput {
 	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HealthCheck")
 	}
 
-	var r0 sharedapp.HealthOutput
-	if returnFunc, ok := ret.Get(0).(func(context.Context) sharedapp.HealthOutput); ok {
+	var r0 app.HealthOutput
+	if returnFunc, ok := ret.Get(0).(func(context.Context) app.HealthOutput); ok {
 		r0 = returnFunc(ctx)
 	} else {
-		r0 = ret.Get(0).(sharedapp.HealthOutput)
+		r0 = ret.Get(0).(app.HealthOutput)
 	}
 	return r0
 }
@@ -80,12 +79,12 @@ func (_c *MockHealthService_HealthCheck_Call) Run(run func(ctx context.Context))
 	return _c
 }
 
-func (_c *MockHealthService_HealthCheck_Call) Return(healthOutput sharedapp.HealthOutput) *MockHealthService_HealthCheck_Call {
+func (_c *MockHealthService_HealthCheck_Call) Return(healthOutput app.HealthOutput) *MockHealthService_HealthCheck_Call {
 	_c.Call.Return(healthOutput)
 	return _c
 }
 
-func (_c *MockHealthService_HealthCheck_Call) RunAndReturn(run func(ctx context.Context) sharedapp.HealthOutput) *MockHealthService_HealthCheck_Call {
+func (_c *MockHealthService_HealthCheck_Call) RunAndReturn(run func(ctx context.Context) app.HealthOutput) *MockHealthService_HealthCheck_Call {
 	_c.Call.Return(run)
 	return _c
 }

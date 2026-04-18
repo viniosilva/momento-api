@@ -13,6 +13,7 @@ type Config struct {
 	Api   ApiConfig
 	Mongo MongoConfig
 	JWT   JWTConfig
+	Redis RedisConfig
 }
 
 type ApiConfig struct {
@@ -32,24 +33,37 @@ type MongoConfig struct {
 }
 
 type JWTConfig struct {
-	Secret     string
-	Expiration time.Duration
+	Secret                 string
+	Expiration             time.Duration
+	RefreshTokenExpiration time.Duration
+}
+
+type RedisConfig struct {
+	Host string
+	Port string
+	Pass string
+	DB   int
 }
 
 const (
-	defaultEnvPath             = ".env"
-	defaultApiHost             = ""
-	defaultApiPort             = "8080"
-	defaultMongoHost           = "localhost"
-	defaultMongoPort           = "27017"
-	defaultMongoDB             = "momento"
-	defaultMongoUser           = "admin"
-	defaultMongoPass           = "admin"
-	defaultMongoMaxRetries     = 3
-	defaultMongoRetryDelay     = 2 * time.Second
-	defaultMongoConnectTimeout = 10 * time.Second
-	defaultJWTSecret           = "your-secret-key-change-in-production"
-	defaultJWTExpiration       = 12 * time.Hour
+	defaultEnvPath                = ".env"
+	defaultApiHost                = ""
+	defaultApiPort                = "8080"
+	defaultMongoHost              = "localhost"
+	defaultMongoPort              = "27017"
+	defaultMongoDB                = "momento"
+	defaultMongoUser              = "admin"
+	defaultMongoPass              = "admin"
+	defaultMongoMaxRetries        = 3
+	defaultMongoRetryDelay        = 2 * time.Second
+	defaultMongoConnectTimeout    = 10 * time.Second
+	defaultJWTSecret              = "your-secret-key-change-in-production"
+	defaultJWTExpiration          = 12 * time.Hour
+	defaultRefreshTokenExpiration = 7 * 24 * time.Hour
+	defaultRedisHost              = "localhost"
+	defaultRedisPort              = "6379"
+	defaultRedisPass              = ""
+	defaultRedisDB                = 0
 )
 
 type LoadConfigOption func(*loadConfigOptions)
@@ -93,8 +107,15 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			ConnectTimeout: getEnvAsDuration("MONGO_CONNECT_TIMEOUT_MS", defaultMongoConnectTimeout),
 		},
 		JWT: JWTConfig{
-			Secret:     getEnv("JWT_SECRET", defaultJWTSecret),
-			Expiration: getEnvAsDuration("JWT_EXPIRATION_MS", defaultJWTExpiration),
+			Secret:                 getEnv("JWT_SECRET", defaultJWTSecret),
+			Expiration:             getEnvAsDuration("JWT_EXPIRATION_MS", defaultJWTExpiration),
+			RefreshTokenExpiration: getEnvAsDuration("REFRESH_TOKEN_EXPIRATION_MS", defaultRefreshTokenExpiration),
+		},
+		Redis: RedisConfig{
+			Host: getEnv("REDIS_HOST", defaultRedisHost),
+			Port: getEnv("REDIS_PORT", defaultRedisPort),
+			Pass: getEnv("REDIS_PASS", defaultRedisPass),
+			DB:   getEnvAsInt("REDIS_DB", defaultRedisDB),
 		},
 	}
 }

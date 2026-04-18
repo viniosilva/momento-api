@@ -67,7 +67,7 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login godoc
 // @Summary Login with email and password
-// @Description Authenticates a user with email and password credentials
+// @Description Authenticates a user and returns a JWT token and a refresh token
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -101,7 +101,55 @@ func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := LoginResponse{
-		Token: output.Token,
+		Token:        output.Token,
+		RefreshToken: output.RefreshToken,
+	}
+
+	nethttp_utils.JSON(w, http.StatusOK, response)
+}
+
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Exchanges a refresh token for a new JWT token and a new refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshRequest true "Refresh request"
+// @Success 200 {object} RefreshResponse "Tokens refreshed successfully"
+// @Failure 400 {object} nethttp.ErrorResponse "Invalid request body"
+// @Failure 401 {object} nethttp.ErrorResponse "Invalid or expired refresh token"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/auth/refresh [post]
+func (h *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	if strings.TrimSpace(req.RefreshToken) == "" {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "refresh_token is required",
+		})
+		return
+	}
+
+	output, err := h.authService.RefreshToken(r.Context(), app.RefreshTokenInput{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	response := RefreshResponse{
+		Token:        output.Token,
+		RefreshToken: output.RefreshToken,
 	}
 
 	nethttp_utils.JSON(w, http.StatusOK, response)
@@ -129,6 +177,12 @@ func MapErrorToHTTPStatus(err error) (int, string) {
 		return http.StatusBadRequest, domain.ErrPasswordMissingSymbol.Error()
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		return http.StatusUnauthorized, domain.ErrInvalidCredentials.Error()
+	case errors.Is(err, domain.ErrRefreshTokenInvalid):
+		return http.StatusUnauthorized, domain.ErrRefreshTokenInvalid.Error()
+	case errors.Is(err, domain.ErrRefreshTokenNotFound):
+		return http.StatusUnauthorized, domain.ErrRefreshTokenInvalid.Error()
+	case errors.Is(err, domain.ErrRefreshTokenExpired):
+		return http.StatusUnauthorized, domain.ErrRefreshTokenInvalid.Error()
 	default:
 		return http.StatusInternalServerError, "internal server error"
 	}

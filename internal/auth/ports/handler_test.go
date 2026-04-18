@@ -27,8 +27,9 @@ const (
 func TestNewAuthHandler(t *testing.T) {
 	t.Run("should create auth handler", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		assert.NotNil(t, handler)
@@ -43,8 +44,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return created when user is created successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
@@ -61,8 +63,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		resp, got, err := nethttp.RequestWithResponse[string, nethttp.ErrorResponse](
@@ -75,8 +78,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when email is invalid", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -94,8 +98,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return bad request when password is empty after trim", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -113,8 +118,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return conflict when user already exists", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(true, nil).Once()
@@ -129,8 +135,9 @@ func TestAuthHandler_Register(t *testing.T) {
 
 	t.Run("should return internal server error when repository fails", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		mockRepo.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, assert.AnError).Once()
@@ -197,6 +204,13 @@ func TestMapErrorToHTTPStatus(t *testing.T) {
 		assert.Equal(t, "invalid credentials", message)
 	})
 
+	t.Run("should return unauthorized when refresh token is invalid", func(t *testing.T) {
+		statusCode, message := ports.MapErrorToHTTPStatus(domain.ErrRefreshTokenInvalid)
+
+		assert.Equal(t, http.StatusUnauthorized, statusCode)
+		assert.Equal(t, "invalid refresh token", message)
+	})
+
 	t.Run("should return internal server error when unknown fails", func(t *testing.T) {
 		statusCode, message := ports.MapErrorToHTTPStatus(context.DeadlineExceeded)
 
@@ -230,10 +244,11 @@ func TestAuthHandler_Login(t *testing.T) {
 		"password": "ValidPass123!",
 	}
 
-	t.Run("should return ok when login is successful", func(t *testing.T) {
+	t.Run("should return ok with token and refresh token when login is successful", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -245,6 +260,8 @@ func TestAuthHandler_Login(t *testing.T) {
 		user := domain.NewUser(email, password)
 
 		mockRepo.EXPECT().FindByEmail(mock.Anything, email).Return(user, nil).Once()
+		tokenSvcMock.EXPECT().Generate(mock.Anything, mock.Anything, mock.Anything).
+			Return("refresh-token-xyz", nil).Once()
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, ports.LoginResponse](
 			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
@@ -252,12 +269,14 @@ func TestAuthHandler_Login(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.NotEmpty(t, got.Token)
+		assert.NotEmpty(t, got.RefreshToken)
 	})
 
 	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		resp, got, err := nethttp.RequestWithResponse[string, nethttp.ErrorResponse](
@@ -270,8 +289,9 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return bad request when email is invalid", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		reqBody := map[string]any{
@@ -289,8 +309,9 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return unauthorized when user is not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -310,8 +331,9 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return unauthorized when password is incorrect", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -334,8 +356,9 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	t.Run("should return internal server error when repository fails", func(t *testing.T) {
 		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		authService := app.NewAuthService(mockRepo, jwtService)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
 		handler := ports.NewAuthHandler(authService)
 
 		email, err := domain.NewEmail(defaultReqBody["email"].(string))
@@ -347,6 +370,89 @@ func TestAuthHandler_Login(t *testing.T) {
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, nethttp.ErrorResponse](
 			t.Context(), http.MethodPost, "/auth/login", defaultReqBody, handler.Login)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		assert.Equal(t, "internal server error", got.Message)
+	})
+}
+
+func TestAuthHandler_Refresh(t *testing.T) {
+	const validRefreshToken = "valid-refresh-token"
+
+	defaultReqBody := map[string]any{
+		"refresh_token": validRefreshToken,
+	}
+
+	t.Run("should return ok with new token and refresh token", func(t *testing.T) {
+		authServiceMock := mocks.NewMockAuthService(t)
+		handler := ports.NewAuthHandler(authServiceMock)
+
+		authServiceMock.EXPECT().RefreshToken(mock.Anything, app.RefreshTokenInput{RefreshToken: validRefreshToken}).
+			Return(app.LoginOutput{Token: "new-jwt", RefreshToken: "new-refresh"}, nil).
+			Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, ports.RefreshResponse](
+			t.Context(), http.MethodPost, "/auth/refresh", defaultReqBody, handler.Refresh)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "new-jwt", got.Token)
+		assert.Equal(t, "new-refresh", got.RefreshToken)
+	})
+
+	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
+		authServiceMock := mocks.NewMockAuthService(t)
+		handler := ports.NewAuthHandler(authServiceMock)
+
+		resp, got, err := nethttp.RequestWithResponse[string, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/refresh", "invalid json", handler.Refresh)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Equal(t, "invalid request body", got.Message)
+	})
+
+	t.Run("should return bad request when refresh_token is empty", func(t *testing.T) {
+		authServiceMock := mocks.NewMockAuthService(t)
+		handler := ports.NewAuthHandler(authServiceMock)
+
+		reqBody := map[string]any{"refresh_token": "   "}
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/refresh", reqBody, handler.Refresh)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Equal(t, "refresh_token is required", got.Message)
+	})
+
+	t.Run("should return unauthorized when refresh token is invalid", func(t *testing.T) {
+		authServiceMock := mocks.NewMockAuthService(t)
+		handler := ports.NewAuthHandler(authServiceMock)
+
+		authServiceMock.EXPECT().RefreshToken(mock.Anything, app.RefreshTokenInput{RefreshToken: validRefreshToken}).
+			Return(app.LoginOutput{}, domain.ErrRefreshTokenInvalid).
+			Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/refresh", defaultReqBody, handler.Refresh)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.Equal(t, "invalid refresh token", got.Message)
+	})
+
+	t.Run("should return internal server error when service fails", func(t *testing.T) {
+		authServiceMock := mocks.NewMockAuthService(t)
+		handler := ports.NewAuthHandler(authServiceMock)
+
+		authServiceMock.EXPECT().RefreshToken(mock.Anything, app.RefreshTokenInput{RefreshToken: validRefreshToken}).
+			Return(app.LoginOutput{}, assert.AnError).
+			Once()
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/refresh", defaultReqBody, handler.Refresh)
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)

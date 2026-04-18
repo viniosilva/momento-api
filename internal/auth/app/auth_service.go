@@ -9,14 +9,20 @@ import (
 )
 
 type authService struct {
-	userRepository UserRepository
-	jwtService     JWTService
+	userRepository     UserRepository
+	jwtService         JWTService
+	secureTokenService SecureTokenService
 }
 
-func NewAuthService(userRepository UserRepository, jwtService JWTService) *authService {
+func NewAuthService(
+	userRepository UserRepository,
+	jwtService JWTService,
+	secureTokenService SecureTokenService,
+) *authService {
 	return &authService{
-		userRepository: userRepository,
-		jwtService:     jwtService,
+		userRepository:     userRepository,
+		jwtService:         jwtService,
+		secureTokenService: secureTokenService,
 	}
 }
 
@@ -75,7 +81,33 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 		return LoginOutput{}, fmt.Errorf("s.jwtService.Generate: %w", err)
 	}
 
+	refreshToken, err := s.secureTokenService.Generate(ctx, user.ID, string(user.Email))
+	if err != nil {
+		return LoginOutput{}, fmt.Errorf("s.secureTokenService.Generate: %w", err)
+	}
+
 	return LoginOutput{
-		Token: token,
+		Token:        token,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput) (LoginOutput, error) {
+	userID, email, newRefreshToken, err := s.secureTokenService.Refresh(ctx, input.RefreshToken)
+	if err != nil {
+		if errors.Is(err, domain.ErrRefreshTokenNotFound) || errors.Is(err, domain.ErrRefreshTokenExpired) {
+			return LoginOutput{}, domain.ErrRefreshTokenInvalid
+		}
+		return LoginOutput{}, fmt.Errorf("s.secureTokenService.Refresh: %w", err)
+	}
+
+	token, err := s.jwtService.Generate(userID, domain.Email(email))
+	if err != nil {
+		return LoginOutput{}, fmt.Errorf("s.jwtService.Generate: %w", err)
+	}
+
+	return LoginOutput{
+		Token:        token,
+		RefreshToken: newRefreshToken,
 	}, nil
 }

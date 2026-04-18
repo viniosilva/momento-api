@@ -15,3 +15,8 @@ type UserRepository interface {
 type JWTService interface {
 	Generate(userID string, email domain.Email) (string, error)
 }
+
+type SecureTokenService interface {
+	Generate(ctx context.Context, userID, email string) (string, error)
+	Refresh(ctx context.Context, token string) (userID, email, newToken string, err error)
+}

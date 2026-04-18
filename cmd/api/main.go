@@ -22,6 +22,7 @@ import (
 	sharedports "momento/internal/shared/ports"
 	pkglogger "momento/pkg/logger"
 	"momento/pkg/mongodb"
+	pkgredis "momento/pkg/redis"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -129,11 +130,24 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
+	logger.Info("connecting to Redis")
+	redisClient, err := pkgredis.NewRedisClient(
+		ctx,
+		config.Redis.Host,
+		config.Redis.Port,
+		config.Redis.Pass,
+		config.Redis.DB,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+	}
+
 	logger.Info("initializing services")
 
 	db := mongoClient.Database(config.Mongo.DBName)
 	userRepository := authadapters.NewUserRepository(db)
 	noteRepository := notesadapters.NewNoteRepository(db)
+	secureTokenRepository := authadapters.NewSecureTokenService(redisClient, config.JWT.RefreshTokenExpiration)
 
 	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
 
@@ -141,7 +155,7 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 		MongoClient:   mongoClient,
 		HealthService: sharedapp.NewHealthService(mongoClient),
 		JwtService:    jwtService,
-		AuthService:   authapp.NewAuthService(userRepository, jwtService),
+		AuthService:   authapp.NewAuthService(userRepository, jwtService, secureTokenRepository),
 		NoteService:   notesapp.NewNoteService(noteRepository),
 	}, nil
 }
