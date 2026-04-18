@@ -22,6 +22,15 @@ import (
 )
 ```
 
+## Go 1.26+ — `new(expr)` (pointer to a value)
+
+The project targets **Go 1.26+** (`go.mod`). Use the language change where it helps readability.
+
+- The built-in **`new` may take an expression**, not only a type. The operand’s value initializes the allocated variable; the result is a pointer to that type, e.g. `new("hello")` → `*string`, `new(42)` → `*int`, `new(30*time.Second)` → `*time.Duration`.
+- **Prefer `new(expr)`** for optional pointer fields in DTOs/structs (`*string`, `*int`, …), HTTP/JSON handlers, protobuf, and **tests** — instead of a one-off `v := x; &v` or importing a generic `ptr` helper solely for literals.
+- **`new(T)`** (operand is a type) is unchanged: zero value of `T`, e.g. `new(string)` → `*string` to `""`.
+- **`new(nil)`** is invalid (nil has no type).
+
 ## Error Handling
 
 **Flow**: Domain → Adapters (translate) → App (enrich) → Ports (map to HTTP)

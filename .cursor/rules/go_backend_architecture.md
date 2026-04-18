@@ -1,7 +1,7 @@
 # Go Backend Architecture - Structure and Layers
 
 ## Stack
-Go 1.25.0 + MongoDB 8 + Swagger/OpenAPI
+Go 1.26.0 + MongoDB 8 + Swagger/OpenAPI
 
 ## Structure (DDD Layers)
 
