@@ -7,6 +7,7 @@ import (
 
 	"momento/internal/notes/domain"
 	"momento/pkg/listopts"
+	"momento/pkg/tools"
 )
 
 type noteService struct {
@@ -74,21 +75,33 @@ func (s *noteService) GetUserNoteByID(ctx context.Context, input GetUserNoteByID
 }
 
 func (s *noteService) UpdateNote(ctx context.Context, input UpdateNoteInput) (NoteOutput, error) {
-	title, err := domain.NewNoteTitle(input.Title)
-	if err != nil {
-		return NoteOutput{}, err
+	var newTitle *domain.NoteTitle
+	if input.Title != nil {
+		title, err := domain.NewNoteTitle(*input.Title)
+		if err != nil {
+			return NoteOutput{}, err
+		}
+		newTitle = &title
 	}
 
-	content, err := domain.NewNoteContent(input.Content)
-	if err != nil {
-		return NoteOutput{}, err
+	var newContent *domain.NoteContent
+	if input.Content != nil {
+		content, err := domain.NewNoteContent(*input.Content)
+		if err != nil {
+			return NoteOutput{}, err
+		}
+		newContent = &content
 	}
 
 	note, err := s.noteRepository.GetByIDAndUserID(ctx, input.ID, input.UserID)
 	if err != nil {
 		return NoteOutput{}, fmt.Errorf("s.noteRepository.GetByIDAndUserID: %w", err)
 	}
-	note.Update(title, content)
+
+	note.Update(
+		tools.ValueOrDefault(newTitle, note.Title),
+		tools.ValueOrDefault(newContent, note.Content),
+	)
 
 	if err := s.noteRepository.Update(ctx, note); err != nil {
 		if errors.Is(err, domain.ErrNoteNotFound) {

@@ -14,3 +14,11 @@ func AtoiOrDefault(value string, defaultValue int) int {
 
 	return intValue
 }
+
+func ValueOrDefault[T comparable](value *T, defaultValue T) T {
+	if value == nil {
+		return defaultValue
+	}
+
+	return *value
+}

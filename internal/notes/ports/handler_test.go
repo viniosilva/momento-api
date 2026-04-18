@@ -568,6 +568,50 @@ func TestNoteHandler_UpdateNote(t *testing.T) {
 		assert.Equal(t, "Updated note content", got.Content)
 	})
 
+	t.Run("should return 200 when only title is updated (partial update)", func(t *testing.T) {
+		mockRepo := mocks.NewMockNoteRepository(t)
+		svc := app.NewNoteService(mockRepo)
+		handler := ports.NewNoteHandler(svc)
+
+		now := time.Now().UTC()
+		mockNote := domain.Note{
+			ID:        noteID,
+			UserID:    userID,
+			Title:     domain.NoteTitle("Original title"),
+			Content:   domain.NoteContent("Original content"),
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
+
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, mockNote.ID, mockNote.UserID).Return(mockNote, nil).Once()
+		mockRepo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("PATCH /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), nethttp_auth.ContextKeyUserID, userID)
+			handler.UpdateNote(w, r.WithContext(ctx))
+		})
+
+		reqBody := map[string]any{
+			"title": "Updated title",
+		}
+		body, _ := json.Marshal(reqBody)
+		uri := fmt.Sprintf("/notes/%s", noteID)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, uri, bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var got ports.NoteResponse
+		err := json.Unmarshal(rec.Body.Bytes(), &got)
+		require.NoError(t, err)
+
+		assert.Equal(t, "Updated title", got.Title)
+		assert.Equal(t, "Original content", got.Content)
+	})
+
 	t.Run("should return 400 when content is empty", func(t *testing.T) {
 		svc := app.NewNoteService(nil)
 		handler := ports.NewNoteHandler(svc)

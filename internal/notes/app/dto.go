@@ -38,8 +38,8 @@ type GetUserNoteByIDInput struct {
 type UpdateNoteInput struct {
 	UserID  string
 	ID      string
-	Title   string
-	Content string
+	Title   *string
+	Content *string
 }
 
 type DeleteNoteInput struct {

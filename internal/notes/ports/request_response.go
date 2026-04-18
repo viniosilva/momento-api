@@ -13,8 +13,8 @@ type CreateNoteRequest struct {
 }
 
 type UpdateNoteRequest struct {
-	Title   string `json:"title" example:"My updated note title"`
-	Content string `json:"content" example:"My updated note content"`
+	Title   *string `json:"title" example:"My updated note title"`
+	Content *string `json:"content" example:"My updated note content"`
 }
 
 type NoteResponse struct {

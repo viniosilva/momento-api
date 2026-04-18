@@ -359,8 +359,8 @@ func TestNoteService_UpdateNote(t *testing.T) {
 	defaultInput := app.UpdateNoteInput{
 		UserID:  userID,
 		ID:      noteID,
-		Title:   "Updated title",
-		Content: "Updated content",
+		Title:   new("Updated title"),
+		Content: new("Updated content"),
 	}
 
 	now := time.Now().UTC().Add(-time.Hour)
@@ -388,9 +388,52 @@ func TestNoteService_UpdateNote(t *testing.T) {
 
 		assert.Equal(t, noteID, got.ID)
 		assert.Equal(t, userID, got.UserID)
+		assert.Equal(t, domain.NoteTitle("Updated title"), got.Title)
 		assert.Equal(t, domain.NoteContent("Updated content"), got.Content)
 		assert.Equal(t, noteMockDefault.CreatedAt, got.CreatedAt)
 		assert.NotEqual(t, noteMockDefault.UpdatedAt, got.UpdatedAt)
+	})
+
+	t.Run("should update only title when content is nil", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := app.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+
+		input := app.UpdateNoteInput{
+			UserID:  userID,
+			ID:      noteID,
+			Title:   new("New title"),
+			Content: nil,
+		}
+
+		got, err := noteService.UpdateNote(t.Context(), input)
+		require.NoError(t, err)
+
+		assert.Equal(t, domain.NoteTitle("New title"), got.Title)
+		assert.Equal(t, noteMockDefault.Content, got.Content)
+	})
+
+	t.Run("should update only content when title is nil", func(t *testing.T) {
+		noteRepoMock := mocks.NewMockNoteRepository(t)
+		noteService := app.NewNoteService(noteRepoMock)
+
+		noteRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, noteID, userID).Return(noteMockDefault, nil).Once()
+		noteRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+
+		input := app.UpdateNoteInput{
+			UserID:  userID,
+			ID:      noteID,
+			Title:   nil,
+			Content: new("New content"),
+		}
+
+		got, err := noteService.UpdateNote(t.Context(), input)
+		require.NoError(t, err)
+
+		assert.Equal(t, noteMockDefault.Title, got.Title)
+		assert.Equal(t, domain.NoteContent("New content"), got.Content)
 	})
 
 	t.Run("should return error when title is invalid", func(t *testing.T) {
@@ -398,7 +441,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteService := app.NewNoteService(noteRepoMock)
 
 		input := defaultInput
-		input.Title = ""
+		input.Title = new("")
 
 		_, err := noteService.UpdateNote(t.Context(), input)
 
@@ -410,7 +453,7 @@ func TestNoteService_UpdateNote(t *testing.T) {
 		noteService := app.NewNoteService(noteRepoMock)
 
 		input := defaultInput
-		input.Content = ""
+		input.Content = new("")
 
 		_, err := noteService.UpdateNote(t.Context(), input)
 
