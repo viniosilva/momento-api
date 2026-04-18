@@ -7,9 +7,7 @@
 - `request_response.go` - Request (Swagger tags) and Response (primitives)
 - `port.go` - Service interface (decoupling)
 - `handler.go` - Handler implementation + `MapErrorToHTTPStatus`
-- `handler_test.go` - Tests (one per possible status code)
 - `router.go` - `SetupRouterOptions` + route registration
-- `router_test.go` - Route tests
 
 ## Critical Rules
 - ✅ COMPLETE Swagger (@Summary, @Description, @Tags, @Param, @Success, @Failure, @Router)
@@ -75,6 +73,13 @@ type AuthService interface {
 
 ### handler.go
 ```go
+import (
+    "errors"
+    "net/http"
+    
+    "momento/internal/auth/domain"
+)
+
 // @Summary Register a new user
 // @Tags auth
 // @Param request body RegisterRequest true "Registration request"
@@ -84,8 +89,18 @@ type AuthService interface {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
     // 1. Parse, 2. Clean, 3. Call service, 4. Return
 }
-func MapErrorToHTTPStatus(err error) (int, string) { /* maps */ }
-```
+func MapErrorToHTTPStatus(err error) (int, string) {
+    switch {
+    case errors.Is(err, domain.ErrUserAlreadyExists):
+        return http.StatusConflict, "user already exists"
+    case errors.Is(err, domain.ErrInvalidEmail):
+        return http.StatusBadRequest, "invalid email format"
+    case errors.Is(err, domain.ErrUserNotFound):
+        return http.StatusNotFound, "user not found"
+    default:
+        return http.StatusInternalServerError, "internal server error"
+    }
+}
 
 ### router.go
 ```go
@@ -109,3 +124,6 @@ type RegisterRequest struct {
     Email string `json:"email" example:"user@example.com"`
 }
 ```
+
+## See Also
+- @.cursor/rules/go_backend_tests.md

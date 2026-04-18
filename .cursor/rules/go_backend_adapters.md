@@ -6,7 +6,6 @@
 ## Common Files
 - `{name}_repository.go` - Implements `app/port.go` (DB access)
 - `{name}_service.go` - External services (JWT, APIs, etc)
-- `{name}_service_test.go` - Tests for external services
 - `mongo_indexes.go` - Index orchestrator
 - `indexes/00N_{name}.go` - Specific indexes
 
@@ -14,10 +13,11 @@
 - ✅ Implement interfaces from `app/port.go`
 - ✅ Translate adapter errors to domain errors
 - ✅ Context as first parameter
-- ✅ Test external services (JWT, APIs) with unit tests
-- ❌ DO NOT test repositories (leave for integration tests)
 - ❌ DO NOT expose implementation details (MongoDB, etc)
 - ❌ DO NOT add logging (logging is done via HTTP middleware)
+
+## See Also
+- @.cursor/rules/go_backend_tests.md
 
 ## Patterns
 

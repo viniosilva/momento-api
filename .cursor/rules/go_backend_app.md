@@ -7,7 +7,6 @@
 - `dto.go` - Input (primitives) and Output (can have VOs)
 - `port.go` - Interfaces for external dependencies
 - `{name}_service.go` - Use case implementation
-- `{name}_service_test.go` - Unit tests
 
 ## Critical Rules
 - ✅ Context as **first parameter** always
@@ -46,27 +45,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 }
 ```
 
-## Tests (100% coverage when possible)
-
-### Structure (Arrange-Act-Assert)
-```go
-func TestAuthService_Register(t *testing.T) {
-    t.Run("should create user successfully", func(t *testing.T) {
-        mock := mocks.NewMockUserRepository(t)
-        mock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
-        mock.EXPECT().Create(mock.Anything, mock.Anything).Return(nil).Once()
-        svc := app.NewAuthService(mock)
-        
-        got, err := svc.Register(t.Context(), defaultInput)
-        
-        require.NoError(t, err)
-        assert.NotEmpty(t, got.ID)
-    })
-}
-```
-
-### Naming
-- Function: `TestStructName_MethodName`
-- Subtest: `t.Run("should {behavior} when {condition}")`
+## See Also
+- @.cursor/rules/go_backend_tests.md
 
 See `internal/auth/app/` as reference.

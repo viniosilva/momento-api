@@ -1,21 +1,7 @@
 # Style and Conventions - Code Patterns
 
 ## Object Calisthenics
-
-- ✅ Happy path to the left - NO `else`, use guard clauses
-- ✅ Low indentation - max 2-3 levels, extract functions
-- ✅ Small methods - focused and descriptive functions
-- ✅ Tell, don't ask - delegate logic to the object owning the data
-
-### Example
-```go
-// ❌ BAD (else + indentation)
-if err != nil { return err } else { /* ... */ }
-
-// ✅ GOOD (guard clause)
-if err != nil { return err }
-// happy path continues here
-```
+Pragmatic guidelines. See `@.cursor/rules/go_backend_object_calisthenics.md` for full details. Simplicity > Rules
 
 ## Naming
 
