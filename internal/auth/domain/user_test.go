@@ -23,6 +23,7 @@ func TestNewUser(t *testing.T) {
 		assert.NotEmpty(t, user.ID)
 		assert.Equal(t, email, user.Email)
 		assert.Equal(t, password, user.Password)
+		assert.Nil(t, user.EmailVerifiedAt)
 		assert.WithinDuration(t, time.Now(), user.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now(), user.UpdatedAt, time.Second)
 		assert.Equal(t, user.CreatedAt, user.UpdatedAt)

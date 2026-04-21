@@ -64,3 +64,30 @@ func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (d
 
 	return toUserDomain(doc), nil
 }
+
+func (r *userRepository) Update(ctx context.Context, user domain.User) error {
+	doc, err := toUserDocument(user)
+	if err != nil {
+		return fmt.Errorf("toUserDocument: %w", err)
+	}
+
+	filter := bson.M{"_id": doc.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"password":          doc.Password,
+			"updated_at":        doc.UpdatedAt,
+			"email_verified_at": doc.EmailVerifiedAt,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}
