@@ -75,6 +75,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/auth/logout": {
+            "post": {
+                "description": "Invalidates the refresh token to log out the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "parameters": [
+                    {
+                        "description": "Logout request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ports.LogoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Logout successful"
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/refresh": {
             "post": {
                 "description": "Exchanges a refresh token for a new JWT token and a new refresh token",
@@ -715,6 +752,15 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "ports.LogoutRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string",
+                    "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
                 }
             }
         },

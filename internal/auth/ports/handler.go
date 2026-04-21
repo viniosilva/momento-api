@@ -155,6 +155,46 @@ func (h *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	nethttp_utils.JSON(w, http.StatusOK, response)
 }
 
+// Logout godoc
+// @Summary Logout user
+// @Description Invalidates the refresh token to log out the user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LogoutRequest true "Logout request"
+// @Success 204 "Logout successful"
+// @Failure 400 {object} nethttp.ErrorResponse "Invalid request body"
+// @Router /api/auth/logout [post]
+func (h *authHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req LogoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	if strings.TrimSpace(req.RefreshToken) == "" {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "refresh_token is required",
+		})
+		return
+	}
+
+	err := h.authService.Logout(r.Context(), app.LogoutInput{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	nethttp_utils.StatusCode(w, http.StatusNoContent)
+}
+
 func MapErrorToHTTPStatus(err error) (int, string) {
 	switch {
 	case errors.Is(err, domain.ErrUserAlreadyExists):

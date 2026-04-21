@@ -186,3 +186,60 @@ func (_c *MockSecureTokenService_Refresh_Call) RunAndReturn(run func(ctx context
 	_c.Call.Return(run)
 	return _c
 }
+
+// Invalidate provides a mock function for the type MockSecureTokenService
+func (_mock *MockSecureTokenService) Invalidate(ctx context.Context, token string) error {
+	ret := _mock.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Invalidate")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		return returnFunc(ctx, token)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockSecureTokenService_Invalidate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Invalidate'
+type MockSecureTokenService_Invalidate_Call struct {
+	*mock.Call
+}
+
+// Invalidate is a helper method to define mock.On call
+//   - ctx context.Context
+//   - token string
+func (_e *MockSecureTokenService_Expecter) Invalidate(ctx interface{}, token interface{}) *MockSecureTokenService_Invalidate_Call {
+	return &MockSecureTokenService_Invalidate_Call{Call: _e.mock.On("Invalidate", ctx, token)}
+}
+
+func (_c *MockSecureTokenService_Invalidate_Call) Run(run func(ctx context.Context, token string)) *MockSecureTokenService_Invalidate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSecureTokenService_Invalidate_Call) Return(err error) *MockSecureTokenService_Invalidate_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockSecureTokenService_Invalidate_Call) RunAndReturn(run func(ctx context.Context, token string) error) *MockSecureTokenService_Invalidate_Call {
+	_c.Call.Return(run)
+	return _c
+}

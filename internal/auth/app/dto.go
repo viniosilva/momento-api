@@ -31,3 +31,7 @@ type LoginOutput struct {
 type RefreshTokenInput struct {
 	RefreshToken string
 }
+
+type LogoutInput struct {
+	RefreshToken string
+}

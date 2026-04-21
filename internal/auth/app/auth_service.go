@@ -111,3 +111,13 @@ func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput)
 		RefreshToken: newRefreshToken,
 	}, nil
 }
+
+func (s *authService) Logout(ctx context.Context, input LogoutInput) error {
+	if err := s.secureTokenService.Invalidate(ctx, input.RefreshToken); err != nil {
+		// Even if token doesn't exist or is already invalid, we return nil
+		// This is intentional - logout should succeed even if token is already invalid
+		return nil
+	}
+
+	return nil
+}

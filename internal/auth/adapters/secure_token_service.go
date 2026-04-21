@@ -55,6 +55,10 @@ func (s *secureTokenService) Refresh(ctx context.Context, token string) (userID,
 	return
 }
 
+func (s *secureTokenService) Invalidate(ctx context.Context, token string) error {
+	return s.delete(ctx, token)
+}
+
 func (s *secureTokenService) save(ctx context.Context, token, userID, email string) error {
 	data := refreshTokenData{UserID: userID, Email: email}
 

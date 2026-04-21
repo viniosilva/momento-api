@@ -459,3 +459,95 @@ func TestAuthHandler_Refresh(t *testing.T) {
 		assert.Equal(t, "internal server error", got.Message)
 	})
 }
+
+func TestAuthHandler_Logout(t *testing.T) {
+	defaultReqBody := map[string]any{
+		"refresh_token": "valid-refresh-token",
+	}
+
+	t.Run("should return no content when logout is successful", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
+		handler := ports.NewAuthHandler(authService)
+
+		tokenSvcMock.EXPECT().Invalidate(mock.Anything, defaultReqBody["refresh_token"]).
+			Return(nil).
+			Once()
+
+		resp, err := nethttp.Request[map[string]any](
+			t.Context(), http.MethodPost, "/auth/logout", defaultReqBody, handler.Logout)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+
+	t.Run("should return bad request when request body is invalid JSON", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
+		handler := ports.NewAuthHandler(authService)
+
+		resp, got, err := nethttp.RequestWithResponse[string, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/logout", "invalid json", handler.Logout)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Equal(t, "invalid request body", got.Message)
+	})
+
+	t.Run("should return bad request when refresh_token is empty", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
+		handler := ports.NewAuthHandler(authService)
+
+		reqBody := map[string]any{"refresh_token": "   "}
+
+		resp, got, err := nethttp.RequestWithResponse[map[string]any, nethttp.ErrorResponse](
+			t.Context(), http.MethodPost, "/auth/logout", reqBody, handler.Logout)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.Equal(t, "refresh_token is required", got.Message)
+	})
+
+	t.Run("should return no content even when token is already invalid", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
+		handler := ports.NewAuthHandler(authService)
+
+		tokenSvcMock.EXPECT().Invalidate(mock.Anything, defaultReqBody["refresh_token"]).
+			Return(domain.ErrRefreshTokenNotFound).
+			Once()
+
+		resp, err := nethttp.Request[map[string]any](
+			t.Context(), http.MethodPost, "/auth/logout", defaultReqBody, handler.Logout)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+
+	t.Run("should return no content even when service returns error", func(t *testing.T) {
+		mockRepo := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(mockRepo, jwtService, tokenSvcMock)
+		handler := ports.NewAuthHandler(authService)
+
+		tokenSvcMock.EXPECT().Invalidate(mock.Anything, defaultReqBody["refresh_token"]).
+			Return(assert.AnError).
+			Once()
+
+		resp, err := nethttp.Request[map[string]any](
+			t.Context(), http.MethodPost, "/auth/logout", defaultReqBody, handler.Logout)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+}

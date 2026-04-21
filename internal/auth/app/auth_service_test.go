@@ -131,6 +131,38 @@ func TestAuthService_Register(t *testing.T) {
 	})
 }
 
+func TestAuthService_Logout(t *testing.T) {
+	const existingToken = "existing-refresh-token"
+
+	t.Run("should logout successfully by invalidating refresh token", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock)
+
+		tokenSvcMock.EXPECT().Invalidate(mock.Anything, existingToken).
+			Return(nil).
+			Once()
+
+		err := authService.Logout(t.Context(), app.LogoutInput{RefreshToken: existingToken})
+		require.NoError(t, err)
+	})
+
+	t.Run("should return nil even when token is already invalid", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock)
+
+		tokenSvcMock.EXPECT().Invalidate(mock.Anything, existingToken).
+			Return(domain.ErrRefreshTokenNotFound).
+			Once()
+
+		err := authService.Logout(t.Context(), app.LogoutInput{RefreshToken: existingToken})
+		require.NoError(t, err)
+	})
+}
+
 func TestAuthService_Login(t *testing.T) {
 	defaultLoginInput := app.LoginInput{
 		Email:    "user@example.com",

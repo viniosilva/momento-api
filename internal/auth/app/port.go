@@ -20,4 +20,5 @@ type JWTService interface {
 type SecureTokenService interface {
 	Generate(ctx context.Context, userID, email string) (string, error)
 	Refresh(ctx context.Context, token string) (userID, email, newToken string, err error)
+	Invalidate(ctx context.Context, token string) error
 }

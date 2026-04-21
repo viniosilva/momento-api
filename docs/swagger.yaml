@@ -64,6 +64,12 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  ports.LogoutRequest:
+    properties:
+      refresh_token:
+        example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+        type: string
+    type: object
   ports.NoteResponse:
     properties:
       content:
@@ -178,6 +184,30 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Login with email and password
+      tags:
+      - auth
+  /api/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidates the refresh token to log out the user
+      parameters:
+      - description: Logout request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Logout successful
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Logout user
       tags:
       - auth
   /api/auth/refresh:
