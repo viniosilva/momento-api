@@ -8,7 +8,7 @@ import (
 
 	authadapters "momento/internal/auth/adapters"
 	"momento/internal/config"
-	notesadapters "momento/internal/notes/adapters"
+	eventsadapters "momento/internal/events/adapters"
 	"momento/pkg/logger"
 	"momento/pkg/mongodb"
 )
@@ -48,8 +48,8 @@ func main() {
 	if err := authadapters.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
 		log.Fatalf("failed to create MongoDB indexes: %v", err)
 	}
-	if err := notesadapters.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
-		log.Fatalf("failed to create notes indexes: %v", err)
+	if err := eventsadapters.CreateIndexes(ctx, mongoClient.Database(cfg.Mongo.DBName)); err != nil {
+		log.Fatalf("failed to create events indexes: %v", err)
 	}
 
 	log.Println("migration completed successfully")

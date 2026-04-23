@@ -15,9 +15,9 @@ import (
 	authapp "momento/internal/auth/app"
 	authports "momento/internal/auth/ports"
 	"momento/internal/config"
-	notesadapters "momento/internal/notes/adapters"
-	notesapp "momento/internal/notes/app"
-	notesports "momento/internal/notes/ports"
+	eventsadapters "momento/internal/events/adapters"
+	eventsapp "momento/internal/events/app"
+	eventsports "momento/internal/events/ports"
 	sharedapp "momento/internal/shared/app"
 	sharedports "momento/internal/shared/ports"
 	pkglogger "momento/pkg/logger"
@@ -104,7 +104,7 @@ func main() {
 
 type jwtSvc interface {
 	authapp.JWTService
-	notesports.JWTService
+	eventsports.JWTService
 }
 
 type Dependencies struct {
@@ -112,7 +112,7 @@ type Dependencies struct {
 	HealthService sharedports.HealthService
 	JwtService    jwtSvc
 	AuthService   authports.AuthService
-	NoteService   notesports.NoteService
+	EventService  eventsports.EventService
 }
 
 func setupDependencies(ctx context.Context, config config.Config, logger *slog.Logger) (*Dependencies, error) {
@@ -146,7 +146,7 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 
 	db := mongoClient.Database(config.Mongo.DBName)
 	userRepository := authadapters.NewUserRepository(db)
-	noteRepository := notesadapters.NewNoteRepository(db)
+	eventRepository := eventsadapters.NewEventRepository(db)
 	secureTokenRepository := authadapters.NewSecureTokenService(redisClient, config.JWT.RefreshTokenExpiration)
 
 	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
@@ -156,7 +156,7 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 		HealthService: sharedapp.NewHealthService(mongoClient),
 		JwtService:    jwtService,
 		AuthService:   authapp.NewAuthService(userRepository, jwtService, secureTokenRepository),
-		NoteService:   notesapp.NewNoteService(noteRepository),
+		EventService:  eventsapp.NewEventService(eventRepository),
 	}, nil
 }
 
@@ -175,11 +175,11 @@ func setupRoutes(mux *http.ServeMux, di *Dependencies, logger *slog.Logger) {
 		Logger:      logger,
 	})
 
-	notesports.SetupRouter(notesports.SetupRouterOptions{
-		Mux:         mux,
-		Prefix:      apiPrefixPath,
-		NoteService: di.NoteService,
-		JWTService:  di.JwtService,
-		Logger:      logger,
+	eventsports.SetupRouter(eventsports.SetupRouterOptions{
+		Mux:          mux,
+		Prefix:       apiPrefixPath,
+		EventService: di.EventService,
+		JWTService:   di.JwtService,
+		Logger:       logger,
 	})
 }

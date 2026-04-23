@@ -18,6 +18,10 @@ SOLID + Object Calisthenics
 - **Handlers/routes**: @.cursor/rules/go_backend_ports.md
 - **Style/conventions**: @.cursor/rules/go_backend_style.md
 
+## Product & Architecture Docs
+- **Product context**: @docs/product.md
+- **Technical decisions**: @docs/architecture.md
+
 ## Principles
 - Logging only via HTTP middleware (pkg/nethttp)
 - Context always 1st parameter

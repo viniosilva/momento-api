@@ -28,20 +28,41 @@ definitions:
         example: internal server error
         type: string
     type: object
-  ports.CreateNoteRequest:
+  ports.CreateEventRequest:
     properties:
       content:
-        example: My important note content
+        example: My important event content
         type: string
       title:
-        example: My note title
+        example: My event title
         type: string
     type: object
-  ports.ListNotesResponse:
+  ports.EventResponse:
+    properties:
+      content:
+        example: My important event content
+        type: string
+      created_at:
+        example: "2026-02-08T10:30:00Z"
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      title:
+        example: My event title
+        type: string
+      updated_at:
+        example: "2026-02-08T10:30:00Z"
+        type: string
+      user_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+    type: object
+  ports.ListEventsResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/ports.NoteResponse'
+          $ref: '#/definitions/ports.EventResponse'
         type: array
       pagination:
         $ref: '#/definitions/listopts.PaginationResponse'
@@ -68,27 +89,6 @@ definitions:
     properties:
       refresh_token:
         example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
-        type: string
-    type: object
-  ports.NoteResponse:
-    properties:
-      content:
-        example: My important note content
-        type: string
-      created_at:
-        example: "2026-02-08T10:30:00Z"
-        type: string
-      id:
-        example: 507f1f77bcf86cd799439011
-        type: string
-      title:
-        example: My note title
-        type: string
-      updated_at:
-        example: "2026-02-08T10:30:00Z"
-        type: string
-      user_id:
-        example: 507f1f77bcf86cd799439011
         type: string
     type: object
   ports.RefreshRequest:
@@ -124,13 +124,13 @@ definitions:
         example: 507f1f77bcf86cd799439011
         type: string
     type: object
-  ports.UpdateNoteRequest:
+  ports.UpdateEventRequest:
     properties:
       content:
-        example: My updated note content
+        example: My updated event content
         type: string
       title:
-        example: My updated note title
+        example: My updated event title
         type: string
     type: object
   response.HealthResponse:
@@ -279,30 +279,11 @@ paths:
       summary: Register a new user
       tags:
       - auth
-  /api/healthcheck:
+  /api/events:
     get:
       consumes:
       - application/json
-      description: Returns the health status of the application and database connection
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Health status response
-          schema:
-            $ref: '#/definitions/response.HealthResponse'
-        "503":
-          description: Health status response
-          schema:
-            $ref: '#/definitions/response.HealthResponse'
-      summary: Health check endpoint
-      tags:
-      - health
-  /api/notes:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a paginated list of notes for the authenticated user
+      description: Retrieves a paginated list of events for the authenticated user
         with sorting options
       parameters:
       - default: 1
@@ -331,7 +312,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ports.ListNotesResponse'
+            $ref: '#/definitions/ports.ListEventsResponse'
         "400":
           description: Invalid query parameters
           schema:
@@ -346,27 +327,27 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: List user notes
+      summary: List user events
       tags:
-      - notes
+      - events
     post:
       consumes:
       - application/json
-      description: Creates a new note associated with the authenticated user
+      description: Creates a new event associated with the authenticated user
       parameters:
-      - description: Note content
+      - description: Event content
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ports.CreateNoteRequest'
+          $ref: '#/definitions/ports.CreateEventRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ports.NoteResponse'
+            $ref: '#/definitions/ports.EventResponse'
         "400":
           description: Invalid content
           schema:
@@ -381,16 +362,16 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Create a new note
+      summary: Create a new event
       tags:
-      - notes
-  /api/notes/{id}:
+      - events
+  /api/events/{id}:
     delete:
       consumes:
       - application/json
-      description: Deletes a note belonging to the authenticated user
+      description: Deletes a event belonging to the authenticated user
       parameters:
-      - description: Note ID
+      - description: Event ID
         in: path
         name: id
         required: true
@@ -405,7 +386,7 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
-          description: Note not found
+          description: Event not found
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
@@ -414,15 +395,16 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Delete a note
+      summary: Delete a event
       tags:
-      - notes
+      - events
     get:
       consumes:
       - application/json
-      description: Retrieves a specific note for the authenticated user by note ID
+      description: Retrieves a specific event for the authenticated user by event
+        ID
       parameters:
-      - description: Note ID
+      - description: Event ID
         in: path
         name: id
         required: true
@@ -433,13 +415,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ports.NoteResponse'
+            $ref: '#/definitions/ports.EventResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
-          description: Note not found
+          description: Event not found
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
@@ -448,32 +430,32 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Retrieve a note by ID
+      summary: Retrieve a event by ID
       tags:
-      - notes
+      - events
     patch:
       consumes:
       - application/json
-      description: Updates the content of a note for the authenticated user
+      description: Updates the content of a event for the authenticated user
       parameters:
-      - description: Note ID
+      - description: Event ID
         in: path
         name: id
         required: true
         type: string
-      - description: Updated note content
+      - description: Updated event content
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ports.UpdateNoteRequest'
+          $ref: '#/definitions/ports.UpdateEventRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ports.NoteResponse'
+            $ref: '#/definitions/ports.EventResponse'
         "400":
           description: Invalid content
           schema:
@@ -483,7 +465,7 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
-          description: Note not found
+          description: Event not found
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
@@ -492,16 +474,16 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Update a note
+      summary: Update a event
       tags:
-      - notes
-  /api/notes/{id}/archive:
+      - events
+  /api/events/{id}/archive:
     patch:
       consumes:
       - application/json
-      description: Archives a note belonging to the authenticated user
+      description: Archives a event belonging to the authenticated user
       parameters:
-      - description: Note ID
+      - description: Event ID
         in: path
         name: id
         required: true
@@ -512,13 +494,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ports.NoteResponse'
+            $ref: '#/definitions/ports.EventResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
-          description: Note not found
+          description: Event not found
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
@@ -527,16 +509,16 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Archive a note
+      summary: Archive a event
       tags:
-      - notes
-  /api/notes/{id}/restore:
+      - events
+  /api/events/{id}/restore:
     patch:
       consumes:
       - application/json
-      description: Restores a note belonging to the authenticated user
+      description: Restores a event belonging to the authenticated user
       parameters:
-      - description: Note ID
+      - description: Event ID
         in: path
         name: id
         required: true
@@ -547,13 +529,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ports.NoteResponse'
+            $ref: '#/definitions/ports.EventResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "404":
-          description: Note not found
+          description: Event not found
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
@@ -562,9 +544,28 @@ paths:
             $ref: '#/definitions/nethttp.ErrorResponse'
       security:
       - Bearer: []
-      summary: Restore a note
+      summary: Restore a event
       tags:
-      - notes
+      - events
+  /api/healthcheck:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the application and database connection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Health status response
+          schema:
+            $ref: '#/definitions/response.HealthResponse'
+        "503":
+          description: Health status response
+          schema:
+            $ref: '#/definitions/response.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - health
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.

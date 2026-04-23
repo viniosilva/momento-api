@@ -216,43 +216,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/healthcheck": {
-            "get": {
-                "description": "Returns the health status of the application and database connection",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Health check endpoint",
-                "responses": {
-                    "200": {
-                        "description": "Health status response",
-                        "schema": {
-                            "$ref": "#/definitions/response.HealthResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Health status response",
-                        "schema": {
-                            "$ref": "#/definitions/response.HealthResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/notes": {
+        "/api/events": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Retrieves a paginated list of notes for the authenticated user with sorting options",
+                "description": "Retrieves a paginated list of events for the authenticated user with sorting options",
                 "consumes": [
                     "application/json"
                 ],
@@ -260,9 +231,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "List user notes",
+                "summary": "List user events",
                 "parameters": [
                     {
                         "type": "integer",
@@ -297,7 +268,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ports.ListNotesResponse"
+                            "$ref": "#/definitions/ports.ListEventsResponse"
                         }
                     },
                     "400": {
@@ -326,7 +297,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Creates a new note associated with the authenticated user",
+                "description": "Creates a new event associated with the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -334,17 +305,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Create a new note",
+                "summary": "Create a new event",
                 "parameters": [
                     {
-                        "description": "Note content",
+                        "description": "Event content",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ports.CreateNoteRequest"
+                            "$ref": "#/definitions/ports.CreateEventRequest"
                         }
                     }
                 ],
@@ -352,7 +323,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ports.NoteResponse"
+                            "$ref": "#/definitions/ports.EventResponse"
                         }
                     },
                     "400": {
@@ -376,14 +347,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/notes/{id}": {
+        "/api/events/{id}": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Retrieves a specific note for the authenticated user by note ID",
+                "description": "Retrieves a specific event for the authenticated user by event ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -391,13 +362,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Retrieve a note by ID",
+                "summary": "Retrieve a event by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Note ID",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -407,7 +378,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ports.NoteResponse"
+                            "$ref": "#/definitions/ports.EventResponse"
                         }
                     },
                     "401": {
@@ -417,7 +388,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Note not found",
+                        "description": "Event not found",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -436,7 +407,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Deletes a note belonging to the authenticated user",
+                "description": "Deletes a event belonging to the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -444,13 +415,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Delete a note",
+                "summary": "Delete a event",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Note ID",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -467,7 +438,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Note not found",
+                        "description": "Event not found",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -486,7 +457,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Updates the content of a note for the authenticated user",
+                "description": "Updates the content of a event for the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -494,24 +465,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Update a note",
+                "summary": "Update a event",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Note ID",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Updated note content",
+                        "description": "Updated event content",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ports.UpdateNoteRequest"
+                            "$ref": "#/definitions/ports.UpdateEventRequest"
                         }
                     }
                 ],
@@ -519,7 +490,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ports.NoteResponse"
+                            "$ref": "#/definitions/ports.EventResponse"
                         }
                     },
                     "400": {
@@ -535,7 +506,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Note not found",
+                        "description": "Event not found",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -549,14 +520,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/notes/{id}/archive": {
+        "/api/events/{id}/archive": {
             "patch": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Archives a note belonging to the authenticated user",
+                "description": "Archives a event belonging to the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -564,13 +535,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Archive a note",
+                "summary": "Archive a event",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Note ID",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -580,7 +551,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ports.NoteResponse"
+                            "$ref": "#/definitions/ports.EventResponse"
                         }
                     },
                     "401": {
@@ -590,7 +561,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Note not found",
+                        "description": "Event not found",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -604,14 +575,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/notes/{id}/restore": {
+        "/api/events/{id}/restore": {
             "patch": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Restores a note belonging to the authenticated user",
+                "description": "Restores a event belonging to the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -619,13 +590,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "notes"
+                    "events"
                 ],
-                "summary": "Restore a note",
+                "summary": "Restore a event",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Note ID",
+                        "description": "Event ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -635,7 +606,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ports.NoteResponse"
+                            "$ref": "#/definitions/ports.EventResponse"
                         }
                     },
                     "401": {
@@ -645,7 +616,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Note not found",
+                        "description": "Event not found",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -654,6 +625,35 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/healthcheck": {
+            "get": {
+                "description": "Returns the health status of the application and database connection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Health status response",
+                        "schema": {
+                            "$ref": "#/definitions/response.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Health status response",
+                        "schema": {
+                            "$ref": "#/definitions/response.HealthResponse"
                         }
                     }
                 }
@@ -702,26 +702,55 @@ const docTemplate = `{
                 }
             }
         },
-        "ports.CreateNoteRequest": {
+        "ports.CreateEventRequest": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string",
-                    "example": "My important note content"
+                    "example": "My important event content"
                 },
                 "title": {
                     "type": "string",
-                    "example": "My note title"
+                    "example": "My event title"
                 }
             }
         },
-        "ports.ListNotesResponse": {
+        "ports.EventResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "My important event content"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-08T10:30:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "My event title"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-02-08T10:30:00Z"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "ports.ListEventsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ports.NoteResponse"
+                        "$ref": "#/definitions/ports.EventResponse"
                     }
                 },
                 "pagination": {
@@ -761,35 +790,6 @@ const docTemplate = `{
                 "refresh_token": {
                     "type": "string",
                     "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
-                }
-            }
-        },
-        "ports.NoteResponse": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "example": "My important note content"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2026-02-08T10:30:00Z"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "507f1f77bcf86cd799439011"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "My note title"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2026-02-08T10:30:00Z"
-                },
-                "user_id": {
-                    "type": "string",
-                    "example": "507f1f77bcf86cd799439011"
                 }
             }
         },
@@ -841,16 +841,16 @@ const docTemplate = `{
                 }
             }
         },
-        "ports.UpdateNoteRequest": {
+        "ports.UpdateEventRequest": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string",
-                    "example": "My updated note content"
+                    "example": "My updated event content"
                 },
                 "title": {
                     "type": "string",
-                    "example": "My updated note title"
+                    "example": "My updated event title"
                 }
             }
         },
