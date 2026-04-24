@@ -1,6 +1,6 @@
-# Momento: Notas Colaborativas
+# Momento: Organize seus eventos. Compartilhe.
 
-Um aplicativo de notas para escrever e compartilhar conteúdos de forma colaborativa. Organizando projetos e estudos com eficiência e segurança.
+Momento é um aplicativo leve de gestão de eventos que ajuda você a capturar momentos, organizar tudo e compartilhar com quem é importante para você — tudo em um só lugar.
 
 
 ## Tecnologias Utilizadas
@@ -17,7 +17,7 @@ Um aplicativo de notas para escrever e compartilhar conteúdos de forma colabora
 
 O projeto está organizado em módulos independentes dentro de `/internal`, seguindo Arquitetura Hexagonal (Ports & Adapters):
 - **auth**: Autenticação e autorização (registro, login, JWT)
-- **notes**: Gerenciamento de notas (criação, listagem, arquivo/restauração)
+- **events**: Gestão de eventos (criação, listagem, arquivo/restauração)
 - **shared**: Código compartilhado entre módulos (health check)
 
 ```
@@ -28,7 +28,7 @@ O projeto está organizado em módulos independentes dentro de `/internal`, segu
     main.go                   // Criação de índices no MongoDB
 
 /internal
-  /{module}                   // Módulo independente (auth, notes, shared)
+  /{module}                   // Módulo independente (auth, events, shared)
     /domain                   // Entidades, Value Objects e erros de domínio (sem dependências externas)
       {name}.go               // Entidade ou Value Object com validação
       {name}_test.go          // Testes unitários de domínio
