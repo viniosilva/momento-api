@@ -39,7 +39,7 @@ func (r *eventRepository) ListByUserID(ctx context.Context, userID string, param
 		return listopts.Paginated[domain.Event]{}, err
 	}
 
-	filter := bson.M{"user_id": uid}
+	filter := bson.M{"owner_user_id": uid}
 
 	totalCount, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -79,7 +79,7 @@ func (r *eventRepository) GetByIDAndUserID(ctx context.Context, id, userID strin
 
 	filter := bson.M{
 		"_id":     oid,
-		"user_id": uid,
+		"owner_user_id": uid,
 	}
 
 	res := r.collection.FindOne(ctx, filter)
@@ -111,7 +111,7 @@ func (r *eventRepository) Update(ctx context.Context, event domain.Event) error 
 
 	filter := bson.M{
 		"_id":     oid,
-		"user_id": uid,
+		"owner_user_id": uid,
 	}
 
 	update := bson.M{
@@ -147,7 +147,7 @@ func (r *eventRepository) DeleteByIDAndUserID(ctx context.Context, id, userID st
 
 	filter := bson.M{
 		"_id":     oid,
-		"user_id": uid,
+		"owner_user_id": uid,
 	}
 
 	result, err := r.collection.DeleteOne(ctx, filter)
@@ -175,7 +175,7 @@ func (r *eventRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID s
 
 	filter := bson.M{
 		"_id":         oid,
-		"user_id":     uid,
+		"owner_user_id":     uid,
 		"archived_at": nil,
 	}
 
@@ -210,7 +210,7 @@ func (r *eventRepository) RestoreByIDAndUserID(ctx context.Context, id, userID s
 
 	filter := bson.M{
 		"_id":         oid,
-		"user_id":     uid,
+		"owner_user_id":     uid,
 		"archived_at": bson.M{"$ne": nil},
 	}
 

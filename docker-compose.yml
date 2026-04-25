@@ -14,3 +14,10 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
