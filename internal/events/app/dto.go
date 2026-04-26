@@ -14,12 +14,13 @@ type EventInput struct {
 }
 
 type EventOutput struct {
-	ID        string
-	UserID    string
-	Title     domain.EventTitle
-	Content   domain.EventContent
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          string
+	OwnerUserID string
+	Title       domain.EventTitle
+	Content     domain.EventContent
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ArchivedAt *time.Time
 }
 
 type ListEventsInput struct {
@@ -59,11 +60,12 @@ type RestoreEventInput struct {
 
 func EventApplicationToOutput(event domain.Event) EventOutput {
 	return EventOutput{
-		ID:        event.ID,
-		UserID:    event.OwnerUserID,
-		Title:     event.Title,
-		Content:   event.Content,
-		CreatedAt: event.CreatedAt,
-		UpdatedAt: event.UpdatedAt,
+		ID:          event.ID,
+		OwnerUserID: event.OwnerUserID,
+		Title:       event.Title,
+		Content:     event.Content,
+		CreatedAt:   event.CreatedAt,
+		UpdatedAt:   event.UpdatedAt,
+		ArchivedAt: event.ArchivedAt,
 	}
 }

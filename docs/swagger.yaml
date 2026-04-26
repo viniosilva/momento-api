@@ -48,14 +48,14 @@ definitions:
       id:
         example: 507f1f77bcf86cd799439011
         type: string
+      owner_user_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
       title:
         example: My event title
         type: string
       updated_at:
         example: "2026-02-08T10:30:00Z"
-        type: string
-      user_id:
-        example: 507f1f77bcf86cd799439011
         type: string
     type: object
   ports.ListEventsResponse:

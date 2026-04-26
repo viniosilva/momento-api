@@ -70,7 +70,7 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, userID, got.UserID)
+		assert.Equal(t, userID, got.OwnerUserID)
 		assert.Equal(t, "Title", got.Title)
 		assert.Equal(t, "Event content", got.Content)
 	})
@@ -563,7 +563,7 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, userID, got.UserID)
+		assert.Equal(t, userID, got.OwnerUserID)
 		assert.Equal(t, "Updated title", got.Title)
 		assert.Equal(t, "Updated event content", got.Content)
 	})

@@ -43,7 +43,7 @@ func TestEventService_CreateEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, got.ID)
-		assert.Equal(t, userID, got.UserID)
+		assert.Equal(t, userID, got.OwnerUserID)
 		assert.Equal(t, domain.EventTitle("Title"), got.Title)
 		assert.Equal(t, domain.EventContent("Event content"), got.Content)
 		assert.WithinDuration(t, time.Now().UTC(), got.CreatedAt, time.Second)
@@ -323,7 +323,7 @@ func TestEventService_GetUserEventByID(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, eventMock.ID, got.ID)
-		assert.Equal(t, eventMock.OwnerUserID, got.UserID)
+		assert.Equal(t, eventMock.OwnerUserID, got.OwnerUserID)
 		assert.Equal(t, eventMock.Content, got.Content)
 		assert.Equal(t, eventMock.CreatedAt, got.CreatedAt)
 		assert.Equal(t, eventMock.UpdatedAt, got.UpdatedAt)
@@ -387,7 +387,7 @@ func TestEventService_UpdateEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, eventID, got.ID)
-		assert.Equal(t, userID, got.UserID)
+		assert.Equal(t, userID, got.OwnerUserID)
 		assert.Equal(t, domain.EventTitle("Updated title"), got.Title)
 		assert.Equal(t, domain.EventContent("Updated content"), got.Content)
 		assert.Equal(t, eventMockDefault.CreatedAt, got.CreatedAt)

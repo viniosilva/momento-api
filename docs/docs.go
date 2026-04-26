@@ -730,6 +730,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
                 },
+                "owner_user_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
                 "title": {
                     "type": "string",
                     "example": "My event title"
@@ -737,10 +741,6 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2026-02-08T10:30:00Z"
-                },
-                "user_id": {
-                    "type": "string",
-                    "example": "507f1f77bcf86cd799439011"
                 }
             }
         },

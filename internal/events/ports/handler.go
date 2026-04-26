@@ -71,12 +71,12 @@ func (h *eventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := EventResponse{
-		ID:        output.ID,
-		UserID:    output.UserID,
-		Title:     string(output.Title),
-		Content:   string(output.Content),
-		CreatedAt: output.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: output.UpdatedAt.Format(time.RFC3339),
+		ID:          output.ID,
+		OwnerUserID: output.OwnerUserID,
+		Title:       string(output.Title),
+		Content:     string(output.Content),
+		CreatedAt:   output.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   output.UpdatedAt.Format(time.RFC3339),
 	}
 
 	nethttp_utils.JSON(w, http.StatusCreated, res)
