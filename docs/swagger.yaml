@@ -39,6 +39,9 @@ definitions:
     type: object
   ports.EventResponse:
     properties:
+      archived_at:
+        example: "2026-02-08T10:30:00Z"
+        type: string
       content:
         example: My important event content
         type: string
@@ -491,10 +494,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ports.EventResponse'
+        "204":
+          description: No Content
         "401":
           description: Unauthorized
           schema:
@@ -526,10 +527,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ports.EventResponse'
+        "204":
+          description: No Content
         "401":
           description: Unauthorized
           schema:

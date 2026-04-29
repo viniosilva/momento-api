@@ -548,11 +548,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ports.EventResponse"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -603,11 +600,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ports.EventResponse"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -718,6 +712,10 @@ const docTemplate = `{
         "ports.EventResponse": {
             "type": "object",
             "properties": {
+                "archived_at": {
+                    "type": "string",
+                    "example": "2026-02-08T10:30:00Z"
+                },
                 "content": {
                     "type": "string",
                     "example": "My important event content"

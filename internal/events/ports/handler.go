@@ -245,7 +245,7 @@ func (h *eventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security Bearer
 // @Param id path string true "Event ID"
-// @Success 200 {object} EventResponse
+// @Success 204
 // @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
 // @Failure 404 {object} nethttp.ErrorResponse "Event not found"
 // @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
@@ -284,7 +284,7 @@ func (h *eventHandler) ArchiveEvent(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security Bearer
 // @Param id path string true "Event ID"
-// @Success 200 {object} EventResponse
+// @Success 204
 // @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
 // @Failure 404 {object} nethttp.ErrorResponse "Event not found"
 // @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
