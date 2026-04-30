@@ -3,6 +3,10 @@
 ## Worktree Setup
 
 ```bash
-git worktree add ../feature-{name} -b feature-{name}
-# Example: git worktree add ../feature-auth-login -b feature/auth-login
+cd momento-api
+git worktree add ../momento-api-feat-{name} -b feat-{name}
+# Example: git worktree add ../momento-api-feat-event-card -b feat/event-card
+
+cd ../momento-api-feat-{name}
+npm install
 ```
