@@ -35,3 +35,16 @@ type RefreshTokenInput struct {
 type LogoutInput struct {
 	RefreshToken string
 }
+
+type ForgotPasswordInput struct {
+	Email string
+}
+
+type ValidateResetTokenInput struct {
+	Token string
+}
+
+type ResetPasswordInput struct {
+	Token    string
+	Password string
+}

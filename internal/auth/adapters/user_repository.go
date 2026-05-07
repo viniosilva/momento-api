@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"momento/internal/auth/domain"
@@ -55,6 +56,26 @@ func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (d
 
 	var doc userDocument
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, err
+	}
+
+	return toUserDomain(doc), nil
+}
+
+func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("invalid id: %w", err)
+	}
+
+	filter := bson.M{"_id": objID}
+
+	var doc userDocument
+	err = r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return domain.User{}, domain.ErrUserNotFound

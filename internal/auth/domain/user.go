@@ -17,11 +17,11 @@ var (
 )
 
 type User struct {
-	ID             string
-	Email          Email
-	Password       Password
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID              string
+	Email           Email
+	Password        Password
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 	EmailVerifiedAt *time.Time
 }
 
@@ -35,4 +35,9 @@ func NewUser(email Email, password Password) User {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
+}
+
+func (u *User) UpdatePassword(newPassword Password) {
+	u.Password = newPassword
+	u.UpdatedAt = time.Now().UTC()
 }

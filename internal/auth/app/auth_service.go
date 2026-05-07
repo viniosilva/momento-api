@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"momento/internal/auth/domain"
 )
@@ -12,17 +13,29 @@ type authService struct {
 	userRepository     UserRepository
 	jwtService         JWTService
 	secureTokenService SecureTokenService
+	resetTokenService  ResetTokenService
+	emailSender        EmailSender
+	resetTokenTTL      time.Duration
+	resetTokenSize     int
 }
 
 func NewAuthService(
 	userRepository UserRepository,
 	jwtService JWTService,
 	secureTokenService SecureTokenService,
+	resetTokenService ResetTokenService,
+	emailSender EmailSender,
+	resetTokenTTL time.Duration,
+	resetTokenSize int,
 ) *authService {
 	return &authService{
 		userRepository:     userRepository,
 		jwtService:         jwtService,
 		secureTokenService: secureTokenService,
+		resetTokenService:  resetTokenService,
+		emailSender:        emailSender,
+		resetTokenTTL:      resetTokenTTL,
+		resetTokenSize:     resetTokenSize,
 	}
 }
 
@@ -117,6 +130,68 @@ func (s *authService) Logout(ctx context.Context, input LogoutInput) error {
 		// Even if token doesn't exist or is already invalid, we return nil
 		// This is intentional - logout should succeed even if token is already invalid
 		return nil
+	}
+
+	return nil
+}
+
+func (s *authService) ForgotPassword(ctx context.Context, input ForgotPasswordInput) error {
+	email, err := domain.NewEmail(input.Email)
+	if err != nil {
+		return err
+	}
+
+	token, err := domain.NewResetToken(s.resetTokenSize)
+	if err != nil {
+		return fmt.Errorf("domain.NewResetToken: %w", err)
+	}
+
+	user, err := s.userRepository.FindByEmail(ctx, email)
+	if err != nil {
+		return nil // We don't want to reveal whether the email exists or not, so we return nil even if user is not found
+	}
+
+	if err := s.resetTokenService.Store(ctx, token, user.ID, s.resetTokenTTL); err != nil {
+		return fmt.Errorf("s.resetTokenSvc.Store: %w", err)
+	}
+
+	if err := s.emailSender.SendResetPasswordEmail(ctx, email.String(), token.String()); err != nil {
+		return fmt.Errorf("s.emailSender.SendResetPasswordEmail: %w", err)
+	}
+
+	return nil
+}
+
+func (s *authService) ValidateResetToken(ctx context.Context, input ValidateResetTokenInput) (string, error) {
+	token := domain.ResetToken(input.Token)
+	return s.resetTokenService.Validate(ctx, token)
+}
+
+func (s *authService) ResetPassword(ctx context.Context, input ResetPasswordInput) error {
+	token := domain.ResetToken(input.Token)
+	userID, err := s.resetTokenService.Validate(ctx, token)
+	if err != nil {
+		return fmt.Errorf("s.resetTokenService.Validate: %w", err)
+	}
+
+	password, err := domain.NewPassword(input.Password)
+	if err != nil {
+		return fmt.Errorf("domain.NewPassword: %w", err)
+	}
+
+	user, err := s.userRepository.FindByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("s.userRepository.FindByID: %w", err)
+	}
+
+	user.UpdatePassword(password)
+
+	if err := s.userRepository.Update(ctx, user); err != nil {
+		return fmt.Errorf("s.userRepository.Update: %w", err)
+	}
+
+	if err := s.resetTokenService.Invalidate(ctx, token); err != nil {
+		return fmt.Errorf("s.resetTokenService.Invalidate: %w", err)
 	}
 
 	return nil

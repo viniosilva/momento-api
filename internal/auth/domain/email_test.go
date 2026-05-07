@@ -61,3 +61,13 @@ func TestNewEmail(t *testing.T) {
 		assert.ErrorIs(t, err, domain.ErrInvalidEmail)
 	})
 }
+
+func TestEmail_String(t *testing.T) {
+	t.Run("should return email as string", func(t *testing.T) {
+		emailStr := "user@example.com"
+		email, err := domain.NewEmail(emailStr)
+		require.NoError(t, err)
+
+		assert.Equal(t, emailStr, email.String())
+	})
+}

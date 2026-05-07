@@ -10,10 +10,12 @@ import (
 )
 
 type Config struct {
-	Api   ApiConfig
-	Mongo MongoConfig
-	JWT   JWTConfig
-	Redis RedisConfig
+	Api           ApiConfig
+	Mongo         MongoConfig
+	JWT           JWTConfig
+	Redis         RedisConfig
+	SMTP          SMTPConfig
+	ResetPassword ResetPasswordConfig
 }
 
 type ApiConfig struct {
@@ -45,6 +47,20 @@ type RedisConfig struct {
 	DB   int
 }
 
+type SMTPConfig struct {
+	Host string
+	Port string
+	User string
+	Pass string
+	From string
+}
+
+type ResetPasswordConfig struct {
+	TokenSize       int
+	TokenExpiration time.Duration
+	URLBase         string
+}
+
 const (
 	defaultEnvPath                = ".env"
 	defaultApiHost                = ""
@@ -64,6 +80,14 @@ const (
 	defaultRedisPort              = "6379"
 	defaultRedisPass              = ""
 	defaultRedisDB                = 0
+	defaultSMTPHost               = "localhost"
+	defaultSMTPPort               = "1025"
+	defaultSMTPUser               = ""
+	defaultSMTPPass               = ""
+	defaultSMTPFrom               = "noreply@momento.com"
+	defaultResetTokenSize         = 32
+	defaultResetTokenExpiration   = 1 * time.Hour
+	defaultResetURLBase           = "http://localhost:3000/reset-password"
 )
 
 type LoadConfigOption func(*loadConfigOptions)
@@ -116,6 +140,18 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			Port: getEnv("REDIS_PORT", defaultRedisPort),
 			Pass: getEnv("REDIS_PASS", defaultRedisPass),
 			DB:   getEnvAsInt("REDIS_DB", defaultRedisDB),
+		},
+		SMTP: SMTPConfig{
+			Host: getEnv("SMTP_HOST", defaultSMTPHost),
+			Port: getEnv("SMTP_PORT", defaultSMTPPort),
+			User: getEnv("SMTP_USER", defaultSMTPUser),
+			Pass: getEnv("SMTP_PASS", defaultSMTPPass),
+			From: getEnv("SMTP_FROM", defaultSMTPFrom),
+		},
+		ResetPassword: ResetPasswordConfig{
+			TokenSize:       getEnvAsInt("RESET_TOKEN_SIZE", defaultResetTokenSize),
+			TokenExpiration: getEnvAsDuration("RESET_TOKEN_EXPIRATION_MS", defaultResetTokenExpiration),
+			URLBase:         getEnv("RESET_URL_BASE", defaultResetURLBase),
 		},
 	}
 }
