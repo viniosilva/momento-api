@@ -38,6 +38,63 @@ func (_m *MockAuthService) EXPECT() *MockAuthService_Expecter {
 	return &MockAuthService_Expecter{mock: &_m.Mock}
 }
 
+// ForgotPassword provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) ForgotPassword(ctx context.Context, input app.ForgotPasswordInput) error {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ForgotPassword")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ForgotPasswordInput) error); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockAuthService_ForgotPassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ForgotPassword'
+type MockAuthService_ForgotPassword_Call struct {
+	*mock.Call
+}
+
+// ForgotPassword is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.ForgotPasswordInput
+func (_e *MockAuthService_Expecter) ForgotPassword(ctx interface{}, input interface{}) *MockAuthService_ForgotPassword_Call {
+	return &MockAuthService_ForgotPassword_Call{Call: _e.mock.On("ForgotPassword", ctx, input)}
+}
+
+func (_c *MockAuthService_ForgotPassword_Call) Run(run func(ctx context.Context, input app.ForgotPasswordInput)) *MockAuthService_ForgotPassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.ForgotPasswordInput
+		if args[1] != nil {
+			arg1 = args[1].(app.ForgotPasswordInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_ForgotPassword_Call) Return(err error) *MockAuthService_ForgotPassword_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockAuthService_ForgotPassword_Call) RunAndReturn(run func(ctx context.Context, input app.ForgotPasswordInput) error) *MockAuthService_ForgotPassword_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Login provides a mock function for the type MockAuthService
 func (_mock *MockAuthService) Login(ctx context.Context, input app.LoginInput) (app.LoginOutput, error) {
 	ret := _mock.Called(ctx, input)
@@ -289,6 +346,129 @@ func (_c *MockAuthService_Register_Call) Return(userOutput app.UserOutput, err e
 }
 
 func (_c *MockAuthService_Register_Call) RunAndReturn(run func(ctx context.Context, input app.UserInput) (app.UserOutput, error)) *MockAuthService_Register_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ResetPassword provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) ResetPassword(ctx context.Context, input app.ResetPasswordInput) error {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetPassword")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ResetPasswordInput) error); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockAuthService_ResetPassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetPassword'
+type MockAuthService_ResetPassword_Call struct {
+	*mock.Call
+}
+
+// ResetPassword is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.ResetPasswordInput
+func (_e *MockAuthService_Expecter) ResetPassword(ctx interface{}, input interface{}) *MockAuthService_ResetPassword_Call {
+	return &MockAuthService_ResetPassword_Call{Call: _e.mock.On("ResetPassword", ctx, input)}
+}
+
+func (_c *MockAuthService_ResetPassword_Call) Run(run func(ctx context.Context, input app.ResetPasswordInput)) *MockAuthService_ResetPassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.ResetPasswordInput
+		if args[1] != nil {
+			arg1 = args[1].(app.ResetPasswordInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_ResetPassword_Call) Return(err error) *MockAuthService_ResetPassword_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockAuthService_ResetPassword_Call) RunAndReturn(run func(ctx context.Context, input app.ResetPasswordInput) error) *MockAuthService_ResetPassword_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ValidateResetToken provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) ValidateResetToken(ctx context.Context, input app.ValidateResetTokenInput) (string, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateResetToken")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ValidateResetTokenInput) (string, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ValidateResetTokenInput) string); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ValidateResetTokenInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockAuthService_ValidateResetToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateResetToken'
+type MockAuthService_ValidateResetToken_Call struct {
+	*mock.Call
+}
+
+// ValidateResetToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.ValidateResetTokenInput
+func (_e *MockAuthService_Expecter) ValidateResetToken(ctx interface{}, input interface{}) *MockAuthService_ValidateResetToken_Call {
+	return &MockAuthService_ValidateResetToken_Call{Call: _e.mock.On("ValidateResetToken", ctx, input)}
+}
+
+func (_c *MockAuthService_ValidateResetToken_Call) Run(run func(ctx context.Context, input app.ValidateResetTokenInput)) *MockAuthService_ValidateResetToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.ValidateResetTokenInput
+		if args[1] != nil {
+			arg1 = args[1].(app.ValidateResetTokenInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_ValidateResetToken_Call) Return(s string, err error) *MockAuthService_ValidateResetToken_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockAuthService_ValidateResetToken_Call) RunAndReturn(run func(ctx context.Context, input app.ValidateResetTokenInput) (string, error)) *MockAuthService_ValidateResetToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

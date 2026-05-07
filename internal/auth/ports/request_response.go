@@ -32,3 +32,16 @@ type RefreshResponse struct {
 type LogoutRequest struct {
 	RefreshToken string `json:"refresh_token" example:"dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" example:"user@example.com"`
+}
+
+type ResetPasswordRequest struct {
+	Token    string `json:"token" example:"abc123..."`
+	Password string `json:"password" example:"NewPass123!"`
+}
+
+type ValidateResetTokenResponse struct {
+	Valid bool `json:"valid" example:"true"`
+}

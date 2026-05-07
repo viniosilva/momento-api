@@ -33,3 +33,7 @@ func ValidateEmail(value string) error {
 
 	return nil
 }
+
+func (e Email) String() string {
+	return string(e)
+}

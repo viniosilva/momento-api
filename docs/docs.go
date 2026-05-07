@@ -23,6 +23,55 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/auth/forgot-password": {
+            "post": {
+                "description": "Sends a password reset email if the account exists",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Request password reset",
+                "parameters": [
+                    {
+                        "description": "Password reset request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ports.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset email sent",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "description": "Authenticates a user and returns a JWT token and a refresh token",
@@ -203,6 +252,114 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "User already exists",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/reset-password": {
+            "post": {
+                "description": "Resets the user's password using a valid reset token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Reset password with token",
+                "parameters": [
+                    {
+                        "description": "Reset password request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ports.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset successful",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token or password",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Token expired",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/reset-password/validate": {
+            "get": {
+                "description": "Checks if a reset token is valid and not expired",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Validate reset token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reset token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Token expired",
                         "schema": {
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
@@ -742,6 +899,15 @@ const docTemplate = `{
                 }
             }
         },
+        "ports.ForgotPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
         "ports.ListEventsResponse": {
             "type": "object",
             "properties": {
@@ -836,6 +1002,19 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "ports.ResetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "NewPass123!"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "abc123..."
                 }
             }
         },

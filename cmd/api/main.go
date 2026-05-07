@@ -148,6 +148,15 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	userRepository := authadapters.NewUserRepository(db)
 	eventRepository := eventsadapters.NewEventRepository(db)
 	secureTokenRepository := authadapters.NewSecureTokenService(redisClient, config.JWT.RefreshTokenExpiration)
+	resetTokenRepository := authadapters.NewResetTokenService(redisClient)
+	emailService := authadapters.NewEmailService(
+		config.SMTP.Host,
+		config.SMTP.User,
+		config.SMTP.Pass,
+		config.SMTP.From,
+		config.ResetPassword.URLBase,
+		config.SMTP.Port,
+	)
 
 	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
 
@@ -155,8 +164,16 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 		MongoClient:   mongoClient,
 		HealthService: sharedapp.NewHealthService(mongoClient),
 		JwtService:    jwtService,
-		AuthService:   authapp.NewAuthService(userRepository, jwtService, secureTokenRepository),
-		EventService:  eventsapp.NewEventService(eventRepository),
+		AuthService: authapp.NewAuthService(
+			userRepository,
+			jwtService,
+			secureTokenRepository,
+			resetTokenRepository,
+			emailService,
+			config.ResetPassword.TokenExpiration,
+			config.ResetPassword.TokenSize,
+		),
+		EventService: eventsapp.NewEventService(eventRepository),
 	}, nil
 }
 

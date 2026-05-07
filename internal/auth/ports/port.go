@@ -11,4 +11,7 @@ type AuthService interface {
 	Login(ctx context.Context, input app.LoginInput) (app.LoginOutput, error)
 	RefreshToken(ctx context.Context, input app.RefreshTokenInput) (app.LoginOutput, error)
 	Logout(ctx context.Context, input app.LogoutInput) error
+	ForgotPassword(ctx context.Context, input app.ForgotPasswordInput) error
+	ResetPassword(ctx context.Context, input app.ResetPasswordInput) error
+	ValidateResetToken(ctx context.Context, input app.ValidateResetTokenInput) (string, error)
 }

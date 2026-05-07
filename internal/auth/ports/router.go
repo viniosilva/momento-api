@@ -43,4 +43,19 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("POST %s/auth/logout", options.Prefix),
 		chain.ThenFunc(handler.Logout),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/forgot-password", options.Prefix),
+		chain.ThenFunc(handler.ForgotPassword),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/reset-password", options.Prefix),
+		chain.ThenFunc(handler.ResetPassword),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/auth/reset-password/validate", options.Prefix),
+		chain.ThenFunc(handler.ValidateResetToken),
+	)
 }

@@ -61,6 +61,12 @@ definitions:
         example: "2026-02-08T10:30:00Z"
         type: string
     type: object
+  ports.ForgotPasswordRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    type: object
   ports.ListEventsResponse:
     properties:
       data:
@@ -127,6 +133,15 @@ definitions:
         example: 507f1f77bcf86cd799439011
         type: string
     type: object
+  ports.ResetPasswordRequest:
+    properties:
+      password:
+        example: NewPass123!
+        type: string
+      token:
+        example: abc123...
+        type: string
+    type: object
   ports.UpdateEventRequest:
     properties:
       content:
@@ -155,6 +170,38 @@ info:
   title: Momento API
   version: "1.0"
 paths:
+  /api/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset email if the account exists
+      parameters:
+      - description: Password reset request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset email sent
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - auth
   /api/auth/login:
     post:
       consumes:
@@ -280,6 +327,77 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /api/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using a valid reset token
+      parameters:
+      - description: Reset password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid token or password
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "410":
+          description: Token expired
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Reset password with token
+      tags:
+      - auth
+  /api/auth/reset-password/validate:
+    get:
+      consumes:
+      - application/json
+      description: Checks if a reset token is valid and not expired
+      parameters:
+      - description: Reset token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token is valid
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "410":
+          description: Token expired
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Validate reset token
       tags:
       - auth
   /api/events:
