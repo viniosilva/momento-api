@@ -87,7 +87,7 @@ const (
 	defaultSMTPFrom               = "noreply@momento.com"
 	defaultResetTokenSize         = 32
 	defaultResetTokenExpiration   = 1 * time.Hour
-	defaultResetURLBase           = "http://localhost:3000/reset-password"
+	defaultResetURLBase           = "http://http://momentonow.com/reset-password"
 )
 
 type LoadConfigOption func(*loadConfigOptions)
