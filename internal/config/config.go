@@ -10,12 +10,13 @@ import (
 )
 
 type Config struct {
-	Api           ApiConfig
-	Mongo         MongoConfig
-	JWT           JWTConfig
-	Redis         RedisConfig
-	SMTP          SMTPConfig
-	ResetPassword ResetPasswordConfig
+	Api               ApiConfig
+	Mongo             MongoConfig
+	JWT               JWTConfig
+	Redis             RedisConfig
+	SMTP              SMTPConfig
+	ResetPassword     ResetPasswordConfig
+	EmailVerification EmailVerificationConfig
 }
 
 type ApiConfig struct {
@@ -61,33 +62,42 @@ type ResetPasswordConfig struct {
 	URLBase         string
 }
 
+type EmailVerificationConfig struct {
+	TokenSize       int
+	TokenExpiration time.Duration
+	URLBase         string
+}
+
 const (
-	defaultEnvPath                = ".env"
-	defaultApiHost                = ""
-	defaultApiPort                = "8080"
-	defaultMongoHost              = "localhost"
-	defaultMongoPort              = "27017"
-	defaultMongoDB                = "momento"
-	defaultMongoUser              = "admin"
-	defaultMongoPass              = "admin"
-	defaultMongoMaxRetries        = 3
-	defaultMongoRetryDelay        = 2 * time.Second
-	defaultMongoConnectTimeout    = 10 * time.Second
-	defaultJWTSecret              = "your-secret-key-change-in-production"
-	defaultJWTExpiration          = 12 * time.Hour
-	defaultRefreshTokenExpiration = 7 * 24 * time.Hour
-	defaultRedisHost              = "localhost"
-	defaultRedisPort              = "6379"
-	defaultRedisPass              = ""
-	defaultRedisDB                = 0
-	defaultSMTPHost               = "localhost"
-	defaultSMTPPort               = "1025"
-	defaultSMTPUser               = ""
-	defaultSMTPPass               = ""
-	defaultSMTPFrom               = "noreply@momento.com"
-	defaultResetTokenSize         = 32
-	defaultResetTokenExpiration   = 1 * time.Hour
-	defaultResetURLBase           = "http://http://momentonow.com/reset-password"
+	defaultEnvPath                     = ".env"
+	defaultApiHost                     = ""
+	defaultApiPort                     = "8080"
+	defaultMongoHost                   = "localhost"
+	defaultMongoPort                   = "27017"
+	defaultMongoDB                     = "momento"
+	defaultMongoUser                   = "admin"
+	defaultMongoPass                   = "admin"
+	defaultMongoMaxRetries             = 3
+	defaultMongoRetryDelay             = 2 * time.Second
+	defaultMongoConnectTimeout         = 10 * time.Second
+	defaultJWTSecret                   = "your-secret-key-change-in-production"
+	defaultJWTExpiration               = 12 * time.Hour
+	defaultRefreshTokenExpiration      = 7 * 24 * time.Hour
+	defaultRedisHost                   = "localhost"
+	defaultRedisPort                   = "6379"
+	defaultRedisPass                   = ""
+	defaultRedisDB                     = 0
+	defaultSMTPHost                    = "localhost"
+	defaultSMTPPort                    = "1025"
+	defaultSMTPUser                    = ""
+	defaultSMTPPass                    = ""
+	defaultSMTPFrom                    = "noreply@momento.com"
+	defaultResetTokenSize              = 32
+	defaultResetTokenExpiration        = 1 * time.Hour
+	defaultResetURLBase                = "http://http://momentonow.com/reset-password"
+	defaultVerificationTokenSize       = 32
+	defaultVerificationTokenExpiration = 24 * time.Hour
+	defaultVerificationURLBase         = "http://momentonow.com/sign-in"
 )
 
 type LoadConfigOption func(*loadConfigOptions)
@@ -152,6 +162,11 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			TokenSize:       getEnvAsInt("RESET_TOKEN_SIZE", defaultResetTokenSize),
 			TokenExpiration: getEnvAsDuration("RESET_TOKEN_EXPIRATION_MS", defaultResetTokenExpiration),
 			URLBase:         getEnv("RESET_URL_BASE", defaultResetURLBase),
+		},
+		EmailVerification: EmailVerificationConfig{
+			TokenSize:       getEnvAsInt("VERIFICATION_TOKEN_SIZE", defaultVerificationTokenSize),
+			TokenExpiration: getEnvAsDuration("VERIFICATION_TOKEN_EXPIRATION_MS", defaultVerificationTokenExpiration),
+			URLBase:         getEnv("VERIFICATION_URL_BASE", defaultVerificationURLBase),
 		},
 	}
 }

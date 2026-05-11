@@ -10,13 +10,17 @@ import (
 )
 
 type authService struct {
-	userRepository     UserRepository
-	jwtService         JWTService
-	secureTokenService SecureTokenService
-	resetTokenService  ResetTokenService
-	emailSender        EmailSender
-	resetTokenTTL      time.Duration
-	resetTokenSize     int
+	userRepository        UserRepository
+	jwtService            JWTService
+	secureTokenService    SecureTokenService
+	resetTokenService     ResetTokenService
+	emailSender           EmailSender
+	resetTokenTTL         time.Duration
+	resetTokenSize        int
+	tokenService          TokenService
+	verificationTokenTTL  time.Duration
+	verificationTokenSize int
+	verificationURL       string
 }
 
 func NewAuthService(
@@ -27,15 +31,23 @@ func NewAuthService(
 	emailSender EmailSender,
 	resetTokenTTL time.Duration,
 	resetTokenSize int,
+	tokenService TokenService,
+	verificationTokenTTL time.Duration,
+	verificationTokenSize int,
+	verificationURL string,
 ) *authService {
 	return &authService{
-		userRepository:     userRepository,
-		jwtService:         jwtService,
-		secureTokenService: secureTokenService,
-		resetTokenService:  resetTokenService,
-		emailSender:        emailSender,
-		resetTokenTTL:      resetTokenTTL,
-		resetTokenSize:     resetTokenSize,
+		userRepository:        userRepository,
+		jwtService:            jwtService,
+		secureTokenService:    secureTokenService,
+		resetTokenService:     resetTokenService,
+		emailSender:           emailSender,
+		resetTokenTTL:         resetTokenTTL,
+		resetTokenSize:        resetTokenSize,
+		tokenService:          tokenService,
+		verificationTokenTTL:  verificationTokenTTL,
+		verificationTokenSize: verificationTokenSize,
+		verificationURL:       verificationURL,
 	}
 }
 
@@ -50,17 +62,31 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 		return UserOutput{}, err
 	}
 
-	exists, err := s.userRepository.ExistsByEmail(ctx, email)
-	if err != nil {
-		return UserOutput{}, fmt.Errorf("s.userRepository.ExistsByEmail: %w", err)
-	}
-	if exists {
-		return UserOutput{}, domain.ErrUserAlreadyExists
-	}
-
 	user := domain.NewUser(email, password)
 	if err := s.userRepository.Create(ctx, user); err != nil {
+		if errors.Is(err, domain.ErrUserAlreadyExists) {
+			// We return nil error to avoid revealing whether the email is already registered or not
+			return UserOutput{
+				ID:        user.ID,
+				Email:     user.Email,
+				CreatedAt: user.CreatedAt,
+				UpdatedAt: user.UpdatedAt,
+			}, nil
+		}
 		return UserOutput{}, fmt.Errorf("s.userRepository.Create: %w", err)
+	}
+
+	token, err := domain.NewVerificationToken(s.verificationTokenSize)
+	if err != nil {
+		return UserOutput{}, fmt.Errorf("domain.NewVerificationToken: %w", err)
+	}
+
+	if err := s.tokenService.Store(ctx, token.String(), user.ID, s.verificationTokenTTL); err != nil {
+		return UserOutput{}, fmt.Errorf("s.tokenService.Store: %w", err)
+	}
+
+	if err := s.emailSender.SendVerificationEmail(ctx, email.String(), token.String()); err != nil {
+		return UserOutput{}, fmt.Errorf("s.emailSender.SendVerificationEmail: %w", err)
 	}
 
 	return UserOutput{
@@ -77,12 +103,12 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 		return LoginOutput{}, err
 	}
 
-	user, err := s.userRepository.FindByEmail(ctx, email)
+	user, err := s.userRepository.FindVerifiedByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return LoginOutput{}, domain.ErrInvalidCredentials
 		}
-		return LoginOutput{}, fmt.Errorf("s.userRepository.FindByEmail: %w", err)
+		return LoginOutput{}, fmt.Errorf("s.userRepository.FindVerifiedByEmail: %w", err)
 	}
 
 	if err := user.Password.Compare(input.Password); err != nil {
@@ -192,6 +218,31 @@ func (s *authService) ResetPassword(ctx context.Context, input ResetPasswordInpu
 
 	if err := s.resetTokenService.Invalidate(ctx, token); err != nil {
 		return fmt.Errorf("s.resetTokenService.Invalidate: %w", err)
+	}
+
+	return nil
+}
+
+func (s *authService) VerifyEmail(ctx context.Context, input VerifyEmailInput) error {
+	userID, err := s.tokenService.Validate(ctx, input.Token)
+	if err != nil {
+		return fmt.Errorf("s.tokenService.Validate: %w", err)
+	}
+
+	user, err := s.userRepository.FindByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("s.userRepository.FindByID: %w", err)
+	}
+
+	now := time.Now().UTC()
+	user.EmailVerifiedAt = &now
+
+	if err := s.userRepository.Update(ctx, user); err != nil {
+		return fmt.Errorf("s.userRepository.Update: %w", err)
+	}
+
+	if err := s.tokenService.Invalidate(ctx, input.Token); err != nil {
+		return fmt.Errorf("s.tokenService.Invalidate: %w", err)
 	}
 
 	return nil

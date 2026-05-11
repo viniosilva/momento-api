@@ -11,6 +11,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user domain.User) error
 	ExistsByEmail(ctx context.Context, email domain.Email) (bool, error)
 	FindByEmail(ctx context.Context, email domain.Email) (domain.User, error)
+	FindVerifiedByEmail(ctx context.Context, email domain.Email) (domain.User, error)
 	FindByID(ctx context.Context, id string) (domain.User, error)
 	Update(ctx context.Context, user domain.User) error
 }
@@ -31,6 +32,13 @@ type ResetTokenService interface {
 	Invalidate(ctx context.Context, token domain.ResetToken) error
 }
 
+type TokenService interface {
+	Store(ctx context.Context, token string, userID string, ttl time.Duration) error
+	Validate(ctx context.Context, token string) (string, error)
+	Invalidate(ctx context.Context, token string) error
+}
+
 type EmailSender interface {
 	SendResetPasswordEmail(ctx context.Context, to, token string) error
+	SendVerificationEmail(ctx context.Context, to, token string) error
 }

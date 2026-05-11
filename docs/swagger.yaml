@@ -151,6 +151,24 @@ definitions:
         example: My updated event title
         type: string
     type: object
+  ports.ValidateResetTokenResponse:
+    properties:
+      valid:
+        example: true
+        type: boolean
+    type: object
+  ports.VerifyEmailRequest:
+    properties:
+      token:
+        example: abc123...
+        type: string
+    type: object
+  ports.VerifyEmailResponse:
+    properties:
+      message:
+        example: Email verified successfully
+        type: string
+    type: object
   response.HealthResponse:
     properties:
       status:
@@ -318,10 +336,6 @@ paths:
           description: Invalid request data
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
-        "409":
-          description: User already exists
-          schema:
-            $ref: '#/definitions/nethttp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
@@ -382,9 +396,7 @@ paths:
         "200":
           description: Token is valid
           schema:
-            additionalProperties:
-              type: boolean
-            type: object
+            $ref: '#/definitions/ports.ValidateResetTokenResponse'
         "400":
           description: Invalid token
           schema:
@@ -398,6 +410,40 @@ paths:
           schema:
             $ref: '#/definitions/nethttp.ErrorResponse'
       summary: Validate reset token
+      tags:
+      - auth
+  /api/auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verifies a user's email address using a verification token
+      parameters:
+      - description: Email verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email verified successfully
+          schema:
+            $ref: '#/definitions/ports.VerifyEmailResponse'
+        "400":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "410":
+          description: Token expired
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      summary: Verify email address
       tags:
       - auth
   /api/events:

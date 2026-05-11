@@ -1,10 +1,7 @@
 package domain
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
-	"fmt"
 )
 
 var (
@@ -16,12 +13,12 @@ type ResetToken string
 
 func NewResetToken(size int) (ResetToken, error) {
 	if size <= 0 {
-		return "", errors.New("token size must be positive")
+		return "", ErrTokenSizeMustBePositive
 	}
 
-	token, err := generateSecureToken(size)
+	token, err := GenerateSecureToken(size)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %w", err)
+		return "", err
 	}
 
 	return ResetToken(token), nil
@@ -29,13 +26,4 @@ func NewResetToken(size int) (ResetToken, error) {
 
 func (t ResetToken) String() string {
 	return string(t)
-}
-
-func generateSecureToken(size int) (string, error) {
-	b := make([]byte, size)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-
-	return base64.URLEncoding.EncodeToString(b), nil
 }

@@ -15,10 +15,13 @@ import (
 )
 
 const (
-	secretTest     = "secretTest"
-	expirationTest = 5 * time.Second
-	resetTokenSize = 32
-	resetTokenTTL  = 1 * time.Hour
+	secretTest            = "secretTest"
+	expirationTest        = 5 * time.Second
+	resetTokenSize        = 32
+	resetTokenTTL         = 1 * time.Hour
+	verificationTokenSize = 32
+	verificationTokenTTL  = 24 * time.Hour
+	verificationURL       = "http://momentonow.com/verify-email"
 )
 
 func TestNewAuthService(t *testing.T) {
@@ -28,8 +31,8 @@ func TestNewAuthService(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		assert.NotNil(t, authService)
 	})
@@ -47,10 +50,15 @@ func TestAuthService_Register(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
-		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).Return(false, nil).Once()
-		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).Return(nil).Once()
+		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(nil).Once()
+		tokenService.EXPECT().Store(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil).Once()
+		emailSender.EXPECT().SendVerificationEmail(mock.Anything, mock.Anything, mock.Anything).
+			Return(nil).Once()
 
 		got, err := userService.Register(t.Context(), defaultUserInput)
 		require.NoError(t, err)
@@ -67,7 +75,8 @@ func TestAuthService_Register(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		input := defaultUserInput
 		input.Email = "invalid-email"
@@ -83,7 +92,8 @@ func TestAuthService_Register(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		input := defaultUserInput
 		input.Password = "short"
@@ -93,33 +103,35 @@ func TestAuthService_Register(t *testing.T) {
 		assert.ErrorIs(t, err, domain.ErrPasswordTooShort)
 	})
 
-	t.Run("should return error when user already exists", func(t *testing.T) {
+	t.Run("should return success even when user already exists (enumeration prevention)", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
-		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
-			Return(true, nil).
+		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(domain.ErrUserAlreadyExists).
 			Once()
 
 		_, err := userService.Register(t.Context(), defaultUserInput)
 
-		assert.ErrorIs(t, err, domain.ErrUserAlreadyExists)
+		require.NoError(t, err)
 	})
 
-	t.Run("should return error when ExistsByEmail fails", func(t *testing.T) {
+	t.Run("should return error when Create fails with unknown error", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
-		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
-			Return(false, assert.AnError).
+		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(assert.AnError).
 			Once()
 
 		_, err := userService.Register(t.Context(), defaultUserInput)
@@ -127,20 +139,38 @@ func TestAuthService_Register(t *testing.T) {
 		assert.ErrorIs(t, err, assert.AnError)
 	})
 
-	t.Run("should return error when Create fails", func(t *testing.T) {
+	t.Run("should return error when Store fails with unknown error", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
-		userRepoMock.EXPECT().ExistsByEmail(mock.Anything, mock.Anything).
-			Return(false, nil).
-			Once()
 		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
-			Return(assert.AnError).
-			Once()
+			Return(nil).Once()
+		tokenService.EXPECT().Store(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError).Once()
+
+		_, err := userService.Register(t.Context(), defaultUserInput)
+
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when SendVerificationEmail fails with unknown error", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(nil).Once()
+		tokenService.EXPECT().Store(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil).Once()
+		emailSender.EXPECT().SendVerificationEmail(mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError).Once()
 
 		_, err := userService.Register(t.Context(), defaultUserInput)
 
@@ -157,7 +187,8 @@ func TestAuthService_Logout(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Invalidate(mock.Anything, existingToken).
 			Return(nil).
@@ -173,7 +204,8 @@ func TestAuthService_Logout(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Invalidate(mock.Anything, existingToken).
 			Return(domain.ErrRefreshTokenNotFound).
@@ -196,7 +228,8 @@ func TestAuthService_Login(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
@@ -206,7 +239,7 @@ func TestAuthService_Login(t *testing.T) {
 
 		user := domain.NewUser(email, password)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(user, nil).
 			Once()
 		tokenSvcMock.EXPECT().Generate(mock.Anything, user.ID, string(user.Email)).
@@ -226,7 +259,93 @@ func TestAuthService_Login(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		input := defaultLoginInput
+		input.Email = "invalid-email"
+
+		_, err := authService.Login(t.Context(), input)
+
+		assert.ErrorIs(t, err, domain.ErrInvalidEmail)
+	})
+
+	t.Run("should return error when credentials are invalid (user not found)", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail(defaultLoginInput.Email)
+		require.NoError(t, err)
+
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
+			Return(domain.User{}, domain.ErrUserNotFound).
+			Once()
+
+		_, err = authService.Login(t.Context(), defaultLoginInput)
+
+		assert.ErrorIs(t, err, domain.ErrInvalidCredentials)
+	})
+
+	t.Run("should return error when credentials are invalid (wrong password)", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail(defaultLoginInput.Email)
+		require.NoError(t, err)
+
+		password, err := domain.NewPassword("OtherPass123!")
+		require.NoError(t, err)
+
+		user := domain.NewUser(email, password)
+
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
+			Return(user, nil).
+			Once()
+
+		_, err = authService.Login(t.Context(), defaultLoginInput)
+
+		assert.ErrorIs(t, err, domain.ErrInvalidCredentials)
+	})
+
+	t.Run("should return error when FindVerifiedByEmail fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail(defaultLoginInput.Email)
+		require.NoError(t, err)
+
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
+			Return(domain.User{}, assert.AnError).
+			Once()
+
+		_, err = authService.Login(t.Context(), defaultLoginInput)
+
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when email is invalid", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		input := defaultLoginInput
 		input.Email = "invalid-email"
@@ -242,12 +361,13 @@ func TestAuthService_Login(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(domain.User{}, domain.ErrUserNotFound).
 			Once()
 
@@ -262,7 +382,8 @@ func TestAuthService_Login(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
@@ -272,7 +393,7 @@ func TestAuthService_Login(t *testing.T) {
 
 		user := domain.NewUser(email, password)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(user, nil).
 			Once()
 
@@ -281,18 +402,19 @@ func TestAuthService_Login(t *testing.T) {
 		assert.ErrorIs(t, err, domain.ErrInvalidCredentials)
 	})
 
-	t.Run("should return error when FindByEmail fails", func(t *testing.T) {
+	t.Run("should return error when FindVerifiedByEmail fails", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(domain.User{}, assert.AnError).
 			Once()
 
@@ -307,7 +429,8 @@ func TestAuthService_Login(t *testing.T) {
 		jwtMock := mocks.NewMockJWTService(t)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtMock, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtMock, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
@@ -317,7 +440,7 @@ func TestAuthService_Login(t *testing.T) {
 
 		user := domain.NewUser(email, password)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(user, nil).
 			Once()
 		jwtMock.EXPECT().Generate(mock.Anything, mock.Anything).
@@ -335,7 +458,8 @@ func TestAuthService_Login(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultLoginInput.Email)
 		require.NoError(t, err)
@@ -345,7 +469,7 @@ func TestAuthService_Login(t *testing.T) {
 
 		user := domain.NewUser(email, password)
 
-		userRepoMock.EXPECT().FindByEmail(mock.Anything, email).
+		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(user, nil).
 			Once()
 		tokenSvcMock.EXPECT().Generate(mock.Anything, mock.Anything, mock.Anything).
@@ -367,7 +491,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
 			Return("user-123", "user@example.com", "new-refresh-token", nil).
@@ -386,7 +511,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
 			Return("", "", "", domain.ErrRefreshTokenNotFound).
@@ -403,7 +529,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
 			Return("", "", "", domain.ErrRefreshTokenExpired).
@@ -420,7 +547,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
 			Return("", "", "", assert.AnError).
@@ -438,7 +566,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		jwtMock := mocks.NewMockJWTService(t)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtMock, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtMock, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
 			Return("user-123", "user@example.com", "new-refresh-token", nil).
@@ -464,7 +593,8 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultInput.Email)
 		require.NoError(t, err)
@@ -495,7 +625,8 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultInput.Email)
 		require.NoError(t, err)
@@ -508,26 +639,14 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("should return error when email is invalid", func(t *testing.T) {
-		userRepoMock := mocks.NewMockUserRepository(t)
-		tokenSvcMock := mocks.NewMockSecureTokenService(t)
-		jwtService := adapters.NewJWTService(secretTest, expirationTest)
-		resetTokenSvc := mocks.NewMockResetTokenService(t)
-		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
-
-		input := app.ForgotPasswordInput{Email: "invalid-email"}
-		err := authService.ForgotPassword(t.Context(), input)
-		assert.ErrorIs(t, err, domain.ErrInvalidEmail)
-	})
-
 	t.Run("should return nil even when FindByEmail fails (security)", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultInput.Email)
 		require.NoError(t, err)
@@ -546,7 +665,8 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultInput.Email)
 		require.NoError(t, err)
@@ -573,7 +693,8 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		email, err := domain.NewEmail(defaultInput.Email)
 		require.NoError(t, err)
@@ -606,7 +727,8 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -623,7 +745,8 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("", domain.ErrInvalidResetToken).
@@ -639,7 +762,8 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("", domain.ErrExpiredResetToken).
@@ -655,7 +779,8 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("", assert.AnError).
@@ -678,7 +803,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -711,7 +837,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("", domain.ErrInvalidResetToken).
@@ -727,7 +854,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -747,7 +875,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -767,7 +896,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -797,7 +927,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
@@ -821,6 +952,175 @@ func TestAuthService_ResetPassword(t *testing.T) {
 			Once()
 
 		err = authService.ResetPassword(t.Context(), defaultInput)
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+}
+
+func TestAuthService_VerifyEmail(t *testing.T) {
+	t.Run("should verify email successfully", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail("user@example.com")
+		require.NoError(t, err)
+		password, err := domain.NewPassword("ValidPass123!")
+		require.NoError(t, err)
+		user := domain.NewUser(email, password)
+		user.ID = "user-123"
+
+		tokenService.EXPECT().Validate(mock.Anything, "valid-token").
+			Return("user-123", nil).
+			Once()
+		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+			Return(user, nil).
+			Once()
+		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		tokenService.EXPECT().Invalidate(mock.Anything, "valid-token").
+			Return(nil).
+			Once()
+
+		err = authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "valid-token"})
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error when token is invalid", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		tokenService.EXPECT().Validate(mock.Anything, "invalid-token").
+			Return("", domain.ErrInvalidVerificationToken).
+			Once()
+
+		err := authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "invalid-token"})
+		assert.ErrorIs(t, err, domain.ErrInvalidVerificationToken)
+	})
+
+	t.Run("should return error when token is expired", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		tokenService.EXPECT().Validate(mock.Anything, "expired-token").
+			Return("", domain.ErrExpiredVerificationToken).
+			Once()
+
+		err := authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "expired-token"})
+		assert.ErrorIs(t, err, domain.ErrExpiredVerificationToken)
+	})
+
+	t.Run("should return error when validate fails with unknown error", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		tokenService.EXPECT().Validate(mock.Anything, "token").
+			Return("", assert.AnError).
+			Once()
+
+		err := authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "token"})
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when FindByID fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		tokenService.EXPECT().Validate(mock.Anything, "token").
+			Return("user-123", nil).
+			Once()
+		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+			Return(domain.User{}, assert.AnError).
+			Once()
+
+		err := authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "token"})
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when Update fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail("user@example.com")
+		require.NoError(t, err)
+		password, err := domain.NewPassword("ValidPass123!")
+		require.NoError(t, err)
+		user := domain.NewUser(email, password)
+		user.ID = "user-123"
+
+		tokenService.EXPECT().Validate(mock.Anything, "token").
+			Return("user-123", nil).
+			Once()
+		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+			Return(user, nil).
+			Once()
+		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
+			Return(assert.AnError).
+			Once()
+
+		err = authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "token"})
+		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when Invalidate fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		email, err := domain.NewEmail("user@example.com")
+		require.NoError(t, err)
+		password, err := domain.NewPassword("ValidPass123!")
+		require.NoError(t, err)
+		user := domain.NewUser(email, password)
+		user.ID = "user-123"
+
+		tokenService.EXPECT().Validate(mock.Anything, "token").
+			Return("user-123", nil).
+			Once()
+		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+			Return(user, nil).
+			Once()
+		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		tokenService.EXPECT().Invalidate(mock.Anything, "token").
+			Return(assert.AnError).
+			Once()
+
+		err = authService.VerifyEmail(t.Context(), app.VerifyEmailInput{Token: "token"})
 		assert.ErrorIs(t, err, assert.AnError)
 	})
 }

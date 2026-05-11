@@ -48,3 +48,7 @@ type ResetPasswordInput struct {
 	Token    string
 	Password string
 }
+
+type VerifyEmailInput struct {
+	Token string
+}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"momento/internal/auth/adapters"
 	"momento/internal/auth/app"
@@ -24,11 +23,9 @@ func newAuthService(t *testing.T) ports.AuthService {
 	jwtService := adapters.NewJWTService(secretTest, expirationTest)
 	resetTokenSvc := mocks.NewMockResetTokenService(t)
 	emailSender := mocks.NewMockEmailSender(t)
+	tokenService := mocks.NewMockTokenService(t)
 
-	resetTokenSize := 32
-	resetTokenTTL := 1 * time.Hour
-
-	return app.NewAuthService(userRepo, jwtService, secureTokenSvc, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+	return app.NewAuthService(userRepo, jwtService, secureTokenSvc, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 }
 
 func TestSetupRouter(t *testing.T) {
@@ -152,15 +149,13 @@ func TestSetupRouter(t *testing.T) {
 		jwtService := adapters.NewJWTService(secretTest, expirationTest)
 		resetTokenSvc := mocks.NewMockResetTokenService(t)
 		emailSender := mocks.NewMockEmailSender(t)
-
-		resetTokenSize := 32
-		resetTokenTTL := 1 * time.Hour
+		tokenService := mocks.NewMockTokenService(t)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
 			Return("user-123", nil).
 			Once()
 
-		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		mux := http.NewServeMux()
 

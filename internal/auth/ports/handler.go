@@ -31,7 +31,6 @@ func NewAuthHandler(authService AuthService) *authHandler {
 // @Param request body RegisterRequest true "Registration request"
 // @Success 201 {object} RegisterResponse "User created successfully"
 // @Failure 400 {object} nethttp.ErrorResponse "Invalid request data"
-// @Failure 409 {object} nethttp.ErrorResponse "User already exists"
 // @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
 // @Router /api/auth/register [post]
 func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -274,7 +273,7 @@ func (h *authHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param token query string true "Reset token"
-// @Success 200 {object} map[string]bool "Token is valid"
+// @Success 200 {object} ValidateResetTokenResponse "Token is valid"
 // @Failure 400 {object} nethttp.ErrorResponse "Invalid token"
 // @Failure 410 {object} nethttp.ErrorResponse "Token expired"
 // @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
@@ -303,6 +302,51 @@ func (h *authHandler) ValidateResetToken(w http.ResponseWriter, r *http.Request)
 
 	nethttp_utils.JSON(w, http.StatusOK, ValidateResetTokenResponse{
 		Valid: true,
+	})
+}
+
+// VerifyEmail godoc
+// @Summary Verify email address
+// @Description Verifies a user's email address using a verification token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body VerifyEmailRequest true "Email verification request"
+// @Success 200 {object} VerifyEmailResponse "Email verified successfully"
+// @Failure 400 {object} nethttp.ErrorResponse "Invalid token"
+// @Failure 410 {object} nethttp.ErrorResponse "Token expired"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/auth/verify-email [post]
+func (h *authHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	var req VerifyEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	if strings.TrimSpace(req.Token) == "" {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "token is required",
+		})
+		return
+	}
+
+	input := app.VerifyEmailInput{
+		Token: req.Token,
+	}
+
+	if err := h.authService.VerifyEmail(r.Context(), input); err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	nethttp_utils.JSON(w, http.StatusOK, VerifyEmailResponse{
+		Message: "Email verified successfully",
 	})
 }
 
@@ -338,6 +382,10 @@ func MapErrorToHTTPStatus(err error) (int, string) {
 		return http.StatusBadRequest, domain.ErrInvalidResetToken.Error()
 	case errors.Is(err, domain.ErrExpiredResetToken):
 		return http.StatusGone, domain.ErrExpiredResetToken.Error()
+	case errors.Is(err, domain.ErrInvalidVerificationToken):
+		return http.StatusBadRequest, domain.ErrInvalidVerificationToken.Error()
+	case errors.Is(err, domain.ErrExpiredVerificationToken):
+		return http.StatusGone, domain.ErrExpiredVerificationToken.Error()
 	default:
 		return http.StatusInternalServerError, "internal server error"
 	}

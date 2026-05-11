@@ -45,3 +45,11 @@ type ResetPasswordRequest struct {
 type ValidateResetTokenResponse struct {
 	Valid bool `json:"valid" example:"true"`
 }
+
+type VerifyEmailRequest struct {
+	Token string `json:"token" example:"abc123..."`
+}
+
+type VerifyEmailResponse struct {
+	Message string `json:"message" example:"Email verified successfully"`
+}

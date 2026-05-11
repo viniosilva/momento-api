@@ -26,8 +26,8 @@ func Request[T any](ctx context.Context, method string, target string, body T, c
 }
 
 // RequestWithResponse makes a request to the given target with the given method and body and returns the response and the response body.
-// T is the type of the response body.
-// R is the type of the request body.
+// T is the type of the request body.
+// R is the type of the response body.
 func RequestWithResponse[T any, R any](ctx context.Context, method string, target string, body T, cb callback) (*http.Response, *R, error) {
 	resp, err := Request(ctx, method, target, body, cb)
 	if err != nil {

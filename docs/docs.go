@@ -250,12 +250,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/nethttp.ErrorResponse"
                         }
                     },
-                    "409": {
-                        "description": "User already exists",
-                        "schema": {
-                            "$ref": "#/definitions/nethttp.ErrorResponse"
-                        }
-                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -346,10 +340,59 @@ const docTemplate = `{
                     "200": {
                         "description": "Token is valid",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "boolean"
-                            }
+                            "$ref": "#/definitions/ports.ValidateResetTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Token expired",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/nethttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/verify-email": {
+            "post": {
+                "description": "Verifies a user's email address using a verification token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Verify email address",
+                "parameters": [
+                    {
+                        "description": "Email verification request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ports.VerifyEmailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email verified successfully",
+                        "schema": {
+                            "$ref": "#/definitions/ports.VerifyEmailResponse"
                         }
                     },
                     "400": {
@@ -1028,6 +1071,33 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "My updated event title"
+                }
+            }
+        },
+        "ports.ValidateResetTokenResponse": {
+            "type": "object",
+            "properties": {
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "ports.VerifyEmailRequest": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "abc123..."
+                }
+            }
+        },
+        "ports.VerifyEmailResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Email verified successfully"
                 }
             }
         },

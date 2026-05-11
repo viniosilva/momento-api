@@ -58,4 +58,9 @@ func SetupRouter(options SetupRouterOptions) {
 		fmt.Sprintf("GET %s/auth/reset-password/validate", options.Prefix),
 		chain.ThenFunc(handler.ValidateResetToken),
 	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/auth/verify-email", options.Prefix),
+		chain.ThenFunc(handler.VerifyEmail),
+	)
 }

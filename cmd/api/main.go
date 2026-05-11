@@ -149,12 +149,14 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	eventRepository := eventsadapters.NewEventRepository(db)
 	secureTokenRepository := authadapters.NewSecureTokenService(redisClient, config.JWT.RefreshTokenExpiration)
 	resetTokenRepository := authadapters.NewResetTokenService(redisClient)
+	tokenService := authadapters.NewTokenService(redisClient, authadapters.VerificationTokenPrefix)
 	emailService := authadapters.NewEmailService(
 		config.SMTP.Host,
 		config.SMTP.User,
 		config.SMTP.Pass,
 		config.SMTP.From,
 		config.ResetPassword.URLBase,
+		config.EmailVerification.URLBase,
 		config.SMTP.Port,
 	)
 
@@ -172,6 +174,10 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 			emailService,
 			config.ResetPassword.TokenExpiration,
 			config.ResetPassword.TokenSize,
+			tokenService,
+			config.EmailVerification.TokenExpiration,
+			config.EmailVerification.TokenSize,
+			config.EmailVerification.URLBase,
 		),
 		EventService: eventsapp.NewEventService(eventRepository),
 	}, nil

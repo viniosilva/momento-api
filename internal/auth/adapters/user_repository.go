@@ -66,6 +66,24 @@ func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (d
 	return toUserDomain(doc), nil
 }
 
+func (r *userRepository) FindVerifiedByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
+	filter := bson.M{
+		"email":             string(email),
+		"email_verified_at": bson.M{"$ne": nil},
+	}
+
+	var doc userDocument
+	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return domain.User{}, domain.ErrUserNotFound
+		}
+		return domain.User{}, err
+	}
+
+	return toUserDomain(doc), nil
+}
+
 func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
