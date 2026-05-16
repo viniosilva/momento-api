@@ -13,12 +13,12 @@ import (
 )
 
 type SetupRouterOptions struct {
-	Mux         *http.ServeMux
-	Prefix      string
+	Mux          *http.ServeMux
+	Prefix       string
 	EventService EventService
-	JWTService  JWTService
-	Logger      *slog.Logger
-	Timeout     *time.Duration
+	JWTService   JWTService
+	Logger       *slog.Logger
+	Timeout      *time.Duration
 }
 
 func SetupRouter(options SetupRouterOptions) {
@@ -62,5 +62,25 @@ func SetupRouter(options SetupRouterOptions) {
 	options.Mux.Handle(
 		fmt.Sprintf("DELETE %s/events/{id}", options.Prefix),
 		chain.ThenFunc(handler.DeleteEvent),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/events/{id}/images/upload-url", options.Prefix),
+		chain.ThenFunc(handler.GetUploadURL),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("POST %s/events/{id}/images", options.Prefix),
+		chain.ThenFunc(handler.ConfirmImage),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("GET %s/events/{id}/images", options.Prefix),
+		chain.ThenFunc(handler.ListImages),
+	)
+
+	options.Mux.Handle(
+		fmt.Sprintf("DELETE %s/events/{id}/images/{path...}", options.Prefix),
+		chain.ThenFunc(handler.DeleteImage),
 	)
 }

@@ -30,7 +30,8 @@ var mapErrorToHTTPStatus = ports.MapErrorToHTTPStatus
 func TestNewEventHandler(t *testing.T) {
 	t.Run("should create event handler", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, 15*time.Minute)
 		handler := ports.NewEventHandler(svc)
 
 		assert.NotNil(t, handler)
@@ -38,11 +39,13 @@ func TestNewEventHandler(t *testing.T) {
 }
 
 func TestEventHandler_CreateEvent(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	userID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 201 when event is created successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockRepo.EXPECT().Create(mock.Anything, mock.Anything).Return(nil).Once()
@@ -76,7 +79,8 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 	})
 
 	t.Run("should return 400 when content is empty", func(t *testing.T) {
-		svc := app.NewEventService(nil)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(nil, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -106,7 +110,8 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -133,7 +138,8 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockRepo.EXPECT().Create(mock.Anything, mock.Anything).
@@ -166,7 +172,8 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 
 	t.Run("should return 400 when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -191,11 +198,13 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 }
 
 func TestEventHandler_ListEvents(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	userID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 200 with events list", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		now := time.Now().UTC()
@@ -255,7 +264,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 
 	t.Run("should return 200 with empty list when no events found", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockList := listopts.Paginated[domain.Event]{
@@ -292,7 +302,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 
 	t.Run("should use default values when query parameters are missing", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockList := listopts.Paginated[domain.Event]{
@@ -321,7 +332,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 
 	t.Run("should parse query parameters correctly", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockList := listopts.Paginated[domain.Event]{
@@ -350,7 +362,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -371,7 +384,8 @@ func TestEventHandler_ListEvents(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mockRepo.EXPECT().ListByUserID(mock.Anything, mock.Anything, mock.Anything).
@@ -398,9 +412,12 @@ func TestEventHandler_ListEvents(t *testing.T) {
 }
 
 func TestEventHandler_GetUserEventByID(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
+
 	t.Run("should return 200 with event details", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		now := time.Now().UTC()
@@ -437,7 +454,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 
 	t.Run("should return 404 when event not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -466,7 +484,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -490,7 +509,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -519,12 +539,14 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 }
 
 func TestEventHandler_UpdateEvent(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	userID := primitive.NewObjectID().Hex()
 	eventID := primitive.NewObjectID().Hex()
 
 	t.Run("should return 200 when event is updated successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		now := time.Now().UTC()
@@ -570,7 +592,8 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 
 	t.Run("should return 200 when only title is updated (partial update)", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		now := time.Now().UTC()
@@ -613,7 +636,8 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 	})
 
 	t.Run("should return 400 when content is empty", func(t *testing.T) {
-		svc := app.NewEventService(nil)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(nil, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -644,7 +668,8 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -672,7 +697,8 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		now := time.Now().UTC()
@@ -715,7 +741,8 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 
 	t.Run("should return 400 when request body is invalid JSON", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		mux := http.NewServeMux()
@@ -741,9 +768,11 @@ func TestEventHandler_UpdateEvent(t *testing.T) {
 }
 
 func TestEventHandler_ArchiveEvent(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	t.Run("should return 204 no content", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -766,7 +795,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 
 	t.Run("should return 404 when event not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -795,7 +825,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -819,7 +850,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -848,9 +880,11 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 }
 
 func TestEventHandler_RestoreEvent(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	t.Run("should return 204 no content", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -873,7 +907,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 
 	t.Run("should return 404 when event not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -902,7 +937,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -926,7 +962,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -955,9 +992,11 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 }
 
 func TestEventHandler_DeleteEvent(t *testing.T) {
+	imageDownloadURLExpiration := 15 * time.Minute
 	t.Run("should return 204 no content", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -980,7 +1019,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 	t.Run("should return 404 when event not found", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -1009,7 +1049,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 	t.Run("should return 401 when UserID is missing from context", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()
@@ -1033,7 +1074,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 	t.Run("should return 500 when service returns error", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
-		svc := app.NewEventService(mockRepo)
+		s3Mock := mocks.NewMockS3Service(t)
+		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
 		eventID := primitive.NewObjectID().Hex()

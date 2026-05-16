@@ -161,6 +161,7 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	)
 
 	jwtService := authadapters.NewJWTService(config.JWT.Secret, config.JWT.Expiration)
+	s3Service := eventsadapters.NewS3Service(config.S3.Region, config.S3.Endpoint, config.S3.Bucket, config.S3.AccessKey, config.S3.SecretKey, config.S3.UsePathStyle, config.S3.UseSSL)
 
 	return &Dependencies{
 		MongoClient:   mongoClient,
@@ -179,7 +180,7 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 			config.EmailVerification.TokenSize,
 			config.EmailVerification.URLBase,
 		),
-		EventService: eventsapp.NewEventService(eventRepository),
+		EventService: eventsapp.NewEventService(eventRepository, s3Service, config.S3.ImageDownloadURLExpiration),
 	}, nil
 }
 

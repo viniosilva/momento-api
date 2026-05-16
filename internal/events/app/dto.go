@@ -20,7 +20,7 @@ type EventOutput struct {
 	Content     domain.EventContent
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	ArchivedAt *time.Time
+	ArchivedAt  *time.Time
 }
 
 type ListEventsInput struct {
@@ -58,6 +58,44 @@ type RestoreEventInput struct {
 	ID     string
 }
 
+type GetUploadURLInput struct {
+	UserID      string
+	EventID     string
+	ContentType string
+}
+
+type GetUploadURLOutput struct {
+	UploadURL string
+	ObjectKey string
+}
+
+type ConfirmImageInput struct {
+	UserID    string
+	EventID   string
+	ObjectKey string
+}
+
+type ConfirmImageOutput struct {
+	Path        domain.ImagePath
+	DownloadURL string
+}
+
+type DeleteImageInput struct {
+	UserID  string
+	EventID string
+	Path    string
+}
+
+type ListImagesInput struct {
+	UserID  string
+	EventID string
+}
+
+type ImageOutput struct {
+	Path        string
+	DownloadURL string
+}
+
 func EventApplicationToOutput(event domain.Event) EventOutput {
 	return EventOutput{
 		ID:          event.ID,
@@ -66,6 +104,6 @@ func EventApplicationToOutput(event domain.Event) EventOutput {
 		Content:     event.Content,
 		CreatedAt:   event.CreatedAt,
 		UpdatedAt:   event.UpdatedAt,
-		ArchivedAt: event.ArchivedAt,
+		ArchivedAt:  event.ArchivedAt,
 	}
 }

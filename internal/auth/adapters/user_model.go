@@ -11,12 +11,12 @@ import (
 const usersCollectionName = "users"
 
 type userDocument struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	Email     string             `bson:"email"`
-	Password  string             `bson:"password"`
-	CreatedAt        time.Time  `bson:"created_at"`
-	UpdatedAt        time.Time  `bson:"updated_at"`
-	EmailVerifiedAt  *time.Time `bson:"email_verified_at"`
+	ID              primitive.ObjectID `bson:"_id"`
+	Email           string             `bson:"email"`
+	Password        string             `bson:"password"`
+	CreatedAt       time.Time          `bson:"created_at"`
+	UpdatedAt       time.Time          `bson:"updated_at"`
+	EmailVerifiedAt *time.Time         `bson:"email_verified_at"`
 }
 
 func toUserDocument(u domain.User) (userDocument, error) {
@@ -26,11 +26,11 @@ func toUserDocument(u domain.User) (userDocument, error) {
 	}
 
 	return userDocument{
-		ID:             id,
-		Email:          string(u.Email),
-		Password:       string(u.Password),
-		CreatedAt:      u.CreatedAt,
-		UpdatedAt:      u.UpdatedAt,
+		ID:              id,
+		Email:           string(u.Email),
+		Password:        string(u.Password),
+		CreatedAt:       u.CreatedAt,
+		UpdatedAt:       u.UpdatedAt,
 		EmailVerifiedAt: u.EmailVerifiedAt,
 	}, nil
 }

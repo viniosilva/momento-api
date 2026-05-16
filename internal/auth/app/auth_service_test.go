@@ -176,6 +176,24 @@ func TestAuthService_Register(t *testing.T) {
 
 		assert.ErrorIs(t, err, assert.AnError)
 	})
+
+	t.Run("should return error when NewVerificationToken fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		userService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, 0, verificationURL)
+
+		userRepoMock.EXPECT().Create(mock.Anything, mock.Anything).
+			Return(nil).Once()
+
+		_, err := userService.Register(t.Context(), defaultUserInput)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "domain.NewVerificationToken")
+	})
 }
 
 func TestAuthService_Logout(t *testing.T) {
@@ -587,6 +605,19 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 		Email: "user@example.com",
 	}
 
+	t.Run("should return error when email is empty", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		err := authService.ForgotPassword(t.Context(), app.ForgotPasswordInput{Email: ""})
+		assert.ErrorIs(t, err, domain.ErrEmailIsEmpty)
+	})
+
 	t.Run("should send reset email when user exists", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
@@ -717,6 +748,20 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 
 		err = authService.ForgotPassword(t.Context(), defaultInput)
 		assert.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("should return error when NewResetToken fails", func(t *testing.T) {
+		userRepoMock := mocks.NewMockUserRepository(t)
+		tokenSvcMock := mocks.NewMockSecureTokenService(t)
+		jwtService := adapters.NewJWTService(secretTest, expirationTest)
+		resetTokenSvc := mocks.NewMockResetTokenService(t)
+		emailSender := mocks.NewMockEmailSender(t)
+		tokenService := mocks.NewMockTokenService(t)
+		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, 0, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
+
+		err := authService.ForgotPassword(t.Context(), defaultInput)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "domain.NewResetToken")
 	})
 }
 

@@ -15,8 +15,20 @@ type Config struct {
 	JWT               JWTConfig
 	Redis             RedisConfig
 	SMTP              SMTPConfig
+	S3                S3Config
 	ResetPassword     ResetPasswordConfig
 	EmailVerification EmailVerificationConfig
+}
+
+type S3Config struct {
+	Endpoint                   string
+	Region                     string
+	Bucket                     string
+	AccessKey                  string
+	SecretKey                  string
+	UsePathStyle               bool
+	UseSSL                     bool
+	ImageDownloadURLExpiration time.Duration
 }
 
 type ApiConfig struct {
@@ -69,35 +81,43 @@ type EmailVerificationConfig struct {
 }
 
 const (
-	defaultEnvPath                     = ".env"
-	defaultApiHost                     = ""
-	defaultApiPort                     = "8080"
-	defaultMongoHost                   = "localhost"
-	defaultMongoPort                   = "27017"
-	defaultMongoDB                     = "momento"
-	defaultMongoUser                   = "admin"
-	defaultMongoPass                   = "admin"
-	defaultMongoMaxRetries             = 3
-	defaultMongoRetryDelay             = 2 * time.Second
-	defaultMongoConnectTimeout         = 10 * time.Second
-	defaultJWTSecret                   = "your-secret-key-change-in-production"
-	defaultJWTExpiration               = 12 * time.Hour
-	defaultRefreshTokenExpiration      = 7 * 24 * time.Hour
-	defaultRedisHost                   = "localhost"
-	defaultRedisPort                   = "6379"
-	defaultRedisPass                   = ""
-	defaultRedisDB                     = 0
-	defaultSMTPHost                    = "localhost"
-	defaultSMTPPort                    = "1025"
-	defaultSMTPUser                    = ""
-	defaultSMTPPass                    = ""
-	defaultSMTPFrom                    = "noreply@momento.com"
-	defaultResetTokenSize              = 32
-	defaultResetTokenExpiration        = 1 * time.Hour
-	defaultResetURLBase                = "http://http://momentonow.com/reset-password"
-	defaultVerificationTokenSize       = 32
-	defaultVerificationTokenExpiration = 24 * time.Hour
-	defaultVerificationURLBase         = "http://momentonow.com/sign-in"
+	defaultEnvPath                      = ".env"
+	defaultApiHost                      = ""
+	defaultApiPort                      = "8080"
+	defaultMongoHost                    = "localhost"
+	defaultMongoPort                    = "27017"
+	defaultMongoDB                      = "momento"
+	defaultMongoUser                    = "admin"
+	defaultMongoPass                    = "admin"
+	defaultMongoMaxRetries              = 3
+	defaultMongoRetryDelay              = 2 * time.Second
+	defaultMongoConnectTimeout          = 10 * time.Second
+	defaultJWTSecret                    = "your-secret-key-change-in-production"
+	defaultJWTExpiration                = 12 * time.Hour
+	defaultRefreshTokenExpiration       = 7 * 24 * time.Hour
+	defaultRedisHost                    = "localhost"
+	defaultRedisPort                    = "6379"
+	defaultRedisPass                    = ""
+	defaultRedisDB                      = 0
+	defaultSMTPHost                     = "localhost"
+	defaultSMTPPort                     = "1025"
+	defaultSMTPUser                     = ""
+	defaultSMTPPass                     = ""
+	defaultSMTPFrom                     = "noreply@momento.com"
+	defaultResetTokenSize               = 32
+	defaultResetTokenExpiration         = 1 * time.Hour
+	defaultResetURLBase                 = "http://http://momentonow.com/reset-password"
+	defaultVerificationTokenSize        = 32
+	defaultVerificationTokenExpiration  = 24 * time.Hour
+	defaultVerificationURLBase          = "http://momentonow.com/sign-in"
+	defaultS3Endpoint                   = "localhost:9000"
+	defaultS3Region                     = "us-east-1"
+	defaultS3Bucket                     = "momento"
+	defaultS3AccessKey                  = "momento_admin"
+	defaultS3SecretKey                  = "momento_admin"
+	defaultS3UsePathStyle               = true
+	defaultS3UseSSL                     = false
+	defaultS3ImageDownloadURLExpiration = 15 * time.Minute
 )
 
 type LoadConfigOption func(*loadConfigOptions)
@@ -158,6 +178,16 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			Pass: getEnv("SMTP_PASS", defaultSMTPPass),
 			From: getEnv("SMTP_FROM", defaultSMTPFrom),
 		},
+		S3: S3Config{
+			Endpoint:                   getEnv("S3_ENDPOINT", defaultS3Endpoint),
+			Region:                     getEnv("S3_REGION", defaultS3Region),
+			Bucket:                     getEnv("S3_BUCKET", defaultS3Bucket),
+			AccessKey:                  getEnv("S3_ACCESS_KEY", defaultS3AccessKey),
+			SecretKey:                  getEnv("S3_SECRET_KEY", defaultS3SecretKey),
+			UsePathStyle:               getEnvAsBool("S3_USE_PATH_STYLE", defaultS3UsePathStyle),
+			UseSSL:                     getEnvAsBool("S3_USE_SSL", defaultS3UseSSL),
+			ImageDownloadURLExpiration: getEnvAsDuration("S3_IMAGE_DOWNLOAD_URL_EXPIRATION_MS", defaultS3ImageDownloadURLExpiration),
+		},
 		ResetPassword: ResetPasswordConfig{
 			TokenSize:       getEnvAsInt("RESET_TOKEN_SIZE", defaultResetTokenSize),
 			TokenExpiration: getEnvAsDuration("RESET_TOKEN_EXPIRATION_MS", defaultResetTokenExpiration),
@@ -200,4 +230,18 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	}
 
 	return time.Duration(value) * time.Millisecond
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultValue
+	}
+
+	return boolValue
 }

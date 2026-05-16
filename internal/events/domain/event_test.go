@@ -35,6 +35,95 @@ func TestNewEvent(t *testing.T) {
 	})
 }
 
+func TestEvent_AddImage(t *testing.T) {
+	t.Run("should add image to event", func(t *testing.T) {
+		userID := primitive.NewObjectID().Hex()
+		title, _ := domain.NewEventTitle("Title")
+		content, _ := domain.NewEventContent("Content")
+		event := domain.NewEvent(userID, title, content)
+
+		path, _ := domain.NewImagePath("events/event-id/img.jpg")
+		err := event.AddImage(path)
+
+		assert.NoError(t, err)
+		require.NotNil(t, event.Metadata)
+		assert.True(t, event.Metadata.HasImage(path))
+		assert.WithinDuration(t, time.Now().UTC(), event.UpdatedAt, time.Second)
+	})
+
+	t.Run("should initialize metadata when nil", func(t *testing.T) {
+		event := domain.Event{
+			ID:    primitive.NewObjectID().Hex(),
+			Title: "Title",
+		}
+		assert.Nil(t, event.Metadata)
+
+		path, _ := domain.NewImagePath("events/event-id/img.jpg")
+		err := event.AddImage(path)
+
+		assert.NoError(t, err)
+		require.NotNil(t, event.Metadata)
+		assert.True(t, event.Metadata.HasImage(path))
+	})
+
+	t.Run("should return error when max images reached", func(t *testing.T) {
+		userID := primitive.NewObjectID().Hex()
+		title, _ := domain.NewEventTitle("Title")
+		content, _ := domain.NewEventContent("Content")
+		event := domain.NewEvent(userID, title, content)
+
+		for i := 0; i < domain.MaxImages; i++ {
+			p := domain.ImagePath(string(rune('0'+i)))
+			event.AddImage(p)
+		}
+
+		extra, _ := domain.NewImagePath("events/event-id/extra.jpg")
+		err := event.AddImage(extra)
+		assert.ErrorIs(t, err, domain.ErrMaxImagesReached)
+	})
+}
+
+func TestEvent_RemoveImage(t *testing.T) {
+	t.Run("should remove existing image", func(t *testing.T) {
+		userID := primitive.NewObjectID().Hex()
+		title, _ := domain.NewEventTitle("Title")
+		content, _ := domain.NewEventContent("Content")
+		event := domain.NewEvent(userID, title, content)
+
+		path, _ := domain.NewImagePath("events/event-id/img.jpg")
+		event.AddImage(path)
+
+		err := event.RemoveImage(path)
+		assert.NoError(t, err)
+		require.NotNil(t, event.Metadata)
+		assert.False(t, event.Metadata.HasImage(path))
+		assert.WithinDuration(t, time.Now().UTC(), event.UpdatedAt, time.Second)
+	})
+
+	t.Run("should return error when metadata is nil", func(t *testing.T) {
+		event := domain.Event{
+			ID:    primitive.NewObjectID().Hex(),
+			Title: "Title",
+		}
+		assert.Nil(t, event.Metadata)
+
+		path, _ := domain.NewImagePath("events/event-id/img.jpg")
+		err := event.RemoveImage(path)
+		assert.ErrorIs(t, err, domain.ErrImageNotFound)
+	})
+
+	t.Run("should return error when image not found", func(t *testing.T) {
+		userID := primitive.NewObjectID().Hex()
+		title, _ := domain.NewEventTitle("Title")
+		content, _ := domain.NewEventContent("Content")
+		event := domain.NewEvent(userID, title, content)
+
+		path, _ := domain.NewImagePath("events/event-id/img.jpg")
+		err := event.RemoveImage(path)
+		assert.ErrorIs(t, err, domain.ErrImageNotFound)
+	})
+}
+
 func TestEvent_Update(t *testing.T) {
 	t.Run("should update event", func(t *testing.T) {
 		userID := primitive.NewObjectID().Hex()

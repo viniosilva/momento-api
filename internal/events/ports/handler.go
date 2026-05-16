@@ -353,6 +353,202 @@ func (h *eventHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetUploadURL godoc
+// @Summary Get presigned upload URL
+// @Description Returns a presigned S3 URL for uploading an event image
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Event ID"
+// @Param content_type query string true "Content type"
+// @Success 200 {object} GetUploadURLResponse
+// @Failure 400 {object} nethttp.ErrorResponse "Invalid content type"
+// @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/events/{id}/images/upload-url [get]
+func (h *eventHandler) GetUploadURL(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, nethttp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	query := r.URL.Query()
+	input := app.GetUploadURLInput{
+		UserID:      userID,
+		EventID:     r.PathValue("id"),
+		ContentType: query.Get("content_type"),
+	}
+
+	if input.ContentType == "" {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "content_type query parameter is required",
+		})
+		return
+	}
+
+	output, err := h.eventService.GetUploadURL(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	res := GetUploadURLResponse{
+		UploadURL: output.UploadURL,
+		ObjectKey: output.ObjectKey,
+	}
+
+	nethttp_utils.JSON(w, http.StatusOK, res)
+}
+
+// ConfirmImage godoc
+// @Summary Confirm image upload
+// @Description Adds an image reference to the event after upload
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Event ID"
+// @Param request body ConfirmImageRequest true "Object key"
+// @Success 200 {object} ImageResponse
+// @Failure 400 {object} nethttp.ErrorResponse "Invalid image"
+// @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
+// @Failure 404 {object} nethttp.ErrorResponse "Event not found"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/events/{id}/images [post]
+func (h *eventHandler) ConfirmImage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, nethttp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	var req ConfirmImageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		nethttp_utils.JSON(w, http.StatusBadRequest, nethttp.ErrorResponse{
+			Message: "invalid request body",
+		})
+		return
+	}
+
+	input := app.ConfirmImageInput{
+		UserID:    userID,
+		EventID:   r.PathValue("id"),
+		ObjectKey: req.ObjectKey,
+	}
+
+	output, err := h.eventService.ConfirmImage(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	res := ImageResponse{
+		Path:        string(output.Path),
+		DownloadURL: output.DownloadURL,
+	}
+
+	nethttp_utils.JSON(w, http.StatusOK, res)
+}
+
+// ListImages godoc
+// @Summary List event images
+// @Description Lists all images associated with an event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Event ID"
+// @Success 200 {array} ImageResponse
+// @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
+// @Failure 404 {object} nethttp.ErrorResponse "Event not found"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/events/{id}/images [get]
+func (h *eventHandler) ListImages(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, nethttp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	input := app.ListImagesInput{
+		UserID:  userID,
+		EventID: r.PathValue("id"),
+	}
+
+	outputs, err := h.eventService.ListImages(r.Context(), input)
+	if err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	data := make([]ImageResponse, 0, len(outputs))
+	for _, img := range outputs {
+		data = append(data, ImageResponse{
+			Path:        string(img.Path),
+			DownloadURL: img.DownloadURL,
+		})
+	}
+
+	nethttp_utils.JSON(w, http.StatusOK, data)
+}
+
+// DeleteImage godoc
+// @Summary Delete event image
+// @Description Removes an image reference from an event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Event ID"
+// @Param path path string true "Image path"
+// @Success 204
+// @Failure 401 {object} nethttp.ErrorResponse "Unauthorized"
+// @Failure 404 {object} nethttp.ErrorResponse "Event not found"
+// @Failure 500 {object} nethttp.ErrorResponse "Internal server error"
+// @Router /api/events/{id}/images/{path} [delete]
+func (h *eventHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(nethttp_auth.ContextKeyUserID).(string)
+	if !ok || userID == "" {
+		nethttp_utils.JSON(w, http.StatusUnauthorized, nethttp.ErrorResponse{
+			Message: "unauthorized",
+		})
+		return
+	}
+
+	input := app.DeleteImageInput{
+		UserID:  userID,
+		EventID: r.PathValue("id"),
+		Path:    r.PathValue("path"),
+	}
+
+	if err := h.eventService.DeleteImage(r.Context(), input); err != nil {
+		statusCode, message := MapErrorToHTTPStatus(err)
+		nethttp_utils.JSON(w, statusCode, nethttp.ErrorResponse{
+			Message: message,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func MapErrorToHTTPStatus(err error) (int, string) {
 	switch {
 	case errors.Is(err, domain.ErrTitleEmpty):
@@ -365,6 +561,12 @@ func MapErrorToHTTPStatus(err error) (int, string) {
 		return http.StatusBadRequest, domain.ErrContentTooLong.Error()
 	case errors.Is(err, domain.ErrEventNotFound):
 		return http.StatusNotFound, domain.ErrEventNotFound.Error()
+	case errors.Is(err, domain.ErrInvalidImagePath):
+		return http.StatusBadRequest, domain.ErrInvalidImagePath.Error()
+	case errors.Is(err, domain.ErrMaxImagesReached):
+		return http.StatusBadRequest, domain.ErrMaxImagesReached.Error()
+	case errors.Is(err, domain.ErrImageNotFound):
+		return http.StatusNotFound, domain.ErrImageNotFound.Error()
 	default:
 		return http.StatusInternalServerError, "internal server error"
 	}

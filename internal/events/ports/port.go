@@ -15,6 +15,10 @@ type EventService interface {
 	DeleteEvent(ctx context.Context, input app.DeleteEventInput) error
 	ArchiveEvent(ctx context.Context, input app.ArchiveEventInput) error
 	RestoreEvent(ctx context.Context, input app.RestoreEventInput) error
+	GetUploadURL(ctx context.Context, input app.GetUploadURLInput) (app.GetUploadURLOutput, error)
+	ConfirmImage(ctx context.Context, input app.ConfirmImageInput) (app.ConfirmImageOutput, error)
+	ListImages(ctx context.Context, input app.ListImagesInput) ([]app.ImageOutput, error)
+	DeleteImage(ctx context.Context, input app.DeleteImageInput) error
 }
 
 type JWTService interface {

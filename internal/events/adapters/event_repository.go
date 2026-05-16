@@ -78,7 +78,7 @@ func (r *eventRepository) GetByIDAndUserID(ctx context.Context, id, userID strin
 	}
 
 	filter := bson.M{
-		"_id":     oid,
+		"_id":           oid,
 		"owner_user_id": uid,
 	}
 
@@ -110,7 +110,7 @@ func (r *eventRepository) Update(ctx context.Context, event domain.Event) error 
 	}
 
 	filter := bson.M{
-		"_id":     oid,
+		"_id":           oid,
 		"owner_user_id": uid,
 	}
 
@@ -146,7 +146,7 @@ func (r *eventRepository) DeleteByIDAndUserID(ctx context.Context, id, userID st
 	}
 
 	filter := bson.M{
-		"_id":     oid,
+		"_id":           oid,
 		"owner_user_id": uid,
 	}
 
@@ -174,15 +174,73 @@ func (r *eventRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID s
 	}
 
 	filter := bson.M{
-		"_id":         oid,
-		"owner_user_id":     uid,
-		"archived_at": nil,
+		"_id":           oid,
+		"owner_user_id": uid,
+		"archived_at":   nil,
 	}
 
 	update := bson.M{
 		"$set": bson.M{
 			"archived_at": primitive.NewDateTimeFromTime(time.Now().UTC()),
 		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrEventNotFound
+	}
+
+	return nil
+}
+
+func (r *eventRepository) AddImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
+	oid, err := parseObjectID(eventID)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": oid, "owner_user_id": uid}
+	update := bson.M{
+		"$push": bson.M{"metadata.image_paths": string(path)},
+		"$set":  bson.M{"updated_at": time.Now().UTC()},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrEventNotFound
+	}
+
+	return nil
+}
+
+func (r *eventRepository) RemoveImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
+	oid, err := parseObjectID(eventID)
+	if err != nil {
+		return err
+	}
+
+	uid, err := parseObjectID(userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": oid, "owner_user_id": uid}
+	update := bson.M{
+		"$pull": bson.M{"metadata.image_paths": string(path)},
+		"$set":  bson.M{"updated_at": time.Now().UTC()},
 	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -209,9 +267,9 @@ func (r *eventRepository) RestoreByIDAndUserID(ctx context.Context, id, userID s
 	}
 
 	filter := bson.M{
-		"_id":         oid,
-		"owner_user_id":     uid,
-		"archived_at": bson.M{"$ne": nil},
+		"_id":           oid,
+		"owner_user_id": uid,
+		"archived_at":   bson.M{"$ne": nil},
 	}
 
 	update := bson.M{

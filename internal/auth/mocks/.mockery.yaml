@@ -1,6 +1,0 @@
-packages:
-  momento/internal/auth/app:
-    interfaces:
-      TokenService: {}
-      UserRepository: {}
-      EmailSender: {}

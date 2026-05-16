@@ -24,12 +24,26 @@ type EventResponse struct {
 	Content     string `json:"content" example:"My important event content"`
 	CreatedAt   string `json:"created_at" example:"2026-02-08T10:30:00Z"`
 	UpdatedAt   string `json:"updated_at" example:"2026-02-08T10:30:00Z"`
-	ArchivedAt string `json:"archived_at" example:"2026-02-08T10:30:00Z"`
+	ArchivedAt  string `json:"archived_at" example:"2026-02-08T10:30:00Z"`
 }
 
 type ListEventsResponse struct {
 	Data       []EventResponse             `json:"data"`
 	Pagination listopts.PaginationResponse `json:"pagination"`
+}
+
+type GetUploadURLResponse struct {
+	UploadURL string `json:"upload_url" example:"https://s3.amazonaws.com/..."`
+	ObjectKey string `json:"object_key" example:"events/abc123/a1b2c3d4.jpg"`
+}
+
+type ConfirmImageRequest struct {
+	ObjectKey string `json:"object_key" example:"events/abc123/a1b2c3d4.jpg"`
+}
+
+type ImageResponse struct {
+	Path        string `json:"path" example:"events/abc123/a1b2c3d4.jpg"`
+	DownloadURL string `json:"download_url" example:"https://s3.amazonaws.com/..."`
 }
 
 func EventApplicationToResponse(event app.EventOutput) EventResponse {

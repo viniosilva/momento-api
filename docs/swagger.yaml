@@ -28,6 +28,12 @@ definitions:
         example: internal server error
         type: string
     type: object
+  ports.ConfirmImageRequest:
+    properties:
+      object_key:
+        example: events/abc123/a1b2c3d4.jpg
+        type: string
+    type: object
   ports.CreateEventRequest:
     properties:
       content:
@@ -65,6 +71,24 @@ definitions:
     properties:
       email:
         example: user@example.com
+        type: string
+    type: object
+  ports.GetUploadURLResponse:
+    properties:
+      object_key:
+        example: events/abc123/a1b2c3d4.jpg
+        type: string
+      upload_url:
+        example: https://s3.amazonaws.com/...
+        type: string
+    type: object
+  ports.ImageResponse:
+    properties:
+      download_url:
+        example: https://s3.amazonaws.com/...
+        type: string
+      path:
+        example: events/abc123/a1b2c3d4.jpg
         type: string
     type: object
   ports.ListEventsResponse:
@@ -675,6 +699,165 @@ paths:
       security:
       - Bearer: []
       summary: Archive a event
+      tags:
+      - events
+  /api/events/{id}/images:
+    get:
+      consumes:
+      - application/json
+      description: Lists all images associated with an event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ports.ImageResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "404":
+          description: Event not found
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: List event images
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: Adds an image reference to the event after upload
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Object key
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ports.ConfirmImageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ports.ImageResponse'
+        "400":
+          description: Invalid image
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "404":
+          description: Event not found
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Confirm image upload
+      tags:
+      - events
+  /api/events/{id}/images/{path}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an image reference from an event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image path
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "404":
+          description: Event not found
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete event image
+      tags:
+      - events
+  /api/events/{id}/images/upload-url:
+    get:
+      consumes:
+      - application/json
+      description: Returns a presigned S3 URL for uploading an event image
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Content type
+        in: query
+        name: content_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ports.GetUploadURLResponse'
+        "400":
+          description: Invalid content type
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/nethttp.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get presigned upload URL
       tags:
       - events
   /api/events/{id}/restore:

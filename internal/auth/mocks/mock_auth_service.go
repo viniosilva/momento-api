@@ -472,3 +472,60 @@ func (_c *MockAuthService_ValidateResetToken_Call) RunAndReturn(run func(ctx con
 	_c.Call.Return(run)
 	return _c
 }
+
+// VerifyEmail provides a mock function for the type MockAuthService
+func (_mock *MockAuthService) VerifyEmail(ctx context.Context, input app.VerifyEmailInput) error {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VerifyEmail")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.VerifyEmailInput) error); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockAuthService_VerifyEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyEmail'
+type MockAuthService_VerifyEmail_Call struct {
+	*mock.Call
+}
+
+// VerifyEmail is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.VerifyEmailInput
+func (_e *MockAuthService_Expecter) VerifyEmail(ctx interface{}, input interface{}) *MockAuthService_VerifyEmail_Call {
+	return &MockAuthService_VerifyEmail_Call{Call: _e.mock.On("VerifyEmail", ctx, input)}
+}
+
+func (_c *MockAuthService_VerifyEmail_Call) Run(run func(ctx context.Context, input app.VerifyEmailInput)) *MockAuthService_VerifyEmail_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.VerifyEmailInput
+		if args[1] != nil {
+			arg1 = args[1].(app.VerifyEmailInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAuthService_VerifyEmail_Call) Return(err error) *MockAuthService_VerifyEmail_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockAuthService_VerifyEmail_Call) RunAndReturn(run func(ctx context.Context, input app.VerifyEmailInput) error) *MockAuthService_VerifyEmail_Call {
+	_c.Call.Return(run)
+	return _c
+}
