@@ -20,11 +20,11 @@ import (
 	eventsports "momento/internal/events/ports"
 	sharedapp "momento/internal/shared/app"
 	sharedports "momento/internal/shared/ports"
-	pkglogger "momento/pkg/logger"
-	"momento/pkg/mongodb"
+	pkglogger 	"momento/pkg/logger"
+	"momento/pkg/postgres"
 	pkgredis "momento/pkg/redis"
 
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -57,9 +57,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer func() {
-		logger.Info("disconnecting from MongoDB")
-		if err := di.MongoClient.Disconnect(context.Background()); err != nil {
-			logger.Error("error disconnecting from MongoDB", "error", err)
+		logger.Info("closing database connection")
+		if err := di.DB.Close(); err != nil {
+			logger.Error("error closing database", "error", err)
 		}
 	}()
 
@@ -108,7 +108,7 @@ type jwtSvc interface {
 }
 
 type Dependencies struct {
-	MongoClient   *mongo.Client
+	DB            *sqlx.DB
 	HealthService sharedports.HealthService
 	JwtService    jwtSvc
 	AuthService   authports.AuthService
@@ -116,18 +116,14 @@ type Dependencies struct {
 }
 
 func setupDependencies(ctx context.Context, config config.Config, logger *slog.Logger) (*Dependencies, error) {
-	logger.Info("connecting to MongoDB")
-	mongoClient, err := mongodb.NewMongoClient(ctx,
-		config.Mongo.Host,
-		config.Mongo.Port,
-		config.Mongo.DBName,
-		config.Mongo.User,
-		config.Mongo.Pass,
-		config.Mongo.MaxRetries,
-		config.Mongo.RetryDelay,
-		config.Mongo.ConnectTimeout)
+	logger.Info("connecting to PostgreSQL")
+	db, err := postgres.Connect(ctx,
+		config.PG.DSN,
+		config.PG.MaxRetries,
+		config.PG.RetryDelay,
+		config.PG.ConnectTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 
 	logger.Info("connecting to Redis")
@@ -144,7 +140,6 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 
 	logger.Info("initializing services")
 
-	db := mongoClient.Database(config.Mongo.DBName)
 	userRepository := authadapters.NewUserRepository(db)
 	eventRepository := eventsadapters.NewEventRepository(db)
 	secureTokenRepository := authadapters.NewSecureTokenService(redisClient, config.JWT.RefreshTokenExpiration)
@@ -164,8 +159,8 @@ func setupDependencies(ctx context.Context, config config.Config, logger *slog.L
 	s3Service := eventsadapters.NewS3Service(config.S3.Region, config.S3.Endpoint, config.S3.Bucket, config.S3.AccessKey, config.S3.SecretKey, config.S3.UsePathStyle, config.S3.UseSSL)
 
 	return &Dependencies{
-		MongoClient:   mongoClient,
-		HealthService: sharedapp.NewHealthService(mongoClient),
+		DB:            db,
+		HealthService: sharedapp.NewHealthService(db),
 		JwtService:    jwtService,
 		AuthService: authapp.NewAuthService(
 			userRepository,
