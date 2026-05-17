@@ -2,132 +2,150 @@ package adapters
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 
 	"momento/internal/events/domain"
 	"momento/pkg/listopts"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type eventRepository struct {
-	collection *mongo.Collection
+	db *sqlx.DB
 }
 
-func NewEventRepository(db *mongo.Database) *eventRepository {
+func NewEventRepository(db *sqlx.DB) *eventRepository {
 	return &eventRepository{
-		collection: db.Collection(eventsCollectionName),
+		db: db,
 	}
 }
 
 func (r *eventRepository) Create(ctx context.Context, event domain.Event) error {
-	doc, err := toEventDocument(event)
+	row := toEventRow(event)
+
+	query := `INSERT INTO events (id, owner_user_id, title, content, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
+
+	_, err := r.db.ExecContext(ctx, query, row.ID, row.OwnerUserID, row.Title, row.Content, row.CreatedAt, row.UpdatedAt)
 	if err != nil {
-		return err
+		return fmt.Errorf("insert event: %w", err)
 	}
 
-	_, err = r.collection.InsertOne(ctx, doc)
-	return err
+	return nil
 }
 
 func (r *eventRepository) ListByUserID(ctx context.Context, userID string, params listopts.ListParams) (listopts.Paginated[domain.Event], error) {
-	uid, err := parseObjectID(userID)
+	var totalCount int64
+	countQuery := `SELECT COUNT(*) FROM events WHERE owner_user_id = $1`
+	err := r.db.QueryRowContext(ctx, countQuery, userID).Scan(&totalCount)
 	if err != nil {
-		return listopts.Paginated[domain.Event]{}, err
+		return listopts.Paginated[domain.Event]{}, fmt.Errorf("count events: %w", err)
 	}
 
-	filter := bson.M{"owner_user_id": uid}
+	order := params.ToSQLOrder()
+	dataQuery := fmt.Sprintf(`SELECT id, owner_user_id, title, content, created_at, updated_at, archived_at FROM events WHERE owner_user_id = $1 ORDER BY %s LIMIT $2 OFFSET $3`, order)
 
-	totalCount, err := r.collection.CountDocuments(ctx, filter)
+	limit := int64(params.Pagination.PageSize)
+	offset := int64((params.Pagination.Page - 1) * params.Pagination.PageSize)
+
+	var rows []eventRow
+	err = r.db.SelectContext(ctx, &rows, dataQuery, userID, limit, offset)
 	if err != nil {
-		return listopts.Paginated[domain.Event]{}, err
+		return listopts.Paginated[domain.Event]{}, fmt.Errorf("list events: %w", err)
 	}
 
-	findOptions := params.ToFindOptions()
-	cursor, err := r.collection.Find(ctx, filter, findOptions)
+	if len(rows) == 0 {
+		return listopts.NewPaginated([]domain.Event{}, totalCount, params.Pagination), nil
+	}
+
+	eventIDs := make([]string, len(rows))
+	for i, row := range rows {
+		eventIDs[i] = row.ID
+	}
+
+	images, err := r.getImagesByEventIDs(ctx, eventIDs)
 	if err != nil {
-		return listopts.Paginated[domain.Event]{}, err
-	}
-	defer cursor.Close(ctx)
-
-	var docs []eventDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		return listopts.Paginated[domain.Event]{}, err
+		return listopts.Paginated[domain.Event]{}, fmt.Errorf("get images: %w", err)
 	}
 
-	events := make([]domain.Event, len(docs))
-	for i, d := range docs {
-		events[i] = toEventDomain(d)
+	events := make([]domain.Event, len(rows))
+	for i, row := range rows {
+		events[i] = toEventDomain(row, images[row.ID])
 	}
 
 	return listopts.NewPaginated(events, totalCount, params.Pagination), nil
 }
 
+func (r *eventRepository) getImagesByEventIDs(ctx context.Context, eventIDs []string) (map[string][]eventImageRow, error) {
+	if len(eventIDs) == 0 {
+		return nil, nil
+	}
+
+	query := `SELECT event_id, path FROM event_images WHERE event_id = ANY($1)`
+
+	var imageRows []eventImageRow
+	err := r.db.SelectContext(ctx, &imageRows, query, eventIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string][]eventImageRow, len(eventIDs))
+	for _, img := range imageRows {
+		result[img.EventID] = append(result[img.EventID], img)
+	}
+
+	return result, nil
+}
+
+func (r *eventRepository) getImagesByEventID(ctx context.Context, eventID string) ([]eventImageRow, error) {
+	query := `SELECT event_id, path FROM event_images WHERE event_id = $1`
+
+	var rows []eventImageRow
+	err := r.db.SelectContext(ctx, &rows, query, eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
+}
+
 func (r *eventRepository) GetByIDAndUserID(ctx context.Context, id, userID string) (domain.Event, error) {
-	oid, err := parseObjectID(id)
+	query := `SELECT id, owner_user_id, title, content, created_at, updated_at, archived_at FROM events WHERE id = $1 AND owner_user_id = $2`
+
+	var row eventRow
+	err := r.db.GetContext(ctx, &row, query, id, userID)
 	if err != nil {
-		return domain.Event{}, err
-	}
-
-	uid, err := parseObjectID(userID)
-	if err != nil {
-		return domain.Event{}, err
-	}
-
-	filter := bson.M{
-		"_id":           oid,
-		"owner_user_id": uid,
-	}
-
-	res := r.collection.FindOne(ctx, filter)
-	if err := res.Err(); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Event{}, domain.ErrEventNotFound
 		}
-		return domain.Event{}, err
+
+		return domain.Event{}, fmt.Errorf("get event: %w", err)
 	}
 
-	var doc eventDocument
-	if err := res.Decode(&doc); err != nil {
-		return domain.Event{}, err
+	images, err := r.getImagesByEventID(ctx, id)
+	if err != nil {
+		return domain.Event{}, fmt.Errorf("get event images: %w", err)
 	}
 
-	return toEventDomain(doc), nil
+	return toEventDomain(row, images), nil
 }
 
 func (r *eventRepository) Update(ctx context.Context, event domain.Event) error {
-	oid, err := parseObjectID(event.ID)
+	query := `UPDATE events SET title = $1, content = $2, updated_at = $3 WHERE id = $4 AND owner_user_id = $5`
+
+	result, err := r.db.ExecContext(ctx, query, string(event.Title), string(event.Content), event.UpdatedAt, event.ID, event.OwnerUserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("update event: %w", err)
 	}
 
-	uid, err := parseObjectID(event.OwnerUserID)
+	rows, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("rows affected: %w", err)
 	}
 
-	filter := bson.M{
-		"_id":           oid,
-		"owner_user_id": uid,
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"title":      string(event.Title),
-			"content":    string(event.Content),
-			"updated_at": event.UpdatedAt,
-		},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 {
+	if rows == 0 {
 		return domain.ErrEventNotFound
 	}
 
@@ -135,27 +153,19 @@ func (r *eventRepository) Update(ctx context.Context, event domain.Event) error 
 }
 
 func (r *eventRepository) DeleteByIDAndUserID(ctx context.Context, id, userID string) error {
-	oid, err := parseObjectID(id)
+	query := `DELETE FROM events WHERE id = $1 AND owner_user_id = $2`
+
+	result, err := r.db.ExecContext(ctx, query, id, userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete event: %w", err)
 	}
 
-	uid, err := parseObjectID(userID)
+	rows, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("rows affected: %w", err)
 	}
 
-	filter := bson.M{
-		"_id":           oid,
-		"owner_user_id": uid,
-	}
-
-	result, err := r.collection.DeleteOne(ctx, filter)
-	if err != nil {
-		return err
-	}
-
-	if result.DeletedCount == 0 {
+	if rows == 0 {
 		return domain.ErrEventNotFound
 	}
 
@@ -163,92 +173,20 @@ func (r *eventRepository) DeleteByIDAndUserID(ctx context.Context, id, userID st
 }
 
 func (r *eventRepository) ArchiveByIDAndUserID(ctx context.Context, id, userID string) error {
-	oid, err := parseObjectID(id)
+	now := time.Now().UTC()
+	query := `UPDATE events SET archived_at = $1, updated_at = $2 WHERE id = $3 AND owner_user_id = $4 AND archived_at IS NULL`
+
+	result, err := r.db.ExecContext(ctx, query, now, now, id, userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("archive event: %w", err)
 	}
 
-	uid, err := parseObjectID(userID)
+	rows, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("rows affected: %w", err)
 	}
 
-	filter := bson.M{
-		"_id":           oid,
-		"owner_user_id": uid,
-		"archived_at":   nil,
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"archived_at": primitive.NewDateTimeFromTime(time.Now().UTC()),
-		},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 {
-		return domain.ErrEventNotFound
-	}
-
-	return nil
-}
-
-func (r *eventRepository) AddImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
-	oid, err := parseObjectID(eventID)
-	if err != nil {
-		return err
-	}
-
-	uid, err := parseObjectID(userID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": oid, "owner_user_id": uid}
-	update := bson.M{
-		"$push": bson.M{"metadata.image_paths": string(path)},
-		"$set":  bson.M{"updated_at": time.Now().UTC()},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 {
-		return domain.ErrEventNotFound
-	}
-
-	return nil
-}
-
-func (r *eventRepository) RemoveImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
-	oid, err := parseObjectID(eventID)
-	if err != nil {
-		return err
-	}
-
-	uid, err := parseObjectID(userID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": oid, "owner_user_id": uid}
-	update := bson.M{
-		"$pull": bson.M{"metadata.image_paths": string(path)},
-		"$set":  bson.M{"updated_at": time.Now().UTC()},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 {
+	if rows == 0 {
 		return domain.ErrEventNotFound
 	}
 
@@ -256,36 +194,115 @@ func (r *eventRepository) RemoveImage(ctx context.Context, eventID, userID strin
 }
 
 func (r *eventRepository) RestoreByIDAndUserID(ctx context.Context, id, userID string) error {
-	oid, err := parseObjectID(id)
+	now := time.Now().UTC()
+	query := `UPDATE events SET archived_at = NULL, updated_at = $1 WHERE id = $2 AND owner_user_id = $3 AND archived_at IS NOT NULL`
+
+	result, err := r.db.ExecContext(ctx, query, now, id, userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("restore event: %w", err)
 	}
 
-	uid, err := parseObjectID(userID)
+	rows, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("rows affected: %w", err)
 	}
 
-	filter := bson.M{
-		"_id":           oid,
-		"owner_user_id": uid,
-		"archived_at":   bson.M{"$ne": nil},
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"archived_at": nil,
-		},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 {
+	if rows == 0 {
 		return domain.ErrEventNotFound
 	}
 
 	return nil
+}
+
+func (r *eventRepository) AddImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	var count int
+	countQuery := `SELECT COUNT(*) FROM event_images WHERE event_id = $1`
+	if err := tx.QueryRowContext(ctx, countQuery, eventID).Scan(&count); err != nil {
+		return fmt.Errorf("count images: %w", err)
+	}
+
+	if count >= domain.MaxImages {
+		return domain.ErrMaxImagesReached
+	}
+
+	insertQuery := `INSERT INTO event_images (event_id, path) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, insertQuery, eventID, string(path)); err != nil {
+		if isUniqueViolation(err) {
+			return nil
+		}
+
+		return fmt.Errorf("insert image: %w", err)
+	}
+
+	updateQuery := `UPDATE events SET updated_at = $1 WHERE id = $2 AND owner_user_id = $3`
+	result, err := tx.ExecContext(ctx, updateQuery, time.Now().UTC(), eventID, userID)
+	if err != nil {
+		return fmt.Errorf("update event timestamp: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+
+	if rows == 0 {
+		return domain.ErrEventNotFound
+	}
+
+	return tx.Commit()
+}
+
+func (r *eventRepository) RemoveImage(ctx context.Context, eventID, userID string, path domain.ImagePath) error {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	deleteQuery := `DELETE FROM event_images WHERE event_id = $1 AND path = $2`
+	result, err := tx.ExecContext(ctx, deleteQuery, eventID, string(path))
+	if err != nil {
+		return fmt.Errorf("delete image: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+
+	if rows == 0 {
+		return domain.ErrImageNotFound
+	}
+
+	updateQuery := `UPDATE events SET updated_at = $1 WHERE id = $2 AND owner_user_id = $3`
+	_, err = tx.ExecContext(ctx, updateQuery, time.Now().UTC(), eventID, userID)
+	if err != nil {
+		return fmt.Errorf("update event timestamp: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func isUniqueViolation(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "unique constraint") || contains(err.Error(), "23505"))
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && searchString(s, substr)
+}
+
+func searchString(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+
+	return false
 }

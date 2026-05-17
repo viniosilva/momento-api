@@ -4,72 +4,47 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"momento/internal/events/domain"
 )
 
-func TestToEventDocument(t *testing.T) {
-	t.Run("should convert domain event to document", func(t *testing.T) {
-		id := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+func TestToEventRow(t *testing.T) {
+	t.Run("should convert domain event to row", func(t *testing.T) {
+		id := uuid.NewString()
+		userID := uuid.NewString()
 		now := time.Now().Truncate(time.Millisecond)
 
 		event := domain.Event{
-			ID:          id.Hex(),
-			OwnerUserID: userID.Hex(),
+			ID:          id,
+			OwnerUserID: userID,
 			Title:       domain.EventTitle("Test Title"),
 			Content:     domain.EventContent("Test Content"),
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		}
 
-		doc, err := toEventDocument(event)
-		require.NoError(t, err)
+		row := toEventRow(event)
 
-		assert.Equal(t, id, doc.ID)
-		assert.Equal(t, userID, doc.OwnerUserID)
-		assert.Equal(t, "Test Title", doc.Title)
-		assert.Equal(t, "Test Content", doc.Content)
-		assert.Equal(t, now, doc.CreatedAt)
-		assert.Equal(t, now, doc.UpdatedAt)
-		assert.Nil(t, doc.ArchivedAt)
-	})
-
-	t.Run("should return error for invalid event ID", func(t *testing.T) {
-		event := domain.Event{
-			ID:          "invalid-id",
-			OwnerUserID: primitive.NewObjectID().Hex(),
-		}
-
-		_, err := toEventDocument(event)
-
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid event ID")
-	})
-
-	t.Run("should return error for invalid user ID", func(t *testing.T) {
-		event := domain.Event{
-			ID:          primitive.NewObjectID().Hex(),
-			OwnerUserID: "invalid-user-id",
-		}
-
-		_, err := toEventDocument(event)
-
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid user ID")
+		assert.Equal(t, id, row.ID)
+		assert.Equal(t, userID, row.OwnerUserID)
+		assert.Equal(t, "Test Title", row.Title)
+		assert.Equal(t, "Test Content", row.Content)
+		assert.Equal(t, now, row.CreatedAt)
+		assert.Equal(t, now, row.UpdatedAt)
+		assert.Nil(t, row.ArchivedAt)
 	})
 }
 
 func TestToEventDomain(t *testing.T) {
-	t.Run("should convert document to domain event without archived_at", func(t *testing.T) {
-		id := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+	t.Run("should convert row to domain event without archived_at or images", func(t *testing.T) {
+		id := uuid.NewString()
+		userID := uuid.NewString()
 		now := time.Now().Truncate(time.Millisecond)
 
-		doc := eventDocument{
+		row := eventRow{
 			ID:          id,
 			OwnerUserID: userID,
 			Title:       "Test Title",
@@ -78,24 +53,25 @@ func TestToEventDomain(t *testing.T) {
 			UpdatedAt:   now,
 		}
 
-		event := toEventDomain(doc)
+		event := toEventDomain(row, nil)
 
-		assert.Equal(t, id.Hex(), event.ID)
-		assert.Equal(t, userID.Hex(), event.OwnerUserID)
+		assert.Equal(t, id, event.ID)
+		assert.Equal(t, userID, event.OwnerUserID)
 		assert.Equal(t, domain.EventTitle("Test Title"), event.Title)
 		assert.Equal(t, domain.EventContent("Test Content"), event.Content)
 		assert.Equal(t, now, event.CreatedAt)
 		assert.Equal(t, now, event.UpdatedAt)
 		assert.Nil(t, event.ArchivedAt)
+		assert.Nil(t, event.Metadata)
 	})
 
-	t.Run("should convert document to domain event with archived_at", func(t *testing.T) {
-		id := primitive.NewObjectID()
-		userID := primitive.NewObjectID()
+	t.Run("should convert row to domain event with archived_at", func(t *testing.T) {
+		id := uuid.NewString()
+		userID := uuid.NewString()
 		now := time.Now().Truncate(time.Millisecond)
 		archivedAt := now.Add(-time.Hour)
 
-		doc := eventDocument{
+		row := eventRow{
 			ID:          id,
 			OwnerUserID: userID,
 			Title:       "Archived Event",
@@ -105,27 +81,34 @@ func TestToEventDomain(t *testing.T) {
 			ArchivedAt:  &archivedAt,
 		}
 
-		event := toEventDomain(doc)
+		event := toEventDomain(row, nil)
 
 		require.NotNil(t, event.ArchivedAt)
 		assert.Equal(t, archivedAt, *event.ArchivedAt)
 	})
-}
 
-func TestParseObjectID(t *testing.T) {
-	t.Run("should parse valid hex string", func(t *testing.T) {
-		id := primitive.NewObjectID()
+	t.Run("should populate metadata from image rows", func(t *testing.T) {
+		id := uuid.NewString()
+		userID := uuid.NewString()
+		now := time.Now().Truncate(time.Millisecond)
 
-		got, err := parseObjectID(id.Hex())
-		require.NoError(t, err)
+		row := eventRow{
+			ID:          id,
+			OwnerUserID: userID,
+			Title:       "Test",
+			Content:     "Content",
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		}
 
-		assert.Equal(t, id, got)
-	})
+		imageRows := []eventImageRow{
+			{EventID: id, Path: "events/" + id + "/img1.jpg"},
+			{EventID: id, Path: "events/" + id + "/img2.jpg"},
+		}
 
-	t.Run("should return error for invalid hex string", func(t *testing.T) {
-		_, err := parseObjectID("invalid-hex")
+		event := toEventDomain(row, imageRows)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid ID")
+		require.NotNil(t, event.Metadata)
+		assert.Len(t, event.Metadata.ImagePaths, 2)
 	})
 }
