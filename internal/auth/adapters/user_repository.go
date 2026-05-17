@@ -2,131 +2,138 @@ package adapters
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/jmoiron/sqlx"
 
 	"momento/internal/auth/domain"
 )
 
 type userRepository struct {
-	collection *mongo.Collection
+	db *sqlx.DB
 }
 
-func NewUserRepository(db *mongo.Database) *userRepository {
+func NewUserRepository(db *sqlx.DB) *userRepository {
 	return &userRepository{
-		collection: db.Collection(usersCollectionName),
+		db: db,
 	}
 }
 
 func (r *userRepository) Create(ctx context.Context, user domain.User) error {
-	doc, err := toUserDocument(user)
-	if err != nil {
-		return fmt.Errorf("toUserDocument: %w", err)
-	}
+	row := toUserRow(user)
 
-	_, err = r.collection.InsertOne(ctx, doc)
+	query := `INSERT INTO users (id, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`
+
+	_, err := r.db.ExecContext(ctx, query, row.ID, row.Email, row.Password, row.CreatedAt, row.UpdatedAt)
 	if err != nil {
-		if mongo.IsDuplicateKeyError(err) {
+		if isUniqueViolation(err) {
 			return domain.ErrUserAlreadyExists
 		}
 
-		return err
+		return fmt.Errorf("insert user: %w", err)
 	}
 
 	return nil
 }
 
 func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) (bool, error) {
-	filter := bson.M{"email": string(email)}
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, string(email)).Scan(&exists)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("check user exists: %w", err)
 	}
 
-	return count > 0, nil
+	return exists, nil
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	filter := bson.M{"email": string(email)}
+	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE email = $1`
 
-	var doc userDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	var row userRow
+	err := r.db.GetContext(ctx, &row, query, string(email))
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return domain.User{}, domain.ErrUserNotFound
 		}
-		return domain.User{}, err
+
+		return domain.User{}, fmt.Errorf("find user by email: %w", err)
 	}
 
-	return toUserDomain(doc), nil
+	return toUserDomain(row), nil
 }
 
 func (r *userRepository) FindVerifiedByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	filter := bson.M{
-		"email":             string(email),
-		"email_verified_at": bson.M{"$ne": nil},
-	}
+	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE email = $1 AND email_verified_at IS NOT NULL`
 
-	var doc userDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	var row userRow
+	err := r.db.GetContext(ctx, &row, query, string(email))
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return domain.User{}, domain.ErrUserNotFound
 		}
-		return domain.User{}, err
+
+		return domain.User{}, fmt.Errorf("find verified user by email: %w", err)
 	}
 
-	return toUserDomain(doc), nil
+	return toUserDomain(row), nil
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return domain.User{}, fmt.Errorf("invalid id: %w", err)
-	}
+	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE id = $1`
 
-	filter := bson.M{"_id": objID}
-
-	var doc userDocument
-	err = r.collection.FindOne(ctx, filter).Decode(&doc)
+	var row userRow
+	err := r.db.GetContext(ctx, &row, query, id)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return domain.User{}, domain.ErrUserNotFound
 		}
-		return domain.User{}, err
+
+		return domain.User{}, fmt.Errorf("find user by id: %w", err)
 	}
 
-	return toUserDomain(doc), nil
+	return toUserDomain(row), nil
 }
 
 func (r *userRepository) Update(ctx context.Context, user domain.User) error {
-	doc, err := toUserDocument(user)
+	row := toUserRow(user)
+
+	query := `UPDATE users SET password = $1, updated_at = $2, email_verified_at = $3 WHERE id = $4`
+
+	result, err := r.db.ExecContext(ctx, query, row.Password, row.UpdatedAt, row.EmailVerifiedAt, row.ID)
 	if err != nil {
-		return fmt.Errorf("toUserDocument: %w", err)
+		return fmt.Errorf("update user: %w", err)
 	}
 
-	filter := bson.M{"_id": doc.ID}
-	update := bson.M{
-		"$set": bson.M{
-			"password":          doc.Password,
-			"updated_at":        doc.UpdatedAt,
-			"email_verified_at": doc.EmailVerifiedAt,
-		},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	rows, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("rows affected: %w", err)
 	}
 
-	if result.MatchedCount == 0 {
+	if rows == 0 {
 		return domain.ErrUserNotFound
 	}
 
 	return nil
+}
+
+func isUniqueViolation(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "unique constraint") || contains(err.Error(), "23505"))
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && searchString(s, substr)
+}
+
+func searchString(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+
+	return false
 }

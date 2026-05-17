@@ -5,53 +5,40 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 
 	"momento/internal/auth/domain"
 )
 
-func TestToUserDocument(t *testing.T) {
-	t.Run("should convert domain user to document", func(t *testing.T) {
-		id := primitive.NewObjectID()
+func TestToUserRow(t *testing.T) {
+	t.Run("should convert domain user to row", func(t *testing.T) {
+		id := uuid.NewString()
 		now := time.Now().Truncate(time.Millisecond)
 
 		user := domain.User{
-			ID:        id.Hex(),
+			ID:        id,
 			Email:     domain.Email("test@example.com"),
 			Password:  domain.Password("hashedpassword"),
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
 
-		doc, err := toUserDocument(user)
-		require.NoError(t, err)
+		row := toUserRow(user)
 
-		assert.Equal(t, id, doc.ID)
-		assert.Equal(t, "test@example.com", doc.Email)
-		assert.Equal(t, "hashedpassword", doc.Password)
-		assert.Equal(t, now, doc.CreatedAt)
-		assert.Equal(t, now, doc.UpdatedAt)
-	})
-
-	t.Run("should return error for invalid user ID", func(t *testing.T) {
-		user := domain.User{
-			ID:    "invalid-hex-id",
-			Email: domain.Email("test@example.com"),
-		}
-
-		_, err := toUserDocument(user)
-
-		assert.Error(t, err)
+		assert.Equal(t, id, row.ID)
+		assert.Equal(t, "test@example.com", row.Email)
+		assert.Equal(t, "hashedpassword", row.Password)
+		assert.Equal(t, now, row.CreatedAt)
+		assert.Equal(t, now, row.UpdatedAt)
 	})
 }
 
 func TestToUserDomain(t *testing.T) {
-	t.Run("should convert document to domain user", func(t *testing.T) {
-		id := primitive.NewObjectID()
+	t.Run("should convert row to domain user", func(t *testing.T) {
+		id := uuid.NewString()
 		now := time.Now().Truncate(time.Millisecond)
 
-		doc := userDocument{
+		row := userRow{
 			ID:        id,
 			Email:     "test@example.com",
 			Password:  "hashedpassword",
@@ -59,9 +46,9 @@ func TestToUserDomain(t *testing.T) {
 			UpdatedAt: now,
 		}
 
-		user := toUserDomain(doc)
+		user := toUserDomain(row)
 
-		assert.Equal(t, id.Hex(), user.ID)
+		assert.Equal(t, id, user.ID)
 		assert.Equal(t, domain.Email("test@example.com"), user.Email)
 		assert.Equal(t, domain.Password("hashedpassword"), user.Password)
 		assert.Equal(t, now, user.CreatedAt)
