@@ -3,9 +3,14 @@ module momento
 go 1.26.0
 
 require (
+	github.com/aws/aws-sdk-go v1.35.36
+	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/microcosm-cc/bluemonday v1.0.27
+	github.com/redis/go-redis/v9 v9.18.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
@@ -14,9 +19,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/PuerkitoBio/goquery v1.12.0 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
-	github.com/aws/aws-sdk-go v1.35.36 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -30,13 +32,16 @@ require (
 	github.com/go-openapi/swag/stringutils v0.25.5 // indirect
 	github.com/go-openapi/swag/typeutils v0.25.5 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.5 // indirect
-	github.com/go-redis/redismock/v9 v9.2.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/montanaflynn/stats v0.8.2 // indirect
-	github.com/redis/go-redis/v9 v9.18.0 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
