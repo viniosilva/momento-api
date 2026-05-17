@@ -21,14 +21,10 @@ func TestLoadConfig(t *testing.T) {
 
 		assert.Equal(t, "", got.Api.Host)
 		assert.Equal(t, "8080", got.Api.Port)
-		assert.Equal(t, "localhost", got.Mongo.Host)
-		assert.Equal(t, "27017", got.Mongo.Port)
-		assert.Equal(t, "momento", got.Mongo.DBName)
-		assert.Equal(t, "admin", got.Mongo.User)
-		assert.Equal(t, "admin", got.Mongo.Pass)
-		assert.Equal(t, 3, got.Mongo.MaxRetries)
-		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
-		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
+		assert.Equal(t, "postgres://momento:momento@localhost:5432/momento?sslmode=disable", got.PG.DSN)
+		assert.Equal(t, 3, got.PG.MaxRetries)
+		assert.Equal(t, 2*time.Second, got.PG.RetryDelay)
+		assert.Equal(t, 10*time.Second, got.PG.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
 		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
 		assert.Equal(t, 7*24*time.Hour, got.JWT.RefreshTokenExpiration)
@@ -48,14 +44,10 @@ func TestLoadConfig(t *testing.T) {
 
 		assert.Equal(t, "0.0.0.0", got.Api.Host)
 		assert.Equal(t, "8080", got.Api.Port)
-		assert.Equal(t, "localhost", got.Mongo.Host)
-		assert.Equal(t, "27017", got.Mongo.Port)
-		assert.Equal(t, "momento", got.Mongo.DBName)
-		assert.Equal(t, "admin", got.Mongo.User)
-		assert.Equal(t, "admin", got.Mongo.Pass)
-		assert.Equal(t, 3, got.Mongo.MaxRetries)
-		assert.Equal(t, 2*time.Second, got.Mongo.RetryDelay)
-		assert.Equal(t, 10*time.Second, got.Mongo.ConnectTimeout)
+		assert.Equal(t, "postgres://momento:momento@localhost:5432/momento?sslmode=disable", got.PG.DSN)
+		assert.Equal(t, 3, got.PG.MaxRetries)
+		assert.Equal(t, 2*time.Second, got.PG.RetryDelay)
+		assert.Equal(t, 10*time.Second, got.PG.ConnectTimeout)
 		assert.Equal(t, "your-secret-key-change-in-production", got.JWT.Secret)
 		assert.Equal(t, 12*time.Hour, got.JWT.Expiration)
 		assert.Equal(t, 7*24*time.Hour, got.JWT.RefreshTokenExpiration)
@@ -70,25 +62,21 @@ func TestLoadConfig(t *testing.T) {
 			clearEnvVars(t)
 		})
 
-		os.Setenv("MONGO_MAX_RETRIES", "invalid")
+		os.Setenv("PG_MAX_RETRIES", "invalid")
 
 		got := config.LoadConfig()
 
-		assert.Equal(t, 3, got.Mongo.MaxRetries)
+		assert.Equal(t, 3, got.PG.MaxRetries)
 	})
 }
 
 var envVars []string = []string{
 	"API_HOST",
 	"API_PORT",
-	"MONGO_HOST",
-	"MONGO_PORT",
-	"MONGO_DB",
-	"MONGO_USER",
-	"MONGO_PASS",
-	"MONGO_MAX_RETRIES",
-	"MONGO_RETRY_DELAY_MS",
-	"MONGO_CONNECT_TIMEOUT_MS",
+	"DATABASE_URL",
+	"PG_MAX_RETRIES",
+	"PG_RETRY_DELAY_MS",
+	"PG_CONNECT_TIMEOUT_MS",
 	"JWT_SECRET",
 	"JWT_EXPIRATION_MS",
 	"REFRESH_TOKEN_EXPIRATION_MS",

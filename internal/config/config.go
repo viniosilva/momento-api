@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Api               ApiConfig
-	Mongo             MongoConfig
+	PG                PgConfig
 	JWT               JWTConfig
 	Redis             RedisConfig
 	SMTP              SMTPConfig
@@ -36,12 +36,8 @@ type ApiConfig struct {
 	Port string
 }
 
-type MongoConfig struct {
-	Host           string
-	Port           string
-	DBName         string
-	User           string
-	Pass           string
+type PgConfig struct {
+	DSN            string
 	MaxRetries     int
 	RetryDelay     time.Duration
 	ConnectTimeout time.Duration
@@ -84,14 +80,10 @@ const (
 	defaultEnvPath                      = ".env"
 	defaultApiHost                      = ""
 	defaultApiPort                      = "8080"
-	defaultMongoHost                    = "localhost"
-	defaultMongoPort                    = "27017"
-	defaultMongoDB                      = "momento"
-	defaultMongoUser                    = "admin"
-	defaultMongoPass                    = "admin"
-	defaultMongoMaxRetries              = 3
-	defaultMongoRetryDelay              = 2 * time.Second
-	defaultMongoConnectTimeout          = 10 * time.Second
+	defaultPGDSN                        = "postgres://momento:momento@localhost:5432/momento?sslmode=disable"
+	defaultPGMaxRetries                 = 3
+	defaultPGRetryDelay                 = 2 * time.Second
+	defaultPGConnectTimeout             = 10 * time.Second
 	defaultJWTSecret                    = "your-secret-key-change-in-production"
 	defaultJWTExpiration                = 12 * time.Hour
 	defaultRefreshTokenExpiration       = 7 * 24 * time.Hour
@@ -150,15 +142,11 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			Host: getEnv("API_HOST", defaultApiHost),
 			Port: getEnv("API_PORT", defaultApiPort),
 		},
-		Mongo: MongoConfig{
-			Host:           getEnv("MONGO_HOST", defaultMongoHost),
-			Port:           getEnv("MONGO_PORT", defaultMongoPort),
-			DBName:         getEnv("MONGO_DB", defaultMongoDB),
-			User:           getEnv("MONGO_USER", defaultMongoUser),
-			Pass:           getEnv("MONGO_PASS", defaultMongoPass),
-			MaxRetries:     getEnvAsInt("MONGO_MAX_RETRIES", defaultMongoMaxRetries),
-			RetryDelay:     getEnvAsDuration("MONGO_RETRY_DELAY_MS", defaultMongoRetryDelay),
-			ConnectTimeout: getEnvAsDuration("MONGO_CONNECT_TIMEOUT_MS", defaultMongoConnectTimeout),
+		PG: PgConfig{
+			DSN:            getEnv("DATABASE_URL", defaultPGDSN),
+			MaxRetries:     getEnvAsInt("PG_MAX_RETRIES", defaultPGMaxRetries),
+			RetryDelay:     getEnvAsDuration("PG_RETRY_DELAY_MS", defaultPGRetryDelay),
+			ConnectTimeout: getEnvAsDuration("PG_CONNECT_TIMEOUT_MS", defaultPGConnectTimeout),
 		},
 		JWT: JWTConfig{
 			Secret:                 getEnv("JWT_SECRET", defaultJWTSecret),
