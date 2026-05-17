@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 
 	"momento/internal/events/app"
 	"momento/internal/events/domain"
@@ -40,7 +40,7 @@ func TestNewEventHandler(t *testing.T) {
 
 func TestEventHandler_CreateEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
 
 	t.Run("should return 201 when event is created successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
@@ -199,7 +199,7 @@ func TestEventHandler_CreateEvent(t *testing.T) {
 
 func TestEventHandler_ListEvents(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
 
 	t.Run("should return 200 with events list", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
@@ -211,14 +211,14 @@ func TestEventHandler_ListEvents(t *testing.T) {
 		mockList := listopts.Paginated[domain.Event]{
 			Data: []domain.Event{
 				{
-					ID:          primitive.NewObjectID().Hex(),
+					ID:          uuid.NewString(),
 					OwnerUserID: userID,
 					Content:     domain.EventContent("Event 1 content"),
 					CreatedAt:   now,
 					UpdatedAt:   now,
 				},
 				{
-					ID:          primitive.NewObjectID().Hex(),
+					ID:          uuid.NewString(),
 					OwnerUserID: userID,
 					Content:     domain.EventContent("Event 2 content"),
 					CreatedAt:   now,
@@ -422,8 +422,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 
 		now := time.Now().UTC()
 		mockEvent := domain.Event{
-			ID:          primitive.NewObjectID().Hex(),
-			OwnerUserID: primitive.NewObjectID().Hex(),
+			ID:          uuid.NewString(),
+			OwnerUserID: uuid.NewString(),
 			Content:     domain.EventContent("Event content"),
 			CreatedAt:   now,
 			UpdatedAt:   now,
@@ -458,8 +458,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{}, domain.ErrEventNotFound).Once()
 
 		mux := http.NewServeMux()
@@ -488,7 +488,7 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("GET /events/{id}", handler.GetUserEventByID)
@@ -513,8 +513,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{}, assert.AnError).Once()
 
 		mux := http.NewServeMux()
@@ -540,8 +540,8 @@ func TestEventHandler_GetUserEventByID(t *testing.T) {
 
 func TestEventHandler_UpdateEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	t.Run("should return 200 when event is updated successfully", func(t *testing.T) {
 		mockRepo := mocks.NewMockEventRepository(t)
@@ -775,8 +775,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, eventID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
@@ -799,8 +799,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, eventID, userID).Return(domain.ErrEventNotFound).Once()
 
 		mux := http.NewServeMux()
@@ -829,7 +829,7 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /events/{id}/archive", handler.ArchiveEvent)
@@ -854,8 +854,8 @@ func TestEventHandler_ArchiveEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().ArchiveByIDAndUserID(mock.Anything, eventID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()
@@ -887,8 +887,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, eventID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
@@ -911,8 +911,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, eventID, userID).Return(domain.ErrEventNotFound).Once()
 
 		mux := http.NewServeMux()
@@ -941,7 +941,7 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("PATCH /events/{id}/restore", handler.RestoreEvent)
@@ -966,8 +966,8 @@ func TestEventHandler_RestoreEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().RestoreByIDAndUserID(mock.Anything, eventID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()
@@ -999,8 +999,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
@@ -1023,8 +1023,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(domain.ErrEventNotFound).Once()
 
 		mux := http.NewServeMux()
@@ -1053,7 +1053,7 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /events/{id}", handler.DeleteEvent)
@@ -1078,8 +1078,8 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 		svc := app.NewEventService(mockRepo, s3Mock, imageDownloadURLExpiration)
 		handler := ports.NewEventHandler(svc)
 
-		eventID := primitive.NewObjectID().Hex()
-		userID := primitive.NewObjectID().Hex()
+		eventID := uuid.NewString()
+		userID := uuid.NewString()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()

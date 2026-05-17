@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 func TestNewEventService(t *testing.T) {
@@ -27,7 +27,7 @@ func TestNewEventService(t *testing.T) {
 
 func TestEventService_CreateEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
 
 	defaultInput := app.EventInput{
 		UserID:  userID,
@@ -99,7 +99,7 @@ func TestEventService_CreateEvent(t *testing.T) {
 
 func TestEventService_ListEvents(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
 
 	defaultInput := app.ListEventsInput{
 		UserID: userID,
@@ -120,14 +120,14 @@ func TestEventService_ListEvents(t *testing.T) {
 
 		expectedEvents := []domain.Event{
 			{
-				ID:          primitive.NewObjectID().Hex(),
+				ID:          uuid.NewString(),
 				OwnerUserID: userID,
 				Content:     "Event 1",
 				CreatedAt:   time.Now().UTC(),
 				UpdatedAt:   time.Now().UTC(),
 			},
 			{
-				ID:          primitive.NewObjectID().Hex(),
+				ID:          uuid.NewString(),
 				OwnerUserID: userID,
 				Content:     "Event 2",
 				CreatedAt:   time.Now().UTC().Add(-time.Hour),
@@ -310,8 +310,8 @@ func TestEventService_ListEvents(t *testing.T) {
 
 func TestEventService_GetUserEventByID(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.GetUserEventByIDInput{
 		UserID: userID,
@@ -371,8 +371,8 @@ func TestEventService_GetUserEventByID(t *testing.T) {
 
 func TestEventService_UpdateEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.UpdateEventInput{
 		UserID:  userID,
@@ -526,8 +526,8 @@ func TestEventService_UpdateEvent(t *testing.T) {
 
 func TestEventService_DeleteEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.DeleteEventInput{
 		UserID: userID,
@@ -573,8 +573,8 @@ func TestEventService_DeleteEvent(t *testing.T) {
 
 func TestEventService_ArchiveEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.ArchiveEventInput{
 		UserID: userID,
@@ -621,8 +621,8 @@ func TestEventService_ArchiveEvent(t *testing.T) {
 
 func TestEventService_RestoreEvent(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.RestoreEventInput{
 		UserID: userID,
@@ -669,8 +669,8 @@ func TestEventService_RestoreEvent(t *testing.T) {
 
 func TestEventService_GetUploadURL(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.GetUploadURLInput{
 		UserID:      userID,
@@ -771,8 +771,8 @@ func TestEventService_GetUploadURL(t *testing.T) {
 
 func TestEventService_ConfirmImage(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 	objectKey := "events/" + eventID + "/uuid.jpg"
 
 	defaultInput := app.ConfirmImageInput{
@@ -932,8 +932,8 @@ func TestEventService_ConfirmImage(t *testing.T) {
 
 func TestEventService_ListImages(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 
 	defaultInput := app.ListImagesInput{
 		UserID:  userID,
@@ -1081,8 +1081,8 @@ func TestEventService_ListImages(t *testing.T) {
 
 func TestEventService_DeleteImage(t *testing.T) {
 	imageDownloadURLExpiration := 15 * time.Minute
-	userID := primitive.NewObjectID().Hex()
-	eventID := primitive.NewObjectID().Hex()
+	userID := uuid.NewString()
+	eventID := uuid.NewString()
 	path := "events/" + eventID + "/img.jpg"
 
 	defaultInput := app.DeleteImageInput{

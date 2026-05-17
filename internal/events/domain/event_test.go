@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 func TestNewEvent(t *testing.T) {
 	t.Run("should create event with valid data", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 
 		title, err := domain.NewEventTitle("Test event title")
 		require.NoError(t, err)
@@ -37,7 +37,7 @@ func TestNewEvent(t *testing.T) {
 
 func TestEvent_AddImage(t *testing.T) {
 	t.Run("should add image to event", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 		title, _ := domain.NewEventTitle("Title")
 		content, _ := domain.NewEventContent("Content")
 		event := domain.NewEvent(userID, title, content)
@@ -53,7 +53,7 @@ func TestEvent_AddImage(t *testing.T) {
 
 	t.Run("should initialize metadata when nil", func(t *testing.T) {
 		event := domain.Event{
-			ID:    primitive.NewObjectID().Hex(),
+			ID:    uuid.NewString(),
 			Title: "Title",
 		}
 		assert.Nil(t, event.Metadata)
@@ -67,7 +67,7 @@ func TestEvent_AddImage(t *testing.T) {
 	})
 
 	t.Run("should return error when max images reached", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 		title, _ := domain.NewEventTitle("Title")
 		content, _ := domain.NewEventContent("Content")
 		event := domain.NewEvent(userID, title, content)
@@ -85,7 +85,7 @@ func TestEvent_AddImage(t *testing.T) {
 
 func TestEvent_RemoveImage(t *testing.T) {
 	t.Run("should remove existing image", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 		title, _ := domain.NewEventTitle("Title")
 		content, _ := domain.NewEventContent("Content")
 		event := domain.NewEvent(userID, title, content)
@@ -102,7 +102,7 @@ func TestEvent_RemoveImage(t *testing.T) {
 
 	t.Run("should return error when metadata is nil", func(t *testing.T) {
 		event := domain.Event{
-			ID:    primitive.NewObjectID().Hex(),
+			ID:    uuid.NewString(),
 			Title: "Title",
 		}
 		assert.Nil(t, event.Metadata)
@@ -113,7 +113,7 @@ func TestEvent_RemoveImage(t *testing.T) {
 	})
 
 	t.Run("should return error when image not found", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 		title, _ := domain.NewEventTitle("Title")
 		content, _ := domain.NewEventContent("Content")
 		event := domain.NewEvent(userID, title, content)
@@ -126,7 +126,7 @@ func TestEvent_RemoveImage(t *testing.T) {
 
 func TestEvent_Update(t *testing.T) {
 	t.Run("should update event", func(t *testing.T) {
-		userID := primitive.NewObjectID().Hex()
+		userID := uuid.NewString()
 		title, _ := domain.NewEventTitle("Test event title")
 		content, _ := domain.NewEventContent("Test event content")
 
