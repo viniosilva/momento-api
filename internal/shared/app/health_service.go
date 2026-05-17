@@ -7,24 +7,24 @@ import (
 )
 
 type healthService struct {
-	mongoClient MongoClient
+	db Pinger
 }
 
-func NewHealthService(mongoClient MongoClient) *healthService {
+func NewHealthService(db Pinger) *healthService {
 	return &healthService{
-		mongoClient: mongoClient,
+		db: db,
 	}
 }
 
 func (s *healthService) HealthCheck(ctx context.Context) HealthOutput {
-	if s.mongoClient == nil {
+	if s.db == nil {
 		healthStatus := domain.HealthStatusError()
 		return HealthOutput{
 			Status: healthStatus.Status,
 		}
 	}
 
-	if err := s.mongoClient.Ping(ctx, nil); err != nil {
+	if err := s.db.PingContext(ctx); err != nil {
 		healthStatus := domain.HealthStatusError()
 		return HealthOutput{
 			Status: healthStatus.Status,
