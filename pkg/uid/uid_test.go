@@ -5,16 +5,18 @@ import (
 
 	"momento/pkg/uid"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-	t.Run("should generate a valid ID", func(t *testing.T) {
+	t.Run("should generate a valid UUID v4", func(t *testing.T) {
 		got := uid.New()
 
 		assert.NotEmpty(t, got)
-		assert.Len(t, got, 24)
-		assert.Regexp(t, `^[0-9a-f]{24}$`, got)
+		_, err := uuid.Parse(got)
+		assert.NoError(t, err)
+		assert.Equal(t, uuid.Version(4), uuid.MustParse(got).Version())
 	})
 
 	t.Run("should generate unique IDs on each call", func(t *testing.T) {
