@@ -156,28 +156,22 @@ func TestNewSortInput(t *testing.T) {
 	})
 }
 
-func TestListParams_ToFindOptions(t *testing.T) {
-	t.Run("should generate find options for asc order", func(t *testing.T) {
+func TestListParams_ToSQLOrder(t *testing.T) {
+	t.Run("should generate SQL order for asc", func(t *testing.T) {
 		params := listopts.ListParams{
-			Pagination: listopts.PaginationInput{Page: 2, PageSize: 10},
-			Sort:       listopts.SortInput{Field: "created_at", Order: listopts.OrderTypeAsc},
+			Sort: listopts.SortInput{Field: "created_at", Order: listopts.OrderTypeAsc},
 		}
 
-		findOpts := params.ToFindOptions()
-
-		assert.Equal(t, int64(10), *findOpts.Skip)
-		assert.Equal(t, int64(10), *findOpts.Limit)
+		got := params.ToSQLOrder()
+		assert.Equal(t, "created_at ASC", got)
 	})
 
-	t.Run("should generate find options for desc order", func(t *testing.T) {
+	t.Run("should generate SQL order for desc", func(t *testing.T) {
 		params := listopts.ListParams{
-			Pagination: listopts.PaginationInput{Page: 1, PageSize: 5},
-			Sort:       listopts.SortInput{Field: "updated_at", Order: listopts.OrderTypeDesc},
+			Sort: listopts.SortInput{Field: "updated_at", Order: listopts.OrderTypeDesc},
 		}
 
-		findOpts := params.ToFindOptions()
-
-		assert.Equal(t, int64(0), *findOpts.Skip)
-		assert.Equal(t, int64(5), *findOpts.Limit)
+		got := params.ToSQLOrder()
+		assert.Equal(t, "updated_at DESC", got)
 	})
 }
