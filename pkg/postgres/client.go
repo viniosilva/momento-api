@@ -5,32 +5,31 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 )
 
-func Connect(ctx context.Context, dsn string, maxRetries int, retryDelay, connectTimeout time.Duration) (*sqlx.DB, error) {
+const (
+	driverName = "pgx"
+)
+
+func Connect(ctx context.Context, host, port, user, pass, dbname, sslmode string, connectTimeout time.Duration) (*sqlx.DB, error) {
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		user, pass, host, port, dbname, sslmode)
+
 	ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 	defer cancel()
 
-	var db *sqlx.DB
-	var err error
-
-	driverName := "pgx"
-
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		db, err = sqlx.ConnectContext(ctx, driverName, dsn)
-		if err == nil {
-			if err = db.PingContext(ctx); err == nil {
-				return db, nil
-			}
-			db.Close()
-		}
-
-		if attempt < maxRetries {
-			time.Sleep(retryDelay)
-		}
+	db, err := sqlx.ConnectContext(ctx, driverName, dsn)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("failed to connect to PostgreSQL after %d attempts: %w", maxRetries, err)
+	err = db.PingContext(ctx)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }

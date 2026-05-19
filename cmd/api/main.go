@@ -20,7 +20,7 @@ import (
 	eventsports "momento/internal/events/ports"
 	sharedapp "momento/internal/shared/app"
 	sharedports "momento/internal/shared/ports"
-	pkglogger 	"momento/pkg/logger"
+	pkglogger "momento/pkg/logger"
 	"momento/pkg/postgres"
 	pkgredis "momento/pkg/redis"
 
@@ -118,9 +118,12 @@ type Dependencies struct {
 func setupDependencies(ctx context.Context, config config.Config, logger *slog.Logger) (*Dependencies, error) {
 	logger.Info("connecting to PostgreSQL")
 	db, err := postgres.Connect(ctx,
-		config.PG.DSN,
-		config.PG.MaxRetries,
-		config.PG.RetryDelay,
+		config.PG.Host,
+		config.PG.Port,
+		config.PG.User,
+		config.PG.Pass,
+		config.PG.DBName,
+		config.PG.SSLMode,
 		config.PG.ConnectTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)

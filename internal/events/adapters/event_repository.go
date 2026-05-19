@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -12,6 +13,8 @@ import (
 	"momento/internal/events/domain"
 	"momento/pkg/listopts"
 )
+
+const base_event_query = "SELECT id, owner_user_id, title, content, created_at, updated_at, archived_at FROM events"
 
 type eventRepository struct {
 	db *sqlx.DB
@@ -38,14 +41,18 @@ func (r *eventRepository) Create(ctx context.Context, event domain.Event) error 
 
 func (r *eventRepository) ListByUserID(ctx context.Context, userID string, params listopts.ListParams) (listopts.Paginated[domain.Event], error) {
 	var totalCount int64
-	countQuery := `SELECT COUNT(*) FROM events WHERE owner_user_id = $1`
+	countQuery := "SELECT COUNT(*) FROM events WHERE owner_user_id = $1"
 	err := r.db.QueryRowContext(ctx, countQuery, userID).Scan(&totalCount)
 	if err != nil {
 		return listopts.Paginated[domain.Event]{}, fmt.Errorf("count events: %w", err)
 	}
 
-	order := params.ToSQLOrder()
-	dataQuery := fmt.Sprintf(`SELECT id, owner_user_id, title, content, created_at, updated_at, archived_at FROM events WHERE owner_user_id = $1 ORDER BY %s LIMIT $2 OFFSET $3`, order)
+	dataQuery := strings.Join([]string{
+		base_event_query,
+		"WHERE owner_user_id = $1",
+		fmt.Sprintf("ORDER BY %s %s", params.Sort.Field, params.Sort.Order),
+		"LIMIT $2 OFFSET $3",
+	}, " ")
 
 	limit := int64(params.Pagination.PageSize)
 	offset := int64((params.Pagination.Page - 1) * params.Pagination.PageSize)
@@ -83,7 +90,7 @@ func (r *eventRepository) getImagesByEventIDs(ctx context.Context, eventIDs []st
 		return nil, nil
 	}
 
-	query := `SELECT event_id, path FROM event_images WHERE event_id = ANY($1)`
+	query := "SELECT event_id, path FROM event_images WHERE event_id = ANY($1)"
 
 	var imageRows []eventImageRow
 	err := r.db.SelectContext(ctx, &imageRows, query, eventIDs)
@@ -100,7 +107,7 @@ func (r *eventRepository) getImagesByEventIDs(ctx context.Context, eventIDs []st
 }
 
 func (r *eventRepository) getImagesByEventID(ctx context.Context, eventID string) ([]eventImageRow, error) {
-	query := `SELECT event_id, path FROM event_images WHERE event_id = $1`
+	query := "SELECT event_id, path FROM event_images WHERE event_id = $1"
 
 	var rows []eventImageRow
 	err := r.db.SelectContext(ctx, &rows, query, eventID)
@@ -112,7 +119,7 @@ func (r *eventRepository) getImagesByEventID(ctx context.Context, eventID string
 }
 
 func (r *eventRepository) GetByIDAndUserID(ctx context.Context, id, userID string) (domain.Event, error) {
-	query := `SELECT id, owner_user_id, title, content, created_at, updated_at, archived_at FROM events WHERE id = $1 AND owner_user_id = $2`
+	query := fmt.Sprintf("%s WHERE id = $1 AND owner_user_id = $2", base_event_query)
 
 	var row eventRow
 	err := r.db.GetContext(ctx, &row, query, id, userID)
@@ -222,7 +229,7 @@ func (r *eventRepository) AddImage(ctx context.Context, eventID, userID string, 
 	defer tx.Rollback()
 
 	var count int
-	countQuery := `SELECT COUNT(*) FROM event_images WHERE event_id = $1`
+	countQuery := "SELECT COUNT(*) FROM event_images WHERE event_id = $1"
 	if err := tx.QueryRowContext(ctx, countQuery, eventID).Scan(&count); err != nil {
 		return fmt.Errorf("count images: %w", err)
 	}

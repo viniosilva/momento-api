@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type s3Service struct {
@@ -69,4 +70,15 @@ func (s *s3Service) DeleteObject(ctx context.Context, key string) error {
 
 	_, err := s.s3Client.DeleteObjectWithContext(ctx, input)
 	return err
+}
+
+func (s *s3Service) DeleteFolder(ctx context.Context, key string) error {
+	input := &s3.ListObjectsInput{
+		Bucket: new(s.bucket),
+		Prefix: new(key),
+	}
+
+	iter := s3manager.NewDeleteListIterator(s.s3Client, input)
+
+	return s3manager.NewBatchDeleteWithClient(s.s3Client).Delete(ctx, iter)
 }

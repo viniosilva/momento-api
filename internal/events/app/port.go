@@ -24,4 +24,5 @@ type S3Service interface {
 	GetPresignedUploadURL(ctx context.Context, key string, contentType string, expiresIn time.Duration) (string, error)
 	GetPresignedDownloadURL(ctx context.Context, key string, expiresIn time.Duration) (string, error)
 	DeleteObject(ctx context.Context, key string) error
+	DeleteFolder(ctx context.Context, key string) error
 }

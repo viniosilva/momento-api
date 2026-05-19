@@ -95,6 +95,72 @@ func (_c *MockEventService_ArchiveEvent_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// ConfirmImage provides a mock function for the type MockEventService
+func (_mock *MockEventService) ConfirmImage(ctx context.Context, input app.ConfirmImageInput) (app.ConfirmImageOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ConfirmImage")
+	}
+
+	var r0 app.ConfirmImageOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ConfirmImageInput) (app.ConfirmImageOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ConfirmImageInput) app.ConfirmImageOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(app.ConfirmImageOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ConfirmImageInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockEventService_ConfirmImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConfirmImage'
+type MockEventService_ConfirmImage_Call struct {
+	*mock.Call
+}
+
+// ConfirmImage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.ConfirmImageInput
+func (_e *MockEventService_Expecter) ConfirmImage(ctx interface{}, input interface{}) *MockEventService_ConfirmImage_Call {
+	return &MockEventService_ConfirmImage_Call{Call: _e.mock.On("ConfirmImage", ctx, input)}
+}
+
+func (_c *MockEventService_ConfirmImage_Call) Run(run func(ctx context.Context, input app.ConfirmImageInput)) *MockEventService_ConfirmImage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.ConfirmImageInput
+		if args[1] != nil {
+			arg1 = args[1].(app.ConfirmImageInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventService_ConfirmImage_Call) Return(confirmImageOutput app.ConfirmImageOutput, err error) *MockEventService_ConfirmImage_Call {
+	_c.Call.Return(confirmImageOutput, err)
+	return _c
+}
+
+func (_c *MockEventService_ConfirmImage_Call) RunAndReturn(run func(ctx context.Context, input app.ConfirmImageInput) (app.ConfirmImageOutput, error)) *MockEventService_ConfirmImage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateEvent provides a mock function for the type MockEventService
 func (_mock *MockEventService) CreateEvent(ctx context.Context, input app.EventInput) (app.EventOutput, error) {
 	ret := _mock.Called(ctx, input)
@@ -214,6 +280,129 @@ func (_c *MockEventService_DeleteEvent_Call) Return(err error) *MockEventService
 }
 
 func (_c *MockEventService_DeleteEvent_Call) RunAndReturn(run func(ctx context.Context, input app.DeleteEventInput) error) *MockEventService_DeleteEvent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteImage provides a mock function for the type MockEventService
+func (_mock *MockEventService) DeleteImage(ctx context.Context, input app.DeleteImageInput) error {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteImage")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.DeleteImageInput) error); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockEventService_DeleteImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteImage'
+type MockEventService_DeleteImage_Call struct {
+	*mock.Call
+}
+
+// DeleteImage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.DeleteImageInput
+func (_e *MockEventService_Expecter) DeleteImage(ctx interface{}, input interface{}) *MockEventService_DeleteImage_Call {
+	return &MockEventService_DeleteImage_Call{Call: _e.mock.On("DeleteImage", ctx, input)}
+}
+
+func (_c *MockEventService_DeleteImage_Call) Run(run func(ctx context.Context, input app.DeleteImageInput)) *MockEventService_DeleteImage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.DeleteImageInput
+		if args[1] != nil {
+			arg1 = args[1].(app.DeleteImageInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventService_DeleteImage_Call) Return(err error) *MockEventService_DeleteImage_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockEventService_DeleteImage_Call) RunAndReturn(run func(ctx context.Context, input app.DeleteImageInput) error) *MockEventService_DeleteImage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUploadURL provides a mock function for the type MockEventService
+func (_mock *MockEventService) GetUploadURL(ctx context.Context, input app.GetUploadURLInput) (app.GetUploadURLOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUploadURL")
+	}
+
+	var r0 app.GetUploadURLOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUploadURLInput) (app.GetUploadURLOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUploadURLInput) app.GetUploadURLOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		r0 = ret.Get(0).(app.GetUploadURLOutput)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.GetUploadURLInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockEventService_GetUploadURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUploadURL'
+type MockEventService_GetUploadURL_Call struct {
+	*mock.Call
+}
+
+// GetUploadURL is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.GetUploadURLInput
+func (_e *MockEventService_Expecter) GetUploadURL(ctx interface{}, input interface{}) *MockEventService_GetUploadURL_Call {
+	return &MockEventService_GetUploadURL_Call{Call: _e.mock.On("GetUploadURL", ctx, input)}
+}
+
+func (_c *MockEventService_GetUploadURL_Call) Run(run func(ctx context.Context, input app.GetUploadURLInput)) *MockEventService_GetUploadURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.GetUploadURLInput
+		if args[1] != nil {
+			arg1 = args[1].(app.GetUploadURLInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventService_GetUploadURL_Call) Return(getUploadURLOutput app.GetUploadURLOutput, err error) *MockEventService_GetUploadURL_Call {
+	_c.Call.Return(getUploadURLOutput, err)
+	return _c
+}
+
+func (_c *MockEventService_GetUploadURL_Call) RunAndReturn(run func(ctx context.Context, input app.GetUploadURLInput) (app.GetUploadURLOutput, error)) *MockEventService_GetUploadURL_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -350,6 +539,74 @@ func (_c *MockEventService_ListEvents_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// ListImages provides a mock function for the type MockEventService
+func (_mock *MockEventService) ListImages(ctx context.Context, input app.ListImagesInput) ([]app.ImageOutput, error) {
+	ret := _mock.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListImages")
+	}
+
+	var r0 []app.ImageOutput
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListImagesInput) ([]app.ImageOutput, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListImagesInput) []app.ImageOutput); ok {
+		r0 = returnFunc(ctx, input)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]app.ImageOutput)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ListImagesInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockEventService_ListImages_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListImages'
+type MockEventService_ListImages_Call struct {
+	*mock.Call
+}
+
+// ListImages is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input app.ListImagesInput
+func (_e *MockEventService_Expecter) ListImages(ctx interface{}, input interface{}) *MockEventService_ListImages_Call {
+	return &MockEventService_ListImages_Call{Call: _e.mock.On("ListImages", ctx, input)}
+}
+
+func (_c *MockEventService_ListImages_Call) Run(run func(ctx context.Context, input app.ListImagesInput)) *MockEventService_ListImages_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 app.ListImagesInput
+		if args[1] != nil {
+			arg1 = args[1].(app.ListImagesInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventService_ListImages_Call) Return(imageOutputs []app.ImageOutput, err error) *MockEventService_ListImages_Call {
+	_c.Call.Return(imageOutputs, err)
+	return _c
+}
+
+func (_c *MockEventService_ListImages_Call) RunAndReturn(run func(ctx context.Context, input app.ListImagesInput) ([]app.ImageOutput, error)) *MockEventService_ListImages_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RestoreEvent provides a mock function for the type MockEventService
 func (_mock *MockEventService) RestoreEvent(ctx context.Context, input app.RestoreEventInput) error {
 	ret := _mock.Called(ctx, input)
@@ -469,263 +726,6 @@ func (_c *MockEventService_UpdateEvent_Call) Return(eventOutput app.EventOutput,
 }
 
 func (_c *MockEventService_UpdateEvent_Call) RunAndReturn(run func(ctx context.Context, input app.UpdateEventInput) (app.EventOutput, error)) *MockEventService_UpdateEvent_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetUploadURL provides a mock function for the type MockEventService
-func (_mock *MockEventService) GetUploadURL(ctx context.Context, input app.GetUploadURLInput) (app.GetUploadURLOutput, error) {
-	ret := _mock.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetUploadURL")
-	}
-
-	var r0 app.GetUploadURLOutput
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUploadURLInput) (app.GetUploadURLOutput, error)); ok {
-		return returnFunc(ctx, input)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.GetUploadURLInput) app.GetUploadURLOutput); ok {
-		r0 = returnFunc(ctx, input)
-	} else {
-		r0 = ret.Get(0).(app.GetUploadURLOutput)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, app.GetUploadURLInput) error); ok {
-		r1 = returnFunc(ctx, input)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockEventService_GetUploadURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUploadURL'
-type MockEventService_GetUploadURL_Call struct {
-	*mock.Call
-}
-
-// GetUploadURL is a helper method to define mock.On call
-//   - ctx context.Context
-//   - input app.GetUploadURLInput
-func (_e *MockEventService_Expecter) GetUploadURL(ctx interface{}, input interface{}) *MockEventService_GetUploadURL_Call {
-	return &MockEventService_GetUploadURL_Call{Call: _e.mock.On("GetUploadURL", ctx, input)}
-}
-
-func (_c *MockEventService_GetUploadURL_Call) Run(run func(ctx context.Context, input app.GetUploadURLInput)) *MockEventService_GetUploadURL_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 app.GetUploadURLInput
-		if args[1] != nil {
-			arg1 = args[1].(app.GetUploadURLInput)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventService_GetUploadURL_Call) Return(output app.GetUploadURLOutput, err error) *MockEventService_GetUploadURL_Call {
-	_c.Call.Return(output, err)
-	return _c
-}
-
-func (_c *MockEventService_GetUploadURL_Call) RunAndReturn(run func(ctx context.Context, input app.GetUploadURLInput) (app.GetUploadURLOutput, error)) *MockEventService_GetUploadURL_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ConfirmImage provides a mock function for the type MockEventService
-func (_mock *MockEventService) ConfirmImage(ctx context.Context, input app.ConfirmImageInput) (app.ConfirmImageOutput, error) {
-	ret := _mock.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ConfirmImage")
-	}
-
-	var r0 app.ConfirmImageOutput
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ConfirmImageInput) (app.ConfirmImageOutput, error)); ok {
-		return returnFunc(ctx, input)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ConfirmImageInput) app.ConfirmImageOutput); ok {
-		r0 = returnFunc(ctx, input)
-	} else {
-		r0 = ret.Get(0).(app.ConfirmImageOutput)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ConfirmImageInput) error); ok {
-		r1 = returnFunc(ctx, input)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockEventService_ConfirmImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConfirmImage'
-type MockEventService_ConfirmImage_Call struct {
-	*mock.Call
-}
-
-// ConfirmImage is a helper method to define mock.On call
-//   - ctx context.Context
-//   - input app.ConfirmImageInput
-func (_e *MockEventService_Expecter) ConfirmImage(ctx interface{}, input interface{}) *MockEventService_ConfirmImage_Call {
-	return &MockEventService_ConfirmImage_Call{Call: _e.mock.On("ConfirmImage", ctx, input)}
-}
-
-func (_c *MockEventService_ConfirmImage_Call) Run(run func(ctx context.Context, input app.ConfirmImageInput)) *MockEventService_ConfirmImage_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 app.ConfirmImageInput
-		if args[1] != nil {
-			arg1 = args[1].(app.ConfirmImageInput)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventService_ConfirmImage_Call) Return(output app.ConfirmImageOutput, err error) *MockEventService_ConfirmImage_Call {
-	_c.Call.Return(output, err)
-	return _c
-}
-
-func (_c *MockEventService_ConfirmImage_Call) RunAndReturn(run func(ctx context.Context, input app.ConfirmImageInput) (app.ConfirmImageOutput, error)) *MockEventService_ConfirmImage_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListImages provides a mock function for the type MockEventService
-func (_mock *MockEventService) ListImages(ctx context.Context, input app.ListImagesInput) ([]app.ImageOutput, error) {
-	ret := _mock.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListImages")
-	}
-
-	var r0 []app.ImageOutput
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListImagesInput) ([]app.ImageOutput, error)); ok {
-		return returnFunc(ctx, input)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.ListImagesInput) []app.ImageOutput); ok {
-		r0 = returnFunc(ctx, input)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]app.ImageOutput)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, app.ListImagesInput) error); ok {
-		r1 = returnFunc(ctx, input)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockEventService_ListImages_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListImages'
-type MockEventService_ListImages_Call struct {
-	*mock.Call
-}
-
-// ListImages is a helper method to define mock.On call
-//   - ctx context.Context
-//   - input app.ListImagesInput
-func (_e *MockEventService_Expecter) ListImages(ctx interface{}, input interface{}) *MockEventService_ListImages_Call {
-	return &MockEventService_ListImages_Call{Call: _e.mock.On("ListImages", ctx, input)}
-}
-
-func (_c *MockEventService_ListImages_Call) Run(run func(ctx context.Context, input app.ListImagesInput)) *MockEventService_ListImages_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 app.ListImagesInput
-		if args[1] != nil {
-			arg1 = args[1].(app.ListImagesInput)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventService_ListImages_Call) Return(images []app.ImageOutput, err error) *MockEventService_ListImages_Call {
-	_c.Call.Return(images, err)
-	return _c
-}
-
-func (_c *MockEventService_ListImages_Call) RunAndReturn(run func(ctx context.Context, input app.ListImagesInput) ([]app.ImageOutput, error)) *MockEventService_ListImages_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// DeleteImage provides a mock function for the type MockEventService
-func (_mock *MockEventService) DeleteImage(ctx context.Context, input app.DeleteImageInput) error {
-	ret := _mock.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DeleteImage")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, app.DeleteImageInput) error); ok {
-		r0 = returnFunc(ctx, input)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockEventService_DeleteImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteImage'
-type MockEventService_DeleteImage_Call struct {
-	*mock.Call
-}
-
-// DeleteImage is a helper method to define mock.On call
-//   - ctx context.Context
-//   - input app.DeleteImageInput
-func (_e *MockEventService_Expecter) DeleteImage(ctx interface{}, input interface{}) *MockEventService_DeleteImage_Call {
-	return &MockEventService_DeleteImage_Call{Call: _e.mock.On("DeleteImage", ctx, input)}
-}
-
-func (_c *MockEventService_DeleteImage_Call) Run(run func(ctx context.Context, input app.DeleteImageInput)) *MockEventService_DeleteImage_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 app.DeleteImageInput
-		if args[1] != nil {
-			arg1 = args[1].(app.DeleteImageInput)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventService_DeleteImage_Call) Return(err error) *MockEventService_DeleteImage_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockEventService_DeleteImage_Call) RunAndReturn(run func(ctx context.Context, input app.DeleteImageInput) error) *MockEventService_DeleteImage_Call {
 	_c.Call.Return(run)
 	return _c
 }

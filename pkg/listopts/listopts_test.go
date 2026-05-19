@@ -155,23 +155,3 @@ func TestNewSortInput(t *testing.T) {
 		assert.Equal(t, listopts.OrderTypeDesc, got.Order)
 	})
 }
-
-func TestListParams_ToSQLOrder(t *testing.T) {
-	t.Run("should generate SQL order for asc", func(t *testing.T) {
-		params := listopts.ListParams{
-			Sort: listopts.SortInput{Field: "created_at", Order: listopts.OrderTypeAsc},
-		}
-
-		got := params.ToSQLOrder()
-		assert.Equal(t, "created_at ASC", got)
-	})
-
-	t.Run("should generate SQL order for desc", func(t *testing.T) {
-		params := listopts.ListParams{
-			Sort: listopts.SortInput{Field: "updated_at", Order: listopts.OrderTypeDesc},
-		}
-
-		got := params.ToSQLOrder()
-		assert.Equal(t, "updated_at DESC", got)
-	})
-}

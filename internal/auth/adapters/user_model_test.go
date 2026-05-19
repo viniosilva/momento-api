@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 
 	"momento/internal/auth/domain"
 )
 
 func TestToUserRow(t *testing.T) {
 	t.Run("should convert domain user to row", func(t *testing.T) {
-		id := uuid.NewString()
+		id := uuid.New()
 		now := time.Now().Truncate(time.Millisecond)
 
 		user := domain.User{
@@ -25,7 +25,7 @@ func TestToUserRow(t *testing.T) {
 
 		row := toUserRow(user)
 
-		assert.Equal(t, id, row.ID)
+		assert.Equal(t, id.String(), row.ID)
 		assert.Equal(t, "test@example.com", row.Email)
 		assert.Equal(t, "hashedpassword", row.Password)
 		assert.Equal(t, now, row.CreatedAt)
@@ -48,7 +48,7 @@ func TestToUserDomain(t *testing.T) {
 
 		user := toUserDomain(row)
 
-		assert.Equal(t, id, user.ID)
+		assert.Equal(t, id, user.ID.String())
 		assert.Equal(t, domain.Email("test@example.com"), user.Email)
 		assert.Equal(t, domain.Password("hashedpassword"), user.Password)
 		assert.Equal(t, now, user.CreatedAt)

@@ -13,6 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	PREFIX_PATH_EVENT_IMAGE = "events"
+)
+
 type eventService struct {
 	eventRepository        EventRepository
 	s3Service              S3Service
@@ -122,6 +126,22 @@ func (s *eventService) UpdateEvent(ctx context.Context, input UpdateEventInput) 
 }
 
 func (s *eventService) DeleteEvent(ctx context.Context, input DeleteEventInput) error {
+	event, err := s.eventRepository.GetByIDAndUserID(ctx, input.ID, input.UserID)
+	if err != nil {
+		if errors.Is(err, domain.ErrEventNotFound) {
+			return domain.ErrEventNotFound
+		}
+
+		return fmt.Errorf("s.eventRepository.GetByIDAndUserID: %w", err)
+	}
+
+	if event.Metadata != nil {
+		eventPath := fmt.Sprintf("%s/%s", PREFIX_PATH_EVENT_IMAGE, input.ID)
+		if err := s.s3Service.DeleteFolder(ctx, eventPath); err != nil {
+			return fmt.Errorf("s.s3Service.DeleteFolder: %w", err)
+		}
+	}
+
 	if err := s.eventRepository.DeleteByIDAndUserID(ctx, input.ID, input.UserID); err != nil {
 		if errors.Is(err, domain.ErrEventNotFound) {
 			return domain.ErrEventNotFound
@@ -152,7 +172,7 @@ func (s *eventService) GetUploadURL(ctx context.Context, input GetUploadURLInput
 		return GetUploadURLOutput{}, err
 	}
 
-	objectKey := fmt.Sprintf("events/%s/%s.%s", input.EventID, uuid.NewString(), extension)
+	objectKey := fmt.Sprintf("%s/%s/%s.%s", PREFIX_PATH_EVENT_IMAGE, input.EventID, uuid.NewString(), extension)
 
 	uploadURL, err := s.s3Service.GetPresignedUploadURL(ctx, objectKey, input.ContentType, time.Hour)
 	if err != nil {

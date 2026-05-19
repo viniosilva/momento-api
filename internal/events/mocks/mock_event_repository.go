@@ -39,6 +39,75 @@ func (_m *MockEventRepository) EXPECT() *MockEventRepository_Expecter {
 	return &MockEventRepository_Expecter{mock: &_m.Mock}
 }
 
+// AddImage provides a mock function for the type MockEventRepository
+func (_mock *MockEventRepository) AddImage(ctx context.Context, eventID string, userID string, path domain.ImagePath) error {
+	ret := _mock.Called(ctx, eventID, userID, path)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddImage")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, domain.ImagePath) error); ok {
+		r0 = returnFunc(ctx, eventID, userID, path)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockEventRepository_AddImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddImage'
+type MockEventRepository_AddImage_Call struct {
+	*mock.Call
+}
+
+// AddImage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - eventID string
+//   - userID string
+//   - path domain.ImagePath
+func (_e *MockEventRepository_Expecter) AddImage(ctx interface{}, eventID interface{}, userID interface{}, path interface{}) *MockEventRepository_AddImage_Call {
+	return &MockEventRepository_AddImage_Call{Call: _e.mock.On("AddImage", ctx, eventID, userID, path)}
+}
+
+func (_c *MockEventRepository_AddImage_Call) Run(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath)) *MockEventRepository_AddImage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 domain.ImagePath
+		if args[3] != nil {
+			arg3 = args[3].(domain.ImagePath)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventRepository_AddImage_Call) Return(err error) *MockEventRepository_AddImage_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockEventRepository_AddImage_Call) RunAndReturn(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath) error) *MockEventRepository_AddImage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ArchiveByIDAndUserID provides a mock function for the type MockEventRepository
 func (_mock *MockEventRepository) ArchiveByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ret := _mock.Called(ctx, id, userID)
@@ -366,6 +435,75 @@ func (_c *MockEventRepository_ListByUserID_Call) RunAndReturn(run func(ctx conte
 	return _c
 }
 
+// RemoveImage provides a mock function for the type MockEventRepository
+func (_mock *MockEventRepository) RemoveImage(ctx context.Context, eventID string, userID string, path domain.ImagePath) error {
+	ret := _mock.Called(ctx, eventID, userID, path)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveImage")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, domain.ImagePath) error); ok {
+		r0 = returnFunc(ctx, eventID, userID, path)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockEventRepository_RemoveImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveImage'
+type MockEventRepository_RemoveImage_Call struct {
+	*mock.Call
+}
+
+// RemoveImage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - eventID string
+//   - userID string
+//   - path domain.ImagePath
+func (_e *MockEventRepository_Expecter) RemoveImage(ctx interface{}, eventID interface{}, userID interface{}, path interface{}) *MockEventRepository_RemoveImage_Call {
+	return &MockEventRepository_RemoveImage_Call{Call: _e.mock.On("RemoveImage", ctx, eventID, userID, path)}
+}
+
+func (_c *MockEventRepository_RemoveImage_Call) Run(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath)) *MockEventRepository_RemoveImage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 domain.ImagePath
+		if args[3] != nil {
+			arg3 = args[3].(domain.ImagePath)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockEventRepository_RemoveImage_Call) Return(err error) *MockEventRepository_RemoveImage_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockEventRepository_RemoveImage_Call) RunAndReturn(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath) error) *MockEventRepository_RemoveImage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RestoreByIDAndUserID provides a mock function for the type MockEventRepository
 func (_mock *MockEventRepository) RestoreByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ret := _mock.Called(ctx, id, userID)
@@ -482,144 +620,6 @@ func (_c *MockEventRepository_Update_Call) Return(err error) *MockEventRepositor
 }
 
 func (_c *MockEventRepository_Update_Call) RunAndReturn(run func(ctx context.Context, event domain.Event) error) *MockEventRepository_Update_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// AddImage provides a mock function for the type MockEventRepository
-func (_mock *MockEventRepository) AddImage(ctx context.Context, eventID string, userID string, path domain.ImagePath) error {
-	ret := _mock.Called(ctx, eventID, userID, path)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddImage")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, domain.ImagePath) error); ok {
-		r0 = returnFunc(ctx, eventID, userID, path)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockEventRepository_AddImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddImage'
-type MockEventRepository_AddImage_Call struct {
-	*mock.Call
-}
-
-// AddImage is a helper method to define mock.On call
-//   - ctx context.Context
-//   - eventID string
-//   - userID string
-//   - path domain.ImagePath
-func (_e *MockEventRepository_Expecter) AddImage(ctx interface{}, eventID interface{}, userID interface{}, path interface{}) *MockEventRepository_AddImage_Call {
-	return &MockEventRepository_AddImage_Call{Call: _e.mock.On("AddImage", ctx, eventID, userID, path)}
-}
-
-func (_c *MockEventRepository_AddImage_Call) Run(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath)) *MockEventRepository_AddImage_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 domain.ImagePath
-		if args[3] != nil {
-			arg3 = args[3].(domain.ImagePath)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventRepository_AddImage_Call) Return(err error) *MockEventRepository_AddImage_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockEventRepository_AddImage_Call) RunAndReturn(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath) error) *MockEventRepository_AddImage_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// RemoveImage provides a mock function for the type MockEventRepository
-func (_mock *MockEventRepository) RemoveImage(ctx context.Context, eventID string, userID string, path domain.ImagePath) error {
-	ret := _mock.Called(ctx, eventID, userID, path)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveImage")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, domain.ImagePath) error); ok {
-		r0 = returnFunc(ctx, eventID, userID, path)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockEventRepository_RemoveImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveImage'
-type MockEventRepository_RemoveImage_Call struct {
-	*mock.Call
-}
-
-// RemoveImage is a helper method to define mock.On call
-//   - ctx context.Context
-//   - eventID string
-//   - userID string
-//   - path domain.ImagePath
-func (_e *MockEventRepository_Expecter) RemoveImage(ctx interface{}, eventID interface{}, userID interface{}, path interface{}) *MockEventRepository_RemoveImage_Call {
-	return &MockEventRepository_RemoveImage_Call{Call: _e.mock.On("RemoveImage", ctx, eventID, userID, path)}
-}
-
-func (_c *MockEventRepository_RemoveImage_Call) Run(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath)) *MockEventRepository_RemoveImage_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 domain.ImagePath
-		if args[3] != nil {
-			arg3 = args[3].(domain.ImagePath)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-		)
-	})
-	return _c
-}
-
-func (_c *MockEventRepository_RemoveImage_Call) Return(err error) *MockEventRepository_RemoveImage_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockEventRepository_RemoveImage_Call) RunAndReturn(run func(ctx context.Context, eventID string, userID string, path domain.ImagePath) error) *MockEventRepository_RemoveImage_Call {
 	_c.Call.Return(run)
 	return _c
 }

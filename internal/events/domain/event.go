@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"momento/pkg/uid"
+	"github.com/google/uuid"
 )
 
 var (
@@ -27,7 +27,7 @@ func NewEvent(ownerUserID string, title EventTitle, content EventContent) Event 
 	metadata := NewEventMetadata()
 
 	return Event{
-		ID:          uid.New(),
+		ID:          uuid.NewString(),
 		OwnerUserID: ownerUserID,
 		Title:       title,
 		Content:     content,

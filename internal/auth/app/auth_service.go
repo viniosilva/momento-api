@@ -67,7 +67,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 		if errors.Is(err, domain.ErrUserAlreadyExists) {
 			// We return nil error to avoid revealing whether the email is already registered or not
 			return UserOutput{
-				ID:        user.ID,
+				ID:        user.ID.String(),
 				Email:     user.Email,
 				CreatedAt: user.CreatedAt,
 				UpdatedAt: user.UpdatedAt,
@@ -81,7 +81,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 		return UserOutput{}, fmt.Errorf("domain.NewVerificationToken: %w", err)
 	}
 
-	if err := s.tokenService.Store(ctx, token.String(), user.ID, s.verificationTokenTTL); err != nil {
+	if err := s.tokenService.Store(ctx, token.String(), user.ID.String(), s.verificationTokenTTL); err != nil {
 		return UserOutput{}, fmt.Errorf("s.tokenService.Store: %w", err)
 	}
 
@@ -90,7 +90,7 @@ func (s *authService) Register(ctx context.Context, input UserInput) (UserOutput
 	}
 
 	return UserOutput{
-		ID:        user.ID,
+		ID:        user.ID.String(),
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -115,12 +115,12 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 		return LoginOutput{}, domain.ErrInvalidCredentials
 	}
 
-	token, err := s.jwtService.Generate(user.ID, user.Email)
+	token, err := s.jwtService.Generate(user.ID.String(), user.Email)
 	if err != nil {
 		return LoginOutput{}, fmt.Errorf("s.jwtService.Generate: %w", err)
 	}
 
-	refreshToken, err := s.secureTokenService.Generate(ctx, user.ID, string(user.Email))
+	refreshToken, err := s.secureTokenService.Generate(ctx, user.ID.String(), string(user.Email))
 	if err != nil {
 		return LoginOutput{}, fmt.Errorf("s.secureTokenService.Generate: %w", err)
 	}
@@ -177,7 +177,7 @@ func (s *authService) ForgotPassword(ctx context.Context, input ForgotPasswordIn
 		return nil // We don't want to reveal whether the email exists or not, so we return nil even if user is not found
 	}
 
-	if err := s.resetTokenService.Store(ctx, token, user.ID, s.resetTokenTTL); err != nil {
+	if err := s.resetTokenService.Store(ctx, token, user.ID.String(), s.resetTokenTTL); err != nil {
 		return fmt.Errorf("s.resetTokenSvc.Store: %w", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -260,7 +261,7 @@ func TestAuthService_Login(t *testing.T) {
 		userRepoMock.EXPECT().FindVerifiedByEmail(mock.Anything, email).
 			Return(user, nil).
 			Once()
-		tokenSvcMock.EXPECT().Generate(mock.Anything, user.ID, string(user.Email)).
+		tokenSvcMock.EXPECT().Generate(mock.Anything, user.ID.String(), string(user.Email)).
 			Return("refresh-token-abc", nil).
 			Once()
 
@@ -501,6 +502,7 @@ func TestAuthService_Login(t *testing.T) {
 }
 
 func TestAuthService_RefreshToken(t *testing.T) {
+	defaultUUID := uuid.New()
 	const existingToken = "existing-refresh-token"
 
 	t.Run("should rotate refresh token and return new tokens", func(t *testing.T) {
@@ -513,7 +515,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
-			Return("user-123", "user@example.com", "new-refresh-token", nil).
+			Return(defaultUUID.String(), "user@example.com", "new-refresh-token", nil).
 			Once()
 
 		got, err := authService.RefreshToken(t.Context(), app.RefreshTokenInput{RefreshToken: existingToken})
@@ -588,7 +590,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtMock, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenSvcMock.EXPECT().Refresh(mock.Anything, existingToken).
-			Return("user-123", "user@example.com", "new-refresh-token", nil).
+			Return(defaultUUID.String(), "user@example.com", "new-refresh-token", nil).
 			Once()
 		jwtMock.EXPECT().Generate(mock.Anything, mock.Anything).
 			Return("", assert.AnError).
@@ -638,7 +640,7 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 			Return(user, nil).
 			Once()
 
-		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID, resetTokenTTL).
+		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID.String(), resetTokenTTL).
 			Return(nil).
 			Once()
 
@@ -710,7 +712,7 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 			Return(user, nil).
 			Once()
 
-		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID, resetTokenTTL).
+		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID.String(), resetTokenTTL).
 			Return(assert.AnError).
 			Once()
 
@@ -738,7 +740,7 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 			Return(user, nil).
 			Once()
 
-		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID, resetTokenTTL).
+		resetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID.String(), resetTokenTTL).
 			Return(nil).
 			Once()
 
@@ -766,6 +768,8 @@ func TestAuthService_ForgotPassword(t *testing.T) {
 }
 
 func TestAuthService_ValidateResetToken(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should return user ID when token is valid", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
@@ -776,12 +780,12 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		userID, err := authService.ValidateResetToken(t.Context(), app.ValidateResetTokenInput{Token: "valid-token"})
 		require.NoError(t, err)
-		assert.Equal(t, "user-123", userID)
+		assert.Equal(t, defaultUUID.String(), userID)
 	})
 
 	t.Run("should return error when token is invalid", func(t *testing.T) {
@@ -837,6 +841,7 @@ func TestAuthService_ValidateResetToken(t *testing.T) {
 }
 
 func TestAuthService_ResetPassword(t *testing.T) {
+	defaultUUID := uuid.New()
 	defaultInput := app.ResetPasswordInput{
 		Token:    "valid-token",
 		Password: "NewPass123!",
@@ -852,7 +857,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		email, err := domain.NewEmail("user@example.com")
@@ -860,9 +865,9 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		password, err := domain.NewPassword("OldPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
@@ -903,7 +908,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		input := app.ResetPasswordInput{
@@ -924,10 +929,10 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(domain.User{}, assert.AnError).
 			Once()
 
@@ -945,7 +950,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		email, err := domain.NewEmail("user@example.com")
@@ -953,9 +958,9 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		password, err := domain.NewPassword("OldPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
@@ -976,7 +981,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		email, err := domain.NewEmail("user@example.com")
@@ -984,9 +989,9 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		password, err := domain.NewPassword("OldPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
@@ -1002,6 +1007,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 }
 
 func TestAuthService_VerifyEmail(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should verify email successfully", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
@@ -1016,12 +1023,12 @@ func TestAuthService_VerifyEmail(t *testing.T) {
 		password, err := domain.NewPassword("ValidPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
 		tokenService.EXPECT().Validate(mock.Anything, "valid-token").
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
@@ -1096,9 +1103,9 @@ func TestAuthService_VerifyEmail(t *testing.T) {
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
 
 		tokenService.EXPECT().Validate(mock.Anything, "token").
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(domain.User{}, assert.AnError).
 			Once()
 
@@ -1120,12 +1127,12 @@ func TestAuthService_VerifyEmail(t *testing.T) {
 		password, err := domain.NewPassword("ValidPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
 		tokenService.EXPECT().Validate(mock.Anything, "token").
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).
@@ -1150,12 +1157,12 @@ func TestAuthService_VerifyEmail(t *testing.T) {
 		password, err := domain.NewPassword("ValidPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
 		tokenService.EXPECT().Validate(mock.Anything, "token").
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).
 			Return(user, nil).
 			Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).

@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,10 +10,10 @@ import (
 	"momento/internal/events/mocks"
 	"momento/pkg/listopts"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/google/uuid"
 )
 
 func TestNewEventService(t *testing.T) {
@@ -539,9 +540,18 @@ func TestEventService_DeleteEvent(t *testing.T) {
 		s3Mock := mocks.NewMockS3Service(t)
 		eventService := app.NewEventService(eventRepoMock, s3Mock, imageDownloadURLExpiration)
 
+		mockEvent := domain.NewEvent(userID, "title", "content")
+		mockImagePath, err := domain.NewImagePath(fmt.Sprintf("events/%s/%s.jpg", eventID, uuid.NewString()))
+		require.NoError(t, err)
+
+		err = mockEvent.AddImage(mockImagePath)
+		require.NoError(t, err)
+
+		eventRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(mockEvent, nil).Once()
+		s3Mock.EXPECT().DeleteFolder(mock.Anything, fmt.Sprintf("events/%s", eventID)).Return(nil).Once()
 		eventRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(nil).Once()
 
-		err := eventService.DeleteEvent(t.Context(), defaultInput)
+		err = eventService.DeleteEvent(t.Context(), defaultInput)
 		require.NoError(t, err)
 	})
 
@@ -550,7 +560,7 @@ func TestEventService_DeleteEvent(t *testing.T) {
 		s3Mock := mocks.NewMockS3Service(t)
 		eventService := app.NewEventService(eventRepoMock, s3Mock, imageDownloadURLExpiration)
 
-		eventRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(domain.ErrEventNotFound).Once()
+		eventRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{}, domain.ErrEventNotFound).Once()
 
 		err := eventService.DeleteEvent(t.Context(), defaultInput)
 
@@ -562,12 +572,32 @@ func TestEventService_DeleteEvent(t *testing.T) {
 		s3Mock := mocks.NewMockS3Service(t)
 		eventService := app.NewEventService(eventRepoMock, s3Mock, imageDownloadURLExpiration)
 
-		eventRepoMock.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(assert.AnError).Once()
+		eventRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{}, assert.AnError).Once()
 
 		err := eventService.DeleteEvent(t.Context(), defaultInput)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "s.eventRepository.DeleteByIDAndUserID")
+		assert.Contains(t, err.Error(), "s.eventRepository.GetByIDAndUserID")
+	})
+
+	t.Run("should return error when s3 service DeleteEvent fails", func(t *testing.T) {
+		eventRepoMock := mocks.NewMockEventRepository(t)
+		s3Mock := mocks.NewMockS3Service(t)
+		eventService := app.NewEventService(eventRepoMock, s3Mock, imageDownloadURLExpiration)
+
+		mockEvent := domain.NewEvent(userID, "title", "content")
+		mockImagePath, err := domain.NewImagePath(fmt.Sprintf("events/%s/%s.jpg", eventID, uuid.NewString()))
+		require.NoError(t, err)
+
+		err = mockEvent.AddImage(mockImagePath)
+		require.NoError(t, err)
+
+		eventRepoMock.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(mockEvent, nil).Once()
+		s3Mock.EXPECT().DeleteFolder(mock.Anything, fmt.Sprintf("events/%s", eventID)).Return(assert.AnError).Once()
+
+		err = eventService.DeleteEvent(t.Context(), defaultInput)
+
+		assert.Contains(t, err.Error(), "s.s3Service.DeleteFolder")
 	})
 }
 

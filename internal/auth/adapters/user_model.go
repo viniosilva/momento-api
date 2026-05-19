@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"momento/internal/auth/domain"
+
+	"github.com/google/uuid"
 )
 
 type userRow struct {
@@ -17,7 +19,7 @@ type userRow struct {
 
 func toUserRow(u domain.User) userRow {
 	return userRow{
-		ID:              u.ID,
+		ID:              u.ID.String(),
 		Email:           string(u.Email),
 		Password:        string(u.Password),
 		CreatedAt:       u.CreatedAt,
@@ -28,7 +30,7 @@ func toUserRow(u domain.User) userRow {
 
 func toUserDomain(row userRow) domain.User {
 	return domain.User{
-		ID:              row.ID,
+		ID:              uuid.MustParse(row.ID),
 		Email:           domain.Email(row.Email),
 		Password:        domain.Password(row.Password),
 		CreatedAt:       row.CreatedAt,

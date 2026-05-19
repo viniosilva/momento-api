@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -63,7 +64,7 @@ func TestAuthHandler_ForgotPassword(t *testing.T) {
 		user := domain.NewUser(email, password)
 
 		mockRepo.EXPECT().FindByEmail(mock.Anything, email).Return(user, nil).Once()
-		mockResetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID, resetTokenTTL).Return(nil).Once()
+		mockResetTokenSvc.EXPECT().Store(mock.Anything, mock.Anything, user.ID.String(), resetTokenTTL).Return(nil).Once()
 		mockEmailSender.EXPECT().SendResetPasswordEmail(mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		resp, err := nethttp.Request(
@@ -122,18 +123,20 @@ func TestAuthHandler_ForgotPassword(t *testing.T) {
 }
 
 func TestAuthHandler_ResetPassword(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should return no content when password is reset successfully", func(t *testing.T) {
 		svc, mockRepo, _, mockResetTokenSvc, _ := newAuthServiceWithMocks(t)
 		handler := ports.NewAuthHandler(svc)
 
-		mockResetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).Return("user-123", nil).Once()
+		mockResetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).Return(defaultUUID.String(), nil).Once()
 
 		email, _ := domain.NewEmail("user@example.com")
 		password, _ := domain.NewPassword("OldPass123!")
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
-		mockRepo.EXPECT().FindByID(mock.Anything, "user-123").Return(user, nil).Once()
+		mockRepo.EXPECT().FindByID(mock.Anything, defaultUUID.String()).Return(user, nil).Once()
 		mockRepo.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
 		mockResetTokenSvc.EXPECT().Invalidate(mock.Anything, mock.Anything).Return(nil).Once()
 
@@ -195,11 +198,13 @@ func TestAuthHandler_ResetPassword(t *testing.T) {
 }
 
 func TestAuthHandler_ValidateResetToken(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should return ok when token is valid", func(t *testing.T) {
 		svc, _, _, mockResetTokenSvc, _ := newAuthServiceWithMocks(t)
 		handler := ports.NewAuthHandler(svc)
 
-		mockResetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).Return("user-123", nil).Once()
+		mockResetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).Return(defaultUUID.String(), nil).Once()
 
 		resp, got, err := nethttp.RequestWithResponse[map[string]any, ports.ValidateResetTokenResponse](
 			t.Context(), http.MethodGet, "/auth/reset-password/validate?token=valid-token", nil, handler.ValidateResetToken)
@@ -442,12 +447,14 @@ func TestAuthHandler_Login(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should return 200 when refresh is successful", func(t *testing.T) {
 		svc, _, mockSecureTokenSvc, _, _ := newAuthServiceWithMocks(t)
 		handler := ports.NewAuthHandler(svc)
 
 		mockSecureTokenSvc.EXPECT().Refresh(mock.Anything, "valid-refresh-token").
-			Return("user-123", "user@example.com", "new-refresh-token", nil).
+			Return(defaultUUID.String(), "user@example.com", "new-refresh-token", nil).
 			Once()
 
 		resp, got, err := nethttp.RequestWithResponse[ports.RefreshRequest, ports.RefreshResponse](
@@ -571,6 +578,8 @@ func TestAuthHandler_Logout(t *testing.T) {
 }
 
 func TestAuthHandler_VerifyEmail(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should return 200 when email is verified successfully", func(t *testing.T) {
 		userRepoMock := mocks.NewMockUserRepository(t)
 		tokenSvcMock := mocks.NewMockSecureTokenService(t)
@@ -586,10 +595,10 @@ func TestAuthHandler_VerifyEmail(t *testing.T) {
 		password, err := domain.NewPassword("ValidPass123!")
 		require.NoError(t, err)
 		user := domain.NewUser(email, password)
-		user.ID = "user-123"
+		user.ID = defaultUUID
 
-		tokenService.EXPECT().Validate(mock.Anything, "valid-token").Return("user-123", nil).Once()
-		userRepoMock.EXPECT().FindByID(mock.Anything, "user-123").Return(user, nil).Once()
+		tokenService.EXPECT().Validate(mock.Anything, "valid-token").Return(defaultUUID.String(), nil).Once()
+		userRepoMock.EXPECT().FindByID(mock.Anything, defaultUUID.String()).Return(user, nil).Once()
 		userRepoMock.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
 		tokenService.EXPECT().Invalidate(mock.Anything, "valid-token").Return(nil).Once()
 

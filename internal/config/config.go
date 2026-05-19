@@ -37,9 +37,12 @@ type ApiConfig struct {
 }
 
 type PgConfig struct {
-	DSN            string
-	MaxRetries     int
-	RetryDelay     time.Duration
+	Host           string
+	Port           string
+	Pass           string
+	User           string
+	DBName         string
+	SSLMode        string
 	ConnectTimeout time.Duration
 }
 
@@ -80,7 +83,12 @@ const (
 	defaultEnvPath                      = ".env"
 	defaultApiHost                      = ""
 	defaultApiPort                      = "8080"
-	defaultPGDSN                        = "postgres://momento:momento@localhost:5432/momento?sslmode=disable"
+	defaultPGHost                       = "localhost"
+	defaultPGPort                       = "5432"
+	defaultPGPass                       = "momento"
+	defaultPGUser                       = "momento"
+	defaultPGDBName                     = "momento"
+	defaultPGSSLMode                    = "disable"
 	defaultPGMaxRetries                 = 3
 	defaultPGRetryDelay                 = 2 * time.Second
 	defaultPGConnectTimeout             = 10 * time.Second
@@ -143,9 +151,12 @@ func LoadConfig(opts ...LoadConfigOption) Config {
 			Port: getEnv("API_PORT", defaultApiPort),
 		},
 		PG: PgConfig{
-			DSN:            getEnv("DATABASE_URL", defaultPGDSN),
-			MaxRetries:     getEnvAsInt("PG_MAX_RETRIES", defaultPGMaxRetries),
-			RetryDelay:     getEnvAsDuration("PG_RETRY_DELAY_MS", defaultPGRetryDelay),
+			Host:           getEnv("PG_HOST", defaultPGHost),
+			Port:           getEnv("PG_PORT", defaultPGPort),
+			Pass:           getEnv("PG_PASS", defaultPGPass),
+			User:           getEnv("PG_USER", defaultPGUser),
+			DBName:         getEnv("PG_DBNAME", defaultPGDBName),
+			SSLMode:        getEnv("PG_SSLMODE", defaultPGSSLMode),
 			ConnectTimeout: getEnvAsDuration("PG_CONNECT_TIMEOUT_MS", defaultPGConnectTimeout),
 		},
 		JWT: JWTConfig{

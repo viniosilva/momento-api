@@ -11,6 +11,8 @@ import (
 	"momento/internal/auth/domain"
 )
 
+const base_user_query = "SELECT id, email, password, created_at, updated_at, email_verified_at FROM users"
+
 type userRepository struct {
 	db *sqlx.DB
 }
@@ -39,7 +41,7 @@ func (r *userRepository) Create(ctx context.Context, user domain.User) error {
 }
 
 func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) (bool, error) {
-	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
 
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, string(email)).Scan(&exists)
@@ -51,7 +53,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email domain.Email) 
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE email = $1`
+	query := fmt.Sprintf("%s WHERE email = $1", base_user_query)
 
 	var row userRow
 	err := r.db.GetContext(ctx, &row, query, string(email))
@@ -67,7 +69,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email domain.Email) (d
 }
 
 func (r *userRepository) FindVerifiedByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE email = $1 AND email_verified_at IS NOT NULL`
+	query := fmt.Sprintf("%s WHERE email = $1 AND email_verified_at IS NOT NULL", base_user_query)
 
 	var row userRow
 	err := r.db.GetContext(ctx, &row, query, string(email))
@@ -83,7 +85,7 @@ func (r *userRepository) FindVerifiedByEmail(ctx context.Context, email domain.E
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, error) {
-	query := `SELECT id, email, password, created_at, updated_at, email_verified_at FROM users WHERE id = $1`
+	query := fmt.Sprintf("%s WHERE id = $1", base_user_query)
 
 	var row userRow
 	err := r.db.GetContext(ctx, &row, query, id)
@@ -101,7 +103,7 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, 
 func (r *userRepository) Update(ctx context.Context, user domain.User) error {
 	row := toUserRow(user)
 
-	query := `UPDATE users SET password = $1, updated_at = $2, email_verified_at = $3 WHERE id = $4`
+	query := "UPDATE users SET password = $1, updated_at = $2, email_verified_at = $3 WHERE id = $4"
 
 	result, err := r.db.ExecContext(ctx, query, row.Password, row.UpdatedAt, row.EmailVerifiedAt, row.ID)
 	if err != nil {

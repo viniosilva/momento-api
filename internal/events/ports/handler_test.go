@@ -1001,6 +1001,7 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 		eventID := uuid.NewString()
 		userID := uuid.NewString()
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{ID: eventID, OwnerUserID: userID}, nil).Once()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(nil).Once()
 
 		mux := http.NewServeMux()
@@ -1025,7 +1026,7 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 		eventID := uuid.NewString()
 		userID := uuid.NewString()
-		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(domain.ErrEventNotFound).Once()
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{}, domain.ErrEventNotFound).Once()
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("DELETE /events/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -1080,6 +1081,7 @@ func TestEventHandler_DeleteEvent(t *testing.T) {
 
 		eventID := uuid.NewString()
 		userID := uuid.NewString()
+		mockRepo.EXPECT().GetByIDAndUserID(mock.Anything, eventID, userID).Return(domain.Event{ID: eventID, OwnerUserID: userID}, nil).Once()
 		mockRepo.EXPECT().DeleteByIDAndUserID(mock.Anything, eventID, userID).Return(assert.AnError).Once()
 
 		mux := http.NewServeMux()

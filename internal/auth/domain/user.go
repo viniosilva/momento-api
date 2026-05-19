@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"momento/pkg/uid"
+	"github.com/google/uuid"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 type User struct {
-	ID              string
+	ID              uuid.UUID
 	Email           Email
 	Password        Password
 	CreatedAt       time.Time
@@ -29,7 +29,7 @@ func NewUser(email Email, password Password) User {
 	now := time.Now().UTC()
 
 	return User{
-		ID:        uid.New(),
+		ID:        uuid.New(),
 		Email:     email,
 		Password:  password,
 		CreatedAt: now,

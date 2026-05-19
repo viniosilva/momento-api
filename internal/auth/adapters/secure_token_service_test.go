@@ -14,11 +14,11 @@ import (
 
 const (
 	testToken  = "test-refresh-token"
-	testUserID = "user-123"
+	testUserID = "user-UUID"
 	testEmail  = "user@example.com"
 	testTTL    = 7 * 24 * time.Hour
 
-	storedPayload = `{"user_id":"user-123","email":"user@example.com"}`
+	storedPayload = `{"user_id":"user-UUID","email":"user@example.com"}`
 
 	anyToken = `.+`
 )

@@ -7,9 +7,9 @@ packages:
   momento/internal/auth:
     config:
       dir: "internal/auth/mocks"      
-  momento/internal/notes:
+  momento/internal/events:
     config:
-      dir: "internal/notes/mocks"      
+      dir: "internal/events/mocks"      
   momento/internal/shared:
     config:
       dir: "internal/shared/mocks"

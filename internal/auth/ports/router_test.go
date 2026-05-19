@@ -12,6 +12,7 @@ import (
 	"momento/internal/auth/ports"
 	"momento/pkg/logger"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -29,6 +30,8 @@ func newAuthService(t *testing.T) ports.AuthService {
 }
 
 func TestSetupRouter(t *testing.T) {
+	defaultUUID := uuid.New()
+
 	t.Run("should register POST /api/auth/register route", func(t *testing.T) {
 		mux := http.NewServeMux()
 		authService := newAuthService(t)
@@ -152,7 +155,7 @@ func TestSetupRouter(t *testing.T) {
 		tokenService := mocks.NewMockTokenService(t)
 
 		resetTokenSvc.EXPECT().Validate(mock.Anything, mock.Anything).
-			Return("user-123", nil).
+			Return(defaultUUID.String(), nil).
 			Once()
 
 		authService := app.NewAuthService(userRepoMock, jwtService, tokenSvcMock, resetTokenSvc, emailSender, resetTokenTTL, resetTokenSize, tokenService, verificationTokenTTL, verificationTokenSize, verificationURL)
